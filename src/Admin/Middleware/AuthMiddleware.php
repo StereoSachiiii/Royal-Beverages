@@ -4,62 +4,79 @@ declare(strict_types=1);
 namespace App\Admin\Middleware;
 
 use App\Core\Session;
+use App\Interfaces\MiddlewareInterface;
+use App\Core\Request;
+use App\Admin\Exceptions\UnauthorizedException;
+use App\Admin\Exceptions\ForbiddenException;
 
+class AuthMiddleware implements MiddlewareInterface {
 
-class AuthMiddleware {
+    private bool $requireAdmin;
 
     /**
-     * Helper function to check authentication
+     * Constructor
+     *
+     * @param bool $requireAdmin
+     */
+    public function __construct(bool $requireAdmin = false)
+    {
+        $this->requireAdmin = $requireAdmin;
+    }
+
+    /**
+     * Handle the request and pass to the next middleware in the stack
+     *
+     * @param Request $request
+     * @param callable $next
+     * @return mixed
+     */
+    public function handle(Request $request, callable $next): mixed
+    {
+        if ($this->requireAdmin) {
+            self::requireAdmin();
+        } else {
+            self::requireAuth();
+        }
+        return $next($request);
+    }
+
+    /**
+     * Helper function to check authentication (legacy static fallback)
      * @return int User ID
+     * @throws UnauthorizedException
      */
     public static function requireAuth(): int {
         $session = Session::getInstance();
         
         if (!$session->isLoggedIn()) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Unauthorized - Please login',
-                'code' => 401
-            ]);
-            exit;
+            throw new UnauthorizedException("Unauthorized - Please login");
         }
         
         return (int)$session->get('user_id');
     }
 
     /**
-     * Helper function to check admin role
+     * Helper function to check admin role (legacy static fallback)
      * @return int User ID
+     * @throws UnauthorizedException
+     * @throws ForbiddenException
      */
     public static function requireAdmin(): int {
         $session = Session::getInstance();
         
         if (!$session->isLoggedIn()) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Unauthorized - Please login',
-                'code' => 401
-            ]);
-            exit;
+            throw new UnauthorizedException("Unauthorized - Please login");
         }
         
         if (!$session->isAdmin()) {
-            http_response_code(403);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Forbidden - Admin access required',
-                'code' => 403
-            ]);
-            exit;
+            throw new ForbiddenException("Forbidden - Admin access required");
         }
         
         return (int)$session->get('user_id');
     }
 
     /**
-     * Helper function to send JSON response and exit
+     * Helper function to send JSON response and exit (legacy fallback)
      * @param array $data Response data
      * @param int $statusCode HTTP status code
      */
@@ -69,6 +86,4 @@ class AuthMiddleware {
         echo json_encode($data);
         exit;
     }
-
 }
-?>

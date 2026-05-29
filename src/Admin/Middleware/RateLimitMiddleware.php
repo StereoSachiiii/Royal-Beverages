@@ -4,8 +4,11 @@ declare(strict_types=1);
 namespace App\Admin\Middleware;
 
 use App\Core\Session;
+use App\Interfaces\MiddlewareInterface;
+use App\Core\Request;
+use App\Admin\Exceptions\RateLimitException;
 
-class RateLimitMiddleware
+class RateLimitMiddleware implements MiddlewareInterface
 {
     private static ?Session $session = null;
 
@@ -14,12 +17,48 @@ class RateLimitMiddleware
     private static int $timeWindow = 60; // seconds
     private static string $baseKey = 'rate_limit';
 
-    public static function check($key,$maxRequests = 3, $timeWindow = 60): void{
-        self::configure(3, 60); // default: 3 requests per 60 seconds
-        if(self::checkExecute($key)){
-    //        throw new Exception("Rate limit exceeded. Try again later.");
-        };
+    private string $key;
+    private int $maxRequestsInstance;
+    private int $timeWindowInstance;
 
+    /**
+     * Constructor
+     *
+     * @param string $key Unique rate-limit prefix
+     * @param int $maxRequests Max permitted requests in window
+     * @param int $timeWindow Window length in seconds
+     */
+    public function __construct(string $key, int $maxRequests = 3, int $timeWindow = 60)
+    {
+        $this->key = $key;
+        $this->maxRequestsInstance = $maxRequests;
+        $this->timeWindowInstance = $timeWindow;
+    }
+
+    /**
+     * Handle the request and pass to the next middleware in the stack
+     *
+     * @param Request $request
+     * @param callable $next
+     * @return mixed
+     */
+    public function handle(Request $request, callable $next): mixed
+    {
+        self::check($this->key, $this->maxRequestsInstance, $this->timeWindowInstance);
+        return $next($request);
+    }
+
+    /**
+     * static check method (legacy fallback)
+     *
+     * @throws RateLimitException
+     */
+    public static function check(string $key, int $maxRequests = 3, int $timeWindow = 60): void
+    {
+        self::configure($maxRequests, $timeWindow);
+        if (self::checkExecute($key)) {
+            throw new RateLimitException();
+        }
     }
 
     public static function configure(int $maxRequests, int $timeWindowSeconds): void
@@ -34,12 +73,6 @@ class RateLimitMiddleware
 
     /**
      * Check rate limit for the current session or a provided identifier.
-     *
-     * Returns true if the limit has been exceeded (caller should handle response),
-     * or false if the request is allowed.
-     *
-     * @param string|null $identifier Optional identifier (e.g. user id or IP). If null, per-session key is used.
-     * @return bool
      */
     public static function checkExecute(?string $identifier = null): bool
     {
@@ -47,7 +80,7 @@ class RateLimitMiddleware
         $key = self::makeKey($identifier);
         $now = time();
 
-        // Initialize if missing (first request in window)
+        // Initialize if missing
         if (!self::$session->has($key)) {
             self::$session->set($key, [
                 'count'      => 1,
@@ -58,7 +91,6 @@ class RateLimitMiddleware
 
         $rateData = self::$session->get($key);
 
-        // Normalize stored values
         $count = isset($rateData['count']) ? (int)$rateData['count'] : 0;
         $start = isset($rateData['start_time']) ? (int)$rateData['start_time'] : $now;
 
@@ -66,17 +98,16 @@ class RateLimitMiddleware
 
         if ($elapsed < self::$timeWindow) {
             if ($count >= self::$maxRequests) {
-                return true; // limit exceeded
+                return true; // exceeded
             }
 
-            // increment and persist
             $rateData['count'] = $count + 1;
             $rateData['start_time'] = $start;
             self::$session->set($key, $rateData);
             return false;
         }
 
-        // Window expired: reset and count current request
+        // Reset
         self::$session->set($key, [
             'count'      => 1,
             'start_time' => $now,
@@ -84,27 +115,15 @@ class RateLimitMiddleware
         return false;
     }
 
-    /**
-     * Reset rate limit for an identifier (or current session if null).
-     *
-     * @param string|null $identifier
-     * @return void
-     */
     public static function reset(?string $identifier = null): void
     {
         self::$session = Session::getInstance();
         $key = self::makeKey($identifier);
         if (self::$session->has($key)) {
-           // self::$session->remove($key);
+            self::$session->remove($key);
         }
     }
 
-    /**
-     * Build the session key for storage.
-     *
-     * @param string|null $identifier
-     * @return string
-     */
     private static function makeKey(?string $identifier = null): string
     {
         if ($identifier !== null && $identifier !== '') {
@@ -114,12 +133,6 @@ class RateLimitMiddleware
         return self::$baseKey;
     }
 
-    /**
-     * Convenience: emit 429 JSON and exit (caller can use this if desired).
-     *
-     * @param string|null $message
-     * @return void
-     */
     public static function emitLimitExceededResponse(?string $message = null): void
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -134,4 +147,3 @@ class RateLimitMiddleware
         exit;
     }
 }
-?>

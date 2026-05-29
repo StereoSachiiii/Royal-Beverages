@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Interfaces;
+namespace App\Interfaces;
 
-use Core\Request;
-use Core\Response;
+use App\Core\Request;
 
 /**
  * Middleware Interface
@@ -18,7 +17,7 @@ interface MiddlewareInterface
      *
      * @param Request $request
      * @param callable $next The next middleware in the chain
-     * @return Response
+     * @return mixed
      */
-    public function handle(Request $request, callable $next): Response;
+    public function handle(Request $request, callable $next): mixed;
 }

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
-use Interfaces\MiddlewareInterface;
+use App\Interfaces\MiddlewareInterface;
 
 /**
  * Middleware Stack
@@ -33,9 +33,9 @@ class MiddlewareStack
      *
      * @param Request $request
      * @param callable $finalHandler The final handler (usually the controller)
-     * @return Response
+     * @return mixed
      */
-    public function process(Request $request, callable $finalHandler): Response
+    public function process(Request $request, callable $finalHandler): mixed
     {
         // Create a chain of middleware
         $next = $this->createNext($this->middleware, $finalHandler);

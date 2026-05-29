@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Royal Liquor Core Bootstrap
+ * Royal Beverages Core Bootstrap
  * Initializes autoloader, session, and basic configurations
  */
 
@@ -29,12 +29,7 @@ $session = \App\Core\Session::getInstance();
 // 5. Define Global Constants
 if (!defined('DEBUG')) define('DEBUG', $config['app']['debug'] ?? $config['debug'] ?? true);
 
-// 6. Backward Compatibility Aliases
-if (!class_exists('Session', false)) class_alias(\App\Core\Session::class,  'Session');
-if (!class_exists('Database', false)) class_alias(\App\Core\Database::class, 'Database');
-if (!class_exists('CSRF', false))     class_alias(\App\Core\CSRF::class,     'CSRF');
-
-// 7. Web Root & Base URL Detection
+// 6. Web Root & Base URL Detection
 if (!defined('BASE_URL')) {
     $docRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? '');
     $publicPath = str_replace('\\', '/', realpath(__DIR__ . '/../../public') ?: '');
