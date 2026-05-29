@@ -21,35 +21,11 @@ class RouteLoader
     {
         $routesDir = __DIR__ . '/Routes';
         
-        // Define the mapping from old filenames to new PascalCase names
-        // This ensures the loader finds the renamed files
-        $modules = [
-            'UserRoutes.php',
-            'ProductRoutes.php', 
-            'CategoryRoutes.php',
-            'OrderRoutes.php',
-            'OrderItemRoutes.php',
-            'StockRoutes.php',
-            'WishlistRoutes.php',
-            'RecommendationRoutes.php',
-            'CartRoutes.php',
-            'CartItemRoutes.php',
-            'PaymentRoutes.php',
-            'WarehouseRoutes.php',
-            'SupplierRoutes.php',
-            'AddressRoutes.php',
-            'FlavorProfileRoutes.php',
-            'FeedbackRoutes.php',
-            'CocktailRecipeRoutes.php',
-            'RecipeIngredientRoutes.php',
-            'UserPreferenceRoutes.php',
-            'AdminViewRoutes.php',
-            'ImageRoutes.php'
-        ];
+        // Scan the directory dynamically for all php files
+        $files = glob($routesDir . '/*.php');
         
-        foreach ($modules as $file) {
-            $path = $routesDir . '/' . $file;
-            if (file_exists($path)) {
+        if (is_array($files)) {
+            foreach ($files as $path) {
                 // We use require instead of require_once to ensure the 
                 // $router variable is available in the route file's scope
                 require $path;

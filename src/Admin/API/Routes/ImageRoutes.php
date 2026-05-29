@@ -15,13 +15,13 @@ use App\Core\Router;
 
 $router->group('/api/v1', function (Router $router): void {
     $router->post('/images/upload', function (Request $request): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('image_upload', 20, 60);
-
         $controller = $GLOBALS['container']->get(ImageController::class);
-        
         // Grab post body and files
         return $controller->upload($_POST, $_FILES);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('image_upload', 20, 60)
+    ]);
 });

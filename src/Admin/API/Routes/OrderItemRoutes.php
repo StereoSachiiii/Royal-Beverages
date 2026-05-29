@@ -25,11 +25,9 @@ $router->group('/api/v1', function (Router $router): void {
     // GET /api/v1/order-items (with optional filters)
     $router->get('/order-items', function (Request $request): array {
         $controller = $GLOBALS['container']->get(OrderItemController::class);
-
         $id       = $request->getQuery('id');
         $orderId  = $request->getQuery('order_id');
         $count    = $request->getQuery('count');
-
         if ($id !== null) {
             $id = (int)$id;
             if ($id <= 0) {
@@ -41,28 +39,25 @@ $router->group('/api/v1', function (Router $router): void {
             }
             return $controller->getById($id);
         }
-
         if ($orderId !== null) {
             $orderId = (int)$orderId;
             return $controller->getByOrder($orderId);
         }
-
         if ($count === 'true') {
-            AuthMiddleware::requireAdmin();
             return $controller->count();
         }
-
-        AuthMiddleware::requireAdmin();
         $limit  = (int)$request->getQuery('limit', 50);
         $offset = (int)$request->getQuery('offset', 0);
         return $controller->getAll($limit, $offset);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // GET /api/v1/order-items/:id
     $router->get('/order-items/:id', function (Request $request, array $params): array {
         $controller = $GLOBALS['container']->get(OrderItemController::class);
         $id = (int)($params['id'] ?? 0);
-        
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -75,25 +70,21 @@ $router->group('/api/v1', function (Router $router): void {
 
     // POST /api/v1/order-items
     $router->post('/order-items', function (Request $request): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_item_create', 20, 60);
-
         $controller = $GLOBALS['container']->get(OrderItemController::class);
         $body       = $request->getAllBody();
         return $controller->create($body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_item_create', 20, 60)
+    ]);
 
     // PUT /api/v1/order-items/:id
     $router->put('/order-items/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_item_update', 20, 60);
-
         $controller = $GLOBALS['container']->get(OrderItemController::class);
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? ($body['id'] ?? 0));
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -101,19 +92,18 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $controller->update($id, $body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_item_update', 20, 60)
+    ]);
 
     // DELETE /api/v1/order-items/:id
     $router->delete('/order-items/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_item_delete', 10, 60);
-
         $controller = $GLOBALS['container']->get(OrderItemController::class);
         $id         = (int)($params['id'] ?? 0);
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -121,7 +111,11 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $controller->delete($id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_item_delete', 10, 60)
+    ]);
 });

@@ -17,22 +17,21 @@ $router->group('/api/v1', function (Router $router): void {
     // Admin list of cart items
     $router->get('/cart-items', function (Request $request): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        AuthMiddleware::requireAdmin();
         $limit  = (int)$request->getQuery('limit', 50);
         $offset = (int)$request->getQuery('offset', 0);
         $search = $request->getQuery('search', '');
-        
         if ($search) {
             return $cartItemController->search($search, $limit, $offset);
         }
         return $cartItemController->getAllEnriched($limit, $offset);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Get cart item by ID (enriched with product + cart data)
     $router->get('/cart-items/:id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
         $id         = (int)($params['id'] ?? 0);
         if ($id <= 0) {
             return [
@@ -47,7 +46,6 @@ $router->group('/api/v1', function (Router $router): void {
     // Get cart item by cart and product
     $router->get('/cart-items/cart/:cart_id/product/:product_id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
         $cartId     = (int)($params['cart_id'] ?? 0);
         $productId  = (int)($params['product_id'] ?? 0);
         return $cartItemController->getByCartProduct($cartId, $productId);
@@ -56,7 +54,6 @@ $router->group('/api/v1', function (Router $router): void {
     // Get all items for a cart
     $router->get('/cart-items/cart/:cart_id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
         $cartId     = (int)($params['cart_id'] ?? 0);
         return $cartItemController->getByCart($cartId);
     });
@@ -64,32 +61,28 @@ $router->group('/api/v1', function (Router $router): void {
     // Count cart items
     $router->get('/cart-items/count', function (Request $request): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        AuthMiddleware::requireAdmin();
         return $cartItemController->count();
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Create cart item
     $router->post('/cart-items', function (Request $request): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('cart_item_create', 20, 60);
-
         $body       = $request->getAllBody();
         return $cartItemController->create($body);
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('cart_item_create', 20, 60)
+    ]);
 
     // Update cart item
     $router->put('/cart-items/:id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('cart_item_update', 20, 60);
-
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? 0);
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -97,33 +90,30 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $cartItemController->update($id, $body);
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('cart_item_update', 20, 60)
+    ]);
 
     // Update by cart + product
     $router->put('/cart-items/cart/:cart_id/product/:product_id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('cart_item_update', 20, 60);
-
         $body       = $request->getAllBody();
         $cartId     = (int)($params['cart_id'] ?? 0);
         $productId  = (int)($params['product_id'] ?? 0);
-
         return $cartItemController->updateByCartProduct($cartId, $productId, $body);
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('cart_item_update', 20, 60)
+    ]);
 
     // Delete cart item
     $router->delete('/cart-items/:id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('cart_item_delete', 10, 60);
-
         $id         = (int)($params['id'] ?? 0);
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -131,20 +121,22 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $cartItemController->delete($id);
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('cart_item_delete', 10, 60)
+    ]);
 
     // Delete by cart + product
     $router->delete('/cart-items/cart/:cart_id/product/:product_id', function (Request $request, array $params): array {
         $cartItemController = $GLOBALS['container']->get(CartItemController::class);
-
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('cart_item_delete', 10, 60);
-
         $cartId     = (int)($params['cart_id'] ?? 0);
         $productId  = (int)($params['product_id'] ?? 0);
-
         return $cartItemController->deleteByCartProduct($cartId, $productId);
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('cart_item_delete', 10, 60)
+    ]);
 });

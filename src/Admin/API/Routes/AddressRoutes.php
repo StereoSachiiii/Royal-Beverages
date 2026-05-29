@@ -25,10 +25,8 @@ $router->group('/api/v1', function (Router $router): void {
     // GET /api/v1/addresses
     $router->get('/addresses', function (Request $request): array {
         $controller = $GLOBALS['container']->get(AddressController::class);
-        
         $limit  = (int)$request->getQuery('limit', 50);
         $offset = (int)$request->getQuery('offset', 0);
-        
         // Use enriched version for user name/email in table
         return $controller->getAllEnriched($limit, $offset);
     });
@@ -37,7 +35,6 @@ $router->group('/api/v1', function (Router $router): void {
     $router->get('/addresses/:id', function (Request $request, array $params): array {
         $controller = $GLOBALS['container']->get(AddressController::class);
         $id = (int)($params['id'] ?? 0);
-        
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -45,7 +42,6 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-        
         // Use enriched version for view modal
         return $controller->getByIdEnriched($id);
     });
@@ -54,7 +50,6 @@ $router->group('/api/v1', function (Router $router): void {
     $router->get('/addresses/user/:user_id', function (Request $request, array $params): array {
         $controller = $GLOBALS['container']->get(AddressController::class);
         $userId = (int)($params['user_id'] ?? 0);
-        
         return $controller->getByUser($userId);
     });
 
@@ -66,19 +61,19 @@ $router->group('/api/v1', function (Router $router): void {
 
     // POST /api/v1/addresses
     $router->post('/addresses', function (Request $request): array {
-        RateLimitMiddleware::check('address_create', 10, 60);
         $controller = $GLOBALS['container']->get(AddressController::class);
         $body = $request->getAllBody();
         return $controller->create($body);
-    });
+    
+    })->middleware([
+        new RateLimitMiddleware('address_create', 10, 60)
+    ]);
 
     // PUT /api/v1/addresses/:id
     $router->put('/addresses/:id', function (Request $request, array $params): array {
-        RateLimitMiddleware::check('address_update', 10, 60);
         $controller = $GLOBALS['container']->get(AddressController::class);
         $body = $request->getAllBody();
         $id = (int)($params['id'] ?? ($body['id'] ?? 0));
-        
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -86,16 +81,16 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-        
         return $controller->update($id, $body);
-    });
+    
+    })->middleware([
+        new RateLimitMiddleware('address_update', 10, 60)
+    ]);
 
     // DELETE /api/v1/addresses/:id
     $router->delete('/addresses/:id', function (Request $request, array $params): array {
-        RateLimitMiddleware::check('address_delete', 10, 60);
         $controller = $GLOBALS['container']->get(AddressController::class);
         $id = (int)($params['id'] ?? 0);
-        
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -103,7 +98,9 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-        
         return $controller->delete($id);
-    });
+    
+    })->middleware([
+        new RateLimitMiddleware('address_delete', 10, 60)
+    ]);
 });

@@ -29,19 +29,18 @@ $router->group('/api/v1', function (Router $router): void {
         $offset          = (int)$request->getQuery('offset', 0);
         $includeInactive = $request->getQuery('includeInactive') === 'true';
         $search          = trim((string)$request->getQuery('search', ''));
-
         // Search if query provided
         if ($search !== '') {
             return $controller->search($search, $limit, $offset);
         }
-
         if ($includeInactive) {
-            AuthMiddleware::requireAdmin();
             return $controller->getAllIncludingInactive($limit, $offset);
         }
-
         return $controller->getAll($limit, $offset);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Get supplier by ID
     $router->get('/suppliers/:id', function (Request $request, array $params): array {
@@ -77,36 +76,32 @@ $router->group('/api/v1', function (Router $router): void {
     $router->get('/suppliers/count', function (Request $request): array {
         $controller = $GLOBALS['container']->get(SupplierController::class);
         $includeInactive = $request->getQuery('includeInactive') === 'true';
-
         if ($includeInactive) {
-            AuthMiddleware::requireAdmin();
             return $controller->countAll();
         }
-
         return $controller->count();
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Create supplier
     $router->post('/suppliers', function (Request $request): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('supplier_create', 5, 60);
-
         $controller = $GLOBALS['container']->get(SupplierController::class);
         $body       = $request->getAllBody();
         return $controller->create($body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('supplier_create', 5, 60)
+    ]);
 
     // Update supplier
     $router->put('/suppliers/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('supplier_update', 5, 60);
-
         $controller = $GLOBALS['container']->get(SupplierController::class);
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? ($body['id'] ?? 0));
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -114,20 +109,19 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $controller->update($id, $body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('supplier_update', 5, 60)
+    ]);
 
     // Delete / hard delete supplier
     $router->delete('/suppliers/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('supplier_delete', 5, 60);
-
         $controller = $GLOBALS['container']->get(SupplierController::class);
         $id         = (int)($params['id'] ?? 0);
         $hard       = $request->getQuery('hard') === 'true';
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -135,7 +129,11 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $hard ? $controller->hardDelete($id) : $controller->delete($id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('supplier_delete', 5, 60)
+    ]);
 });

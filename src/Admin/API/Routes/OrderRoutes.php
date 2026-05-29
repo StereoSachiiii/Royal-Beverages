@@ -17,17 +17,18 @@ $router->group('/api/v1', function (Router $router): void {
     // Admin list of all orders (with optional search)
     $router->get('/orders', function (Request $request): array {
         $orderController = $GLOBALS['container']->get(OrderController::class);
-        AuthMiddleware::requireAdmin();
         $limit  = (int)$request->getQuery('limit', 50);
         $offset = (int)$request->getQuery('offset', 0);
         $search = trim((string)$request->getQuery('search', ''));
-        
         // If search provided, search by order number
         if ($search !== '') {
             return $orderController->search($search, $limit, $offset);
         }
         return $orderController->getAll($limit, $offset);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Single order by ID
     $router->get('/orders/:id', function (Request $request, array $params): array {
@@ -76,26 +77,26 @@ $router->group('/api/v1', function (Router $router): void {
     // Count orders
     $router->get('/orders/count', function (Request $request): array {
         $orderController = $GLOBALS['container']->get(OrderController::class);
-        AuthMiddleware::requireAdmin();
         return $orderController->count();
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Create order
     $router->post('/orders', function (Request $request): array {
         $orderController = $GLOBALS['container']->get(OrderController::class);
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_create', 5, 60);
-
         $body       = $request->getAllBody();
         return $orderController->create($body);
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_create', 5, 60)
+    ]);
 
     // Cancel order (action endpoint)
     $router->post('/orders/:id/cancel', function (Request $request, array $params): array {
         $orderController = $GLOBALS['container']->get(OrderController::class);
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_create', 5, 60);
-
         $id = (int)($params['id'] ?? 0);
         if ($id <= 0) {
             return [
@@ -104,21 +105,19 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
-        AuthMiddleware::requireAuth();
         return $orderController->cancel($id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(false),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_create', 5, 60)
+    ]);
 
     // Update order (admin)
     $router->put('/orders/:id', function (Request $request, array $params): array {
         $orderController = $GLOBALS['container']->get(OrderController::class);
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_update', 5, 60);
-
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? ($body['id'] ?? 0));
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -126,17 +125,17 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $orderController->update($id, $body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_update', 5, 60)
+    ]);
 
     // Delete order (admin)
     $router->delete('/orders/:id', function (Request $request, array $params): array {
         $orderController = $GLOBALS['container']->get(OrderController::class);
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('order_delete', 5, 60);
-
         $id         = (int)($params['id'] ?? 0);
         if ($id <= 0) {
             return [
@@ -145,7 +144,11 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $orderController->delete($id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('order_delete', 5, 60)
+    ]);
 });

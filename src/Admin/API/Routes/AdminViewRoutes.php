@@ -24,22 +24,19 @@ if (!isset($router) || !$router instanceof Router) {
 $router->group('/api/v1', function (Router $router): void {
     // GET /api/v1/admin/views/dashboard (dashboard stats)
     $router->get('/admin/views/dashboard', function (Request $request): array {
-        AuthMiddleware::requireAdmin();
-        RateLimitMiddleware::check('admin_view', 100, 60);
-
         $controller = $GLOBALS['container']->get(AdminViewController::class);
         return $controller->getDashboardStats();
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new RateLimitMiddleware('admin_view', 100, 60)
+    ]);
 
     // GET /api/v1/admin/views/:entity/:id (detail view)
     $router->get('/admin/views/:entity/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        RateLimitMiddleware::check('admin_view', 100, 60);
-
         $controller = $GLOBALS['container']->get(AdminViewController::class);
         $entity     = $params['entity'] ?? null;
         $id         = (int)($params['id'] ?? 0);
-
         if ($entity === null) {
             return [
                 'success' => false,
@@ -47,7 +44,6 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -55,18 +51,17 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $controller->getDetail($entity, $id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new RateLimitMiddleware('admin_view', 100, 60)
+    ]);
 
     // GET /api/v1/admin/views/:entity (list view)
     $router->get('/admin/views/:entity', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        RateLimitMiddleware::check('admin_view', 100, 60);
-
         $controller = $GLOBALS['container']->get(AdminViewController::class);
         $entity     = $params['entity'] ?? null;
-
         if ($entity === null) {
             return [
                 'success' => false,
@@ -74,11 +69,13 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         $limit  = (int)min(100, max(1, (int)$request->getQuery('limit', 50)));
         $offset = (int)max(0, (int)$request->getQuery('offset', 0));
         $search = $request->getQuery('search');
-
         return $controller->getList($entity, $limit, $offset, $search);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new RateLimitMiddleware('admin_view', 100, 60)
+    ]);
 });

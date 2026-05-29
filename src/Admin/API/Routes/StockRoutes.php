@@ -31,7 +31,6 @@ $router->group('/api/v1', function (Router $router): void {
         $limit  = (int)$request->getQuery('limit', 50);
         $offset = (int)$request->getQuery('offset', 0);
         $search = trim((string)$request->getQuery('search', ''));
-        
         // Use search method if query provided
         if ($search !== '') {
             return $GLOBALS['container']->get(StockController::class)->search($search, $limit, $offset);
@@ -78,12 +77,8 @@ $router->group('/api/v1', function (Router $router): void {
 
     // ORDER OPERATIONS (reserve/confirm/cancel/refund)
     $router->post('/stock/orders/:order_id/:action', function (Request $request, array $params) {
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('stock_order_action', 10, 60);
-
         $orderId    = (int)($params['order_id'] ?? 0);
         $action     = (string)($params['action'] ?? '');
-
         if ($orderId <= 0) {
             return [
                 'success' => false,
@@ -91,7 +86,6 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return match ($action) {
             'reserve' => $GLOBALS['container']->get(StockController::class)->reserveStock($orderId),
             'confirm' => $GLOBALS['container']->get(StockController::class)->confirmPayment($orderId),
@@ -103,15 +97,15 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ],
         };
-    });
+    
+    })->middleware([
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('stock_order_action', 10, 60)
+    ]);
 
     // Warehouse transfer
     $router->post('/stock/transfer', function (Request $request) {
-        AuthMiddleware::requireAdmin();
-        RateLimitMiddleware::check('stock_transfer', 10, 60);
-
         $body       = $request->getAllBody();
-
         if (!isset($body['product_id'], $body['from_warehouse_id'], $body['to_warehouse_id'], $body['quantity'])) {
             return [
                 'success' => false,
@@ -119,23 +113,21 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         $productId       = (int)$body['product_id'];
         $fromWarehouseId = (int)$body['from_warehouse_id'];
         $toWarehouseId   = (int)$body['to_warehouse_id'];
         $quantity        = (int)$body['quantity'];
         $reason          = $body['reason'] ?? null;
-
         return $GLOBALS['container']->get(StockController::class)->transferStock($productId, $fromWarehouseId, $toWarehouseId, $quantity, $reason);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new RateLimitMiddleware('stock_transfer', 10, 60)
+    ]);
 
     // Stock adjustment
     $router->post('/stock/adjust', function (Request $request) {
-        AuthMiddleware::requireAdmin();
-        RateLimitMiddleware::check('stock_adjust', 10, 60);
-
         $body       = $request->getAllBody();
-
         if (!isset($body['product_id'], $body['warehouse_id'], $body['adjustment'])) {
             return [
                 'success' => false,
@@ -143,33 +135,31 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         $productId   = (int)$body['product_id'];
         $warehouseId = (int)$body['warehouse_id'];
         $adjustment  = (int)$body['adjustment'];
         $reason      = $body['reason'] ?? null;
-
         return $GLOBALS['container']->get(StockController::class)->adjustStock($productId, $warehouseId, $adjustment, $reason);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new RateLimitMiddleware('stock_adjust', 10, 60)
+    ]);
 
     // Regular stock creation (admin only)
     $router->post('/stock', function (Request $request) {
-        AuthMiddleware::requireAdmin();
-        RateLimitMiddleware::check('stock_create', 5, 60);
-
         $body       = $request->getAllBody();
         return $GLOBALS['container']->get(StockController::class)->create($body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new RateLimitMiddleware('stock_create', 5, 60)
+    ]);
 
     // Update stock
     $router->put('/stock/:id', function (Request $request, array $params) {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('stock_update', 5, 60);
-
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? 0);
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -177,29 +167,29 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $GLOBALS['container']->get(StockController::class)->update($id, $body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('stock_update', 5, 60)
+    ]);
 
     // Update by product + warehouse
     $router->put('/stock/product/:product_id/warehouse/:warehouse_id', function (Request $request, array $params) {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('stock_update', 5, 60);
-
         $body         = $request->getAllBody();
         $productId    = (int)($params['product_id'] ?? 0);
         $warehouseId  = (int)($params['warehouse_id'] ?? 0);
-
         return $GLOBALS['container']->get(StockController::class)->updateByProductWarehouse($productId, $warehouseId, $body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('stock_update', 5, 60)
+    ]);
 
     // Delete by ID or product+warehouse
     $router->delete('/stock/:id', function (Request $request, array $params) {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('stock_delete', 5, 60);
-
         $id         = (int)($params['id'] ?? 0);
         if ($id <= 0) {
             return [
@@ -208,18 +198,22 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $GLOBALS['container']->get(StockController::class)->delete($id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('stock_delete', 5, 60)
+    ]);
 
     $router->delete('/stock/product/:product_id/warehouse/:warehouse_id', function (Request $request, array $params) {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('stock_delete', 5, 60);
-
         $productId    = (int)($params['product_id'] ?? 0);
         $warehouseId  = (int)($params['warehouse_id'] ?? 0);
-
         return $GLOBALS['container']->get(StockController::class)->deleteByProductWarehouse($productId, $warehouseId);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('stock_delete', 5, 60)
+    ]);
 });

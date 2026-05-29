@@ -28,14 +28,14 @@ $router->group('/api/v1', function (Router $router): void {
         $limit           = (int)$request->getQuery('limit', 50);
         $offset          = (int)$request->getQuery('offset', 0);
         $includeInactive = $request->getQuery('includeInactive') === 'true';
-
         if ($includeInactive) {
-            AuthMiddleware::requireAdmin();
             return $controller->getAllIncludingInactive($limit, $offset);
         }
-
         return $controller->getAll($limit, $offset);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Get warehouse by ID
     $router->get('/warehouses/:id', function (Request $request, array $params): array {
@@ -71,36 +71,32 @@ $router->group('/api/v1', function (Router $router): void {
     $router->get('/warehouses/count', function (Request $request): array {
         $controller = $GLOBALS['container']->get(WarehouseController::class);
         $includeInactive = $request->getQuery('includeInactive') === 'true';
-
         if ($includeInactive) {
-            AuthMiddleware::requireAdmin();
             return $controller->countAll();
         }
-
         return $controller->count();
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true)
+    ]);
 
     // Create warehouse
     $router->post('/warehouses', function (Request $request): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('warehouse_create', 5, 60);
-
         $controller = $GLOBALS['container']->get(WarehouseController::class);
         $body       = $request->getAllBody();
         return $controller->create($body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('warehouse_create', 5, 60)
+    ]);
 
     // Update or partial update warehouse
     $router->put('/warehouses/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('warehouse_update', 5, 60);
-
         $controller = $GLOBALS['container']->get(WarehouseController::class);
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? ($body['id'] ?? 0));
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -108,23 +104,22 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         $partial = $request->getQuery('partial') === 'true';
         return $partial
             ? $controller->partialUpdate($id, $body)
             : $controller->update($id, $body);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('warehouse_update', 5, 60)
+    ]);
 
     // Delete / hard delete warehouse
     $router->delete('/warehouses/:id', function (Request $request, array $params): array {
-        AuthMiddleware::requireAdmin();
-        CsrfMiddleware::verifyCsrf();
-        RateLimitMiddleware::check('warehouse_delete', 5, 60);
-
         $controller = $GLOBALS['container']->get(WarehouseController::class);
         $id         = (int)($params['id'] ?? 0);
         $hard       = $request->getQuery('hard') === 'true';
-
         if ($id <= 0) {
             return [
                 'success' => false,
@@ -132,7 +127,11 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-
         return $hard ? $controller->hardDelete($id) : $controller->delete($id);
-    });
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('warehouse_delete', 5, 60)
+    ]);
 });

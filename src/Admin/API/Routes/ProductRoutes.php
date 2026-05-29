@@ -57,21 +57,6 @@ $router->group('/api/v1', function (Router $router): void {
         return $productController->getTopSellers($limit);
     });
 
-    // Single product
-    $router->get('/products/:id', function (Request $request, array $params): array {
-        $productController = $GLOBALS['container']->get(ProductController::class);
-        $id         = (int)($params['id'] ?? 0);
-
-        if ($id <= 0) {
-            return [
-                'success' => false,
-                'message' => 'Product ID required',
-                'code'    => 400,
-            ];
-        }
-        return $productController->getById($id);
-    });
-
     // Search (basic)
     $router->get('/products/search', function (Request $request): array {
         $productController = $GLOBALS['container']->get(ProductController::class);
@@ -90,6 +75,31 @@ $router->group('/api/v1', function (Router $router): void {
         return $productController->searchEnriched($query, $limit, $offset);
     });
 
+    // Single product enriched (includes stock, ratings, category, supplier)
+    $router->get('/products/:id/enriched', function (Request $request, array $params): array {
+        $productController = $GLOBALS['container']->get(ProductController::class);
+        $id = (int)($params['id'] ?? 0);
+        if ($id <= 0) {
+            return ['success' => false, 'message' => 'Product ID required', 'code' => 400];
+        }
+        return $productController->getByIdEnriched($id);
+    });
+
+    // Single product (basic)
+    $router->get('/products/:id', function (Request $request, array $params): array {
+        $productController = $GLOBALS['container']->get(ProductController::class);
+        $id         = (int)($params['id'] ?? 0);
+
+        if ($id <= 0) {
+            return [
+                'success' => false,
+                'message' => 'Product ID required',
+                'code'    => 400,
+            ];
+        }
+        return $productController->getById($id);
+    });
+
     // Counts
     $router->get('/products/count', function (Request $request): array {
         $productController = $GLOBALS['container']->get(ProductController::class);
@@ -104,22 +114,22 @@ $router->group('/api/v1', function (Router $router): void {
 
     // Admin create
     $router->post('/products', function (Request $request): array {
-        $productController = $GLOBALS['container']->get(ProductController::class);
         AuthMiddleware::requireAdmin();
         CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('product_create', 5, 60);
 
+        $productController = $GLOBALS['container']->get(ProductController::class);
         $body       = $request->getAllBody();
         return $productController->create($body);
     });
 
     // Admin update
     $router->put('/products/:id', function (Request $request, array $params): array {
-        $productController = $GLOBALS['container']->get(ProductController::class);
         AuthMiddleware::requireAdmin();
         CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('product_update', 5, 60);
 
+        $productController = $GLOBALS['container']->get(ProductController::class);
         $body       = $request->getAllBody();
         $id         = (int)($params['id'] ?? ($body['id'] ?? 0));
 
@@ -136,11 +146,11 @@ $router->group('/api/v1', function (Router $router): void {
 
     // Admin delete / hard delete
     $router->delete('/products/:id', function (Request $request, array $params): array {
-        $productController = $GLOBALS['container']->get(ProductController::class);
         AuthMiddleware::requireAdmin();
         CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('product_delete', 5, 60);
 
+        $productController = $GLOBALS['container']->get(ProductController::class);
         $id         = (int)($params['id'] ?? 0);
         $hard       = $request->getQuery('hard') === 'true';
 
