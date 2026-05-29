@@ -1,6 +1,6 @@
 <?php
 $pageName = 'legal';
-$pageTitle = 'Terms of Service - Royal Liquor';
+$pageTitle = 'Terms of Service - Royal Beverages';
 require_once __DIR__ . '/components/header.php';
 ?>
 
@@ -14,7 +14,7 @@ require_once __DIR__ . '/components/header.php';
     <div class="prose prose-sm prose-black max-w-none space-y-12 text-sm leading-relaxed tracking-wide">
         <section>
             <h2 class="text-xs uppercase font-black tracking-widest mb-4">1. Acceptance of Terms</h2>
-            <p class="text-gray-600">By accessing the Royal Liquor online storefront, you confirm you are of legal drinking age in your jurisdiction and agree to be bound by these terms. Continued usage indicates absolute consent.</p>
+            <p class="text-gray-600">By accessing the Royal Beverages online storefront, you confirm you are of legal drinking age in your jurisdiction and agree to be bound by these terms. Continued usage indicates absolute consent.</p>
         </section>
 
         <section>
@@ -29,7 +29,7 @@ require_once __DIR__ . '/components/header.php';
 
         <section>
             <h2 class="text-xs uppercase font-black tracking-widest mb-4">4. Intellectual Property</h2>
-            <p class="text-gray-600">The "Royal Liquor" trademark, monochrome digital layouts, aesthetic implementations, and backend AI architecture are proprietary.</p>
+            <p class="text-gray-600">The "Royal Beverages" trademark, monochrome digital layouts, aesthetic implementations, and backend AI architecture are proprietary.</p>
         </section>
     </div>
 </div>

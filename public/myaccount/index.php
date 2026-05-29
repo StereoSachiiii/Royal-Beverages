@@ -4,7 +4,7 @@
  * Main account overview page
  */
 $pageName = 'account';
-$pageTitle = 'My Account - Royal Liquor';
+$pageTitle = 'My Account - Royal Beverages';
 require_once __DIR__ . "/_layout.php";
 ?>
 

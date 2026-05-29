@@ -1,6 +1,6 @@
 <?php
 $pageName = 'legal';
-$pageTitle = 'Returns Policy - Royal Liquor';
+$pageTitle = 'Returns Policy - Royal Beverages';
 require_once __DIR__ . '/components/header.php';
 ?>
 
@@ -14,7 +14,7 @@ require_once __DIR__ . '/components/header.php';
     <div class="prose prose-sm prose-black max-w-none space-y-12 text-sm leading-relaxed tracking-wide">
         <section>
             <h2 class="text-xs uppercase font-black tracking-widest mb-4">1. General Policy</h2>
-            <p class="text-gray-600">Due to the perishable and heavily legislated nature of alcoholic goods, Royal Liquor operates an exceptionally strict returns architecture. All direct sales are final upon digital settlement.</p>
+            <p class="text-gray-600">Due to the perishable and heavily legislated nature of alcoholic goods, Royal Beverages operates an exceptionally strict returns architecture. All direct sales are final upon digital settlement.</p>
         </section>
 
         <section>

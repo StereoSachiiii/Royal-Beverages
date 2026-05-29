@@ -1,6 +1,6 @@
 <?php
 $pageName = 'taste-profile';
-$pageTitle = 'My Taste Profile - Royal Liquor';
+$pageTitle = 'My Taste Profile - Royal Beverages';
 require_once __DIR__ . "/../components/header.php";
 ?>
 

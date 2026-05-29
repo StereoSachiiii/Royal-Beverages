@@ -4,7 +4,7 @@
  * Saved address management
  */
 $pageName = 'account';
-$pageTitle = 'Saved Addresses - Royal Liquor';
+$pageTitle = 'Saved Addresses - Royal Beverages';
 require_once __DIR__ . "/_layout.php";
 ?>
 

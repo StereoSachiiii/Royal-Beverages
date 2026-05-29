@@ -140,7 +140,7 @@ export const Overview = async () => {
                 <div class="space-y-3">
                     <h1 class="text-5xl font-heading font-black tracking-tighter text-black m-0">Dashboard</h1>
                     <div class="h-1.5 w-24 bg-black"></div>
-                    <p class="text-gray-400 text-xs uppercase tracking-[0.4em] font-medium">Royal Liquor — Business Overview</p>
+                    <p class="text-gray-400 text-xs uppercase tracking-[0.4em] font-medium">Royal Beverages — Business Overview</p>
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="px-5 py-2 border border-gray-200 text-[10px] font-medium tracking-widest uppercase text-gray-500">Live Data</div>

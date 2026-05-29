@@ -1,6 +1,6 @@
 <?php 
 $pageName = 'home';
-$pageTitle = 'Royal Liquor - Premium Spirits & Fine Wines';
+$pageTitle = 'Royal Beverages - Premium Spirits & Fine Wines';
 require_once __DIR__ . '/components/header.php';
 ?>
 <?php require_once __DIR__ . "/components/slider.php";?>

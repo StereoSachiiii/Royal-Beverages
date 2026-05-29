@@ -4,7 +4,7 @@
  * Order history archival ledger
  */
 $pageName = 'account';
-$pageTitle = 'Order History - Royal Liquor';
+$pageTitle = 'Order History - Royal Beverages';
 require_once __DIR__ . "/_layout.php";
 ?>
 
@@ -38,7 +38,7 @@ require_once __DIR__ . "/_layout.php";
         </div>
 
         <div class="p-10 border-t border-gray-100 bg-gray-50/30">
-            <p class="text-[8px] uppercase tracking-[0.4em] text-center text-gray-300 font-bold">Secure Account Area • Royal Liquor</p>
+            <p class="text-[8px] uppercase tracking-[0.4em] text-center text-gray-300 font-bold">Secure Account Area • Royal Beverages</p>
         </div>
     </section>
 </div>

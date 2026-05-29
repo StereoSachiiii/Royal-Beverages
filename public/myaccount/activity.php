@@ -4,7 +4,7 @@
  * User activity history
  */
 $pageName = 'activity';
-$pageTitle = 'My Activity - Royal Liquor';
+$pageTitle = 'My Activity - Royal Beverages';
 require_once __DIR__ . "/_layout.php";
 ?>
 

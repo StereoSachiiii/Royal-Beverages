@@ -1,5 +1,5 @@
 /**
- * Royal Liquor - UI Utilities
+ * Royal Beverages - UI Utilities
  * Reusable UI components: modals, toasts, loaders, etc.
  */
 

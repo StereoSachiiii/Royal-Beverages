@@ -1,5 +1,5 @@
 -- ============================================================================
--- ROYAL LIQUOR - SINGLE SOURCE OF TRUTH SCHEMA
+-- ROYAL BEVERAGES - SINGLE SOURCE OF TRUTH SCHEMA
 -- Generated from live system state
 -- ============================================================================
 

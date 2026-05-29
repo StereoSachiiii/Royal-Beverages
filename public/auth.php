@@ -4,7 +4,7 @@ require_once __DIR__ . '/../src/Core/bootstrap.php';
 use App\Core\Session;
 use App\Core\CSRF;
 
-$session = Session::getInstance();
+$session = \App\Core\Session::getInstance();
 
 // If already logged in, redirect to home or intended page
 if ($session->isLoggedIn()) {
@@ -20,7 +20,7 @@ $csrfToken = $session->getCsrfInstance()->getToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Identity | Royal Liquor</title>
+    <title>Identity | Royal Beverages</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,7 +63,7 @@ $csrfToken = $session->getCsrfInstance()->getToken();
             
             <div class="relative z-10">
                 <a href="index.php" class="inline-block group">
-                    <span class="text-xs font-black uppercase tracking-[0.4em] text-gold group-hover:text-white transition-colors">Royal Liquor</span>
+                    <span class="text-xs font-black uppercase tracking-[0.4em] text-gold group-hover:text-white transition-colors">Royal Beverages</span>
                     <div class="h-px w-0 group-hover:w-full bg-white transition-all duration-500"></div>
                 </a>
             </div>
@@ -90,7 +90,7 @@ $csrfToken = $session->getCsrfInstance()->getToken();
         <main class="flex flex-col items-center justify-center p-8 md:p-16 lg:p-24 bg-white relative">
             <!-- Minimal Nav for Mobile -->
             <div class="lg:hidden absolute top-8 left-8">
-                <a href="index.php" class="text-[10px] font-black uppercase tracking-widest text-black">Royal Liquor</a>
+                <a href="index.php" class="text-[10px] font-black uppercase tracking-widest text-black">Royal Beverages</a>
             </div>
 
             <div class="w-full max-w-md">

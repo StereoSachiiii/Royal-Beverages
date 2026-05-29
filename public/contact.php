@@ -1,6 +1,6 @@
 <?php 
 $pageName = 'contact';
-$pageTitle = 'Contact Us - Royal Liquor';
+$pageTitle = 'Contact Us - Royal Beverages';
 require_once __DIR__ . "/components/header.php"; 
 ?>
 
@@ -89,7 +89,7 @@ require_once __DIR__ . "/components/header.php";
                     <span class="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-6">Visit Us</span>
                     <h3 class="text-xl font-black uppercase tracking-tightest mb-4">Our Flagship Store</h3>
                     <p class="text-[10px] font-bold uppercase tracking-widest leading-loose text-gray-500 mb-6">
-                        Royal Liquor Complex<br/>
+                        Royal Beverages Complex<br/>
                         123 Galle Road, Colombo 03<br/>
                         Sri Lanka
                     </p>

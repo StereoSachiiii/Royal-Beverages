@@ -1,6 +1,6 @@
 <?php 
 $pageName = 'faq';
-$pageTitle = 'FAQ - Royal Liquor';
+$pageTitle = 'FAQ - Royal Beverages';
 require_once __DIR__ . "/components/header.php"; 
 ?>
 

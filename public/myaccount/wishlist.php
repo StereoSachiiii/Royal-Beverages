@@ -4,7 +4,7 @@
  * Saved interests gallery
  */
 $pageName = 'account';
-$pageTitle = 'Wishlist - Royal Liquor';
+$pageTitle = 'Wishlist - Royal Beverages';
 require_once __DIR__ . "/_layout.php";
 ?>
 

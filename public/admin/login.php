@@ -12,7 +12,7 @@ if ($session->isLoggedIn() && $session->isAdmin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workstation Authorization | Royal Liquor</title>
+    <title>Workstation Authorization | Royal Beverages</title>
     <link rel="stylesheet" href="assets/css/dashboard-tailwind.css">
     <style>
         body {
@@ -185,7 +185,7 @@ if ($session->isLoggedIn() && $session->isAdmin()) {
         <div class="glint"></div>
         
         <div class="auth-header">
-            <h1>Royal Liquor</h1>
+            <h1>Royal Beverages</h1>
             <p>Vault Access Protocol & Admin Workstation</p>
         </div>
 
@@ -209,7 +209,7 @@ if ($session->isLoggedIn() && $session->isAdmin()) {
         </form>
 
         <div class="mt-8 text-center">
-            <p class="text-[10px] text-[#444] uppercase tracking-widest font-bold">Secured by Royal Liquor Core v3.0</p>
+            <p class="text-[10px] text-[#444] uppercase tracking-widest font-bold">Secured by Royal Beverages Core v3.0</p>
         </div>
     </div>
 

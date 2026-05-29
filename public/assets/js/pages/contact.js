@@ -1,5 +1,5 @@
 /**
- * Royal Liquor - Premium Contact Page JavaScript
+ * Royal Beverages - Premium Contact Page JavaScript
  * Handles form validation and asynchronous simulated submission.
  */
 

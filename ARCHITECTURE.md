@@ -1,4 +1,4 @@
-# Royal Liquor — Architecture
+# Royal Beverages — Architecture
 
 No frameworks. No Laravel. No React. No jQuery. Vanilla PHP 8.2 and ES6 JavaScript.
 Built from scratch to understand how web systems  work.

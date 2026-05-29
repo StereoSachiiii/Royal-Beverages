@@ -122,7 +122,7 @@ class AIRecommendationService
         $catalogStr = json_encode($catalog);
 
         return "
-You are an expert sommelier and artificial intelligence for Royal Liquor.
+You are an expert sommelier and artificial intelligence for Royal Beverages.
 You must analyze the user's past data and recommend EXACTLY $limit products from our available catalog.
 
 User Context:

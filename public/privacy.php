@@ -1,6 +1,6 @@
 <?php
 $pageName = 'legal';
-$pageTitle = 'Privacy Policy - Royal Liquor';
+$pageTitle = 'Privacy Policy - Royal Beverages';
 require_once __DIR__ . '/components/header.php';
 ?>
 
@@ -14,7 +14,7 @@ require_once __DIR__ . '/components/header.php';
     <div class="prose prose-sm prose-black max-w-none space-y-12 text-sm leading-relaxed tracking-wide">
         <section>
             <h2 class="text-xs uppercase font-black tracking-widest mb-4">1. Collection of Data</h2>
-            <p class="text-gray-600">Royal Liquor ("we", "us", "our") respects your privacy. We collect personal data when you interact with our Services, place an order, or subscribe to our newsletter. This data includes names, emails, shipping addresses, and purchase histories.</p>
+            <p class="text-gray-600">Royal Beverages ("we", "us", "our") respects your privacy. We collect personal data when you interact with our Services, place an order, or subscribe to our newsletter. This data includes names, emails, shipping addresses, and purchase histories.</p>
         </section>
 
         <section>

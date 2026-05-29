@@ -30,7 +30,7 @@ if (file_exists($envFile)) {
 
 return [
     'app' => [
-        'name' => 'Royal Liquor API',
+        'name' => 'Royal Beverages API',
         'env' => $_ENV['APP_ENV'] ?? 'development',
         'debug' => filter_var($_ENV['APP_DEBUG'] ?? true, FILTER_VALIDATE_BOOLEAN),
         'timezone' => 'Asia/Colombo',

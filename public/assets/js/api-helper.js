@@ -1,5 +1,5 @@
 /**
- * Royal Liquor - Centralized API Helper
+ * Royal Beverages - Centralized API Helper
  * All public frontend API calls should use this module
  */
 
