@@ -1,6 +1,6 @@
 <?php
 $pageName = 'shop';
-$pageTitle = 'Search Results - Royal Liquor';
+$pageTitle = 'Search Results - Royal Beverages';
 require_once __DIR__ . "/components/header.php";
 
 $query = isset($_GET['q']) ? htmlspecialchars(trim($_GET['q'])) : '';
@@ -314,7 +314,7 @@ const renderResults = () => {
             <div class="result-card-info">
                 <div class="result-card-category">${p.category_name || 'Spirits'}</div>
                 <div class="result-card-name">${highlightQuery(p.name)}</div>
-                <div class="result-card-price">$${(p.price_cents / 100).toFixed(2)}</div>
+                <div class="result-card-price">Rs. ${(p.price_cents / 100).toFixed(2)}</div>
             </div>
         </a>
     `).join('');

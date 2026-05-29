@@ -38,3 +38,5 @@ temp/
 # Already ignored
 config/constants.php
 ideas
+.phpunit.cache/
+scratch/

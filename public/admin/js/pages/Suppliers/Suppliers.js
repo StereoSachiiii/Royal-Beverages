@@ -1,19 +1,13 @@
 /**
  * Suppliers.js — Modernized Suppliers domain module.
- * Rows rendered as inline HTML strings for correct table parsing.
+ * Uses EntityBuilder to eliminate boilerplate.
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatDate, debounce, openStandardModal, closeModal, getTemplate, getFormData } from '../../utils.js';
+import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import { createEntityModule } from '../../components/EntityBuilder.js';
 
-const DEFAULT_LIMIT = 20;
-let _offset = 0;
-let _query  = '';
-let _lastResults = [];
-
-// ─── API ─────────────────────────────────────────────────────────────────────
-
-async function fetchSuppliers(limit = DEFAULT_LIMIT, offset = 0, query = '') {
+async function fetchSuppliers(limit = 20, offset = 0, query = '') {
     try {
         const url = API_ROUTES.SUPPLIERS.LIST + buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
         const res = await apiRequest(url);
@@ -42,28 +36,30 @@ function renderRow(sup) {
         : `<span class="badge badge-inactive">Inactive</span>`;
     const created = sup.created_at ? formatDate(sup.created_at) : '—';
 
-    return `<tr class="tr">
-        <td class="td" style="color:#94a3b8;font-size:11px;font-family:monospace;">#${escapeHtml(String(sup.id))}</td>
-        <td class="td">
+    return `<tr class="tr group hover:bg-gray-50/50 transition-colors">
+        <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(sup.id))}</td>
+        <td class="px-6 py-4">
             <div style="font-weight:600;color:#0f172a;font-size:13px;">${escapeHtml(sup.name || '—')}</div>
         </td>
-        <td class="td" style="font-size:12px;color:#475569;">${escapeHtml(sup.email || '—')}</td>
-        <td class="td" style="font-size:12px;color:#475569;white-space:nowrap;">${escapeHtml(sup.phone || '—')}</td>
-        <td class="td" style="font-size:11px;color:#64748b;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(sup.address || '—')}</td>
-        <td class="td">${statusBadge}</td>
-        <td class="td" style="font-size:11px;color:#64748b;white-space:nowrap;">${created}</td>
-        <td class="td" style="white-space:nowrap;">
-            <div style="display:flex;gap:6px;align-items:center;">
-                <button class="btn btn-outline btn-sm js-view" data-id="${sup.id}" title="View" style="padding:4px 10px;font-size:12px;">👁 View</button>
-                <button class="btn btn-primary btn-sm js-edit" data-id="${sup.id}" title="Edit" style="padding:4px 10px;font-size:12px;">✏️ Edit</button>
-                <button class="btn btn-outline btn-sm js-delete" data-id="${sup.id}" title="Delete" style="padding:4px 8px;font-size:12px;color:var(--danger);border-color:var(--danger);">🗑</button>
+        <td class="px-6 py-4" style="font-size:12px;color:#475569;">${escapeHtml(sup.email || '—')}</td>
+        <td class="px-6 py-4" style="font-size:12px;color:#475569;white-space:nowrap;">${escapeHtml(sup.phone || '—')}</td>
+        <td class="px-6 py-4" style="font-size:11px;color:#64748b;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(sup.address || '—')}</td>
+        <td class="px-6 py-4">${statusBadge}</td>
+        <td class="px-6 py-4" style="font-size:11px;color:#64748b;white-space:nowrap;">${created}</td>
+        <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end gap-2">
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 text-black hover:bg-black hover:text-white transition-all js-view" data-id="${sup.id}" title="View details">
+                    <span class="text-[10px]">👁️</span>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 text-black hover:bg-black hover:text-white transition-all js-edit" data-id="${sup.id}" title="Edit supplier">
+                    <span class="text-[10px]">✏️</span>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all js-delete" data-id="${sup.id}" title="Delete supplier">
+                    <span class="text-[10px]">🗑️</span>
+                </button>
             </div>
         </td>
     </tr>`;
-}
-
-function emptyRow(msg) {
-    return `<tr class="tr"><td colspan="8" class="td text-center" style="padding:48px;color:#94a3b8;">${escapeHtml(msg)}</td></tr>`;
 }
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
@@ -168,8 +164,7 @@ async function renderFormModal(supplierId = null) {
         if (footer) {
             const del = document.createElement('button');
             del.type = 'button';
-            del.className = 'btn btn-outline text-danger mr-auto';
-            del.id = 'sup-delete-btn';
+            del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
             del.dataset.id = supplierId;
             del.innerHTML = '🗑️ Delete';
             footer.prepend(del);
@@ -178,34 +173,33 @@ async function renderFormModal(supplierId = null) {
     return frag;
 }
 
-// ─── Form Handlers ────────────────────────────────────────────────────────────
+// ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
-function initFormHandlers(modalRoot, supplierId, onSuccess) {
-    const isEdit = supplierId !== null;
-    const form   = modalRoot.querySelector('#sup-form');
-    const cancel = modalRoot.querySelector('#sup-cancel');
-    const delBtn = modalRoot.querySelector('#sup-delete-btn');
-
+function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
+    const isEdit = id !== null;
+    const form = modalRoot.querySelector('#sup-form');
     if (!form) return;
-    if (cancel) cancel.addEventListener('click', () => closeModal());
 
+    const cancel = modalRoot.querySelector('#sup-cancel');
+    if (cancel) cancel.addEventListener('click', closeModalFn);
+
+    const delBtn = modalRoot.querySelector('.js-delete-btn');
     if (delBtn) {
         delBtn.addEventListener('click', async () => {
             if (!delBtn.dataset.confirmed) {
                 delBtn.dataset.confirmed = '1';
                 delBtn.innerHTML = '⚠️ Confirm Delete?';
                 delBtn.classList.add('btn-warning');
-                setTimeout(() => { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete'; delBtn.classList.remove('btn-warning'); }, 3000);
+                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete'; delBtn.classList.remove('btn-warning'); }}, 3000);
                 return;
             }
             delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
             try {
-                await apiRequest(API_ROUTES.SUPPLIERS.DELETE(supplierId), { method: 'DELETE' });
-                closeModal(); onSuccess?.(null, 'deleted');
+                await apiRequest(API_ROUTES.SUPPLIERS.DELETE(id), { method: 'DELETE' });
+                closeModalFn(); onSuccess?.(null, 'deleted');
             } catch (err) {
-                showFormError(form, err.message);
+                showFormErrorFn(form, err.message);
                 delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete';
-                delete delBtn.dataset.confirmed;
             }
         });
     }
@@ -213,185 +207,58 @@ function initFormHandlers(modalRoot, supplierId, onSuccess) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const submit = form.querySelector('[type="submit"]');
-        const orig   = submit.innerHTML;
+        const orig = submit.innerHTML;
         submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
         try {
-            const data    = getFormData(form);
-            const payload = { name: data.name, email: data.email || null, phone: data.phone || null, address: data.address || null, is_active: data.is_active !== undefined };
-            const url     = isEdit ? API_ROUTES.SUPPLIERS.UPDATE(supplierId) : API_ROUTES.SUPPLIERS.CREATE;
-            const res     = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            if (!res.success) throw new Error(res.message || 'Request failed');
-            closeModal(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+            const formData = new FormData(form);
+            const payload = { 
+                name: formData.get('name'), 
+                email: formData.get('email') || null, 
+                phone: formData.get('phone') || null, 
+                address: formData.get('address') || null, 
+                is_active: formData.get('is_active') !== null 
+            };
+            const url = isEdit ? API_ROUTES.SUPPLIERS.UPDATE(id) : API_ROUTES.SUPPLIERS.CREATE;
+            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+            if (!res.success) throw new Error(res.message);
+            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
         } catch (err) {
-            showFormError(form, err.message);
+            showFormErrorFn(form, err.message);
             submit.disabled = false; submit.innerHTML = orig;
         }
     });
 }
 
-function showFormError(form, msg) {
-    let el = form.querySelector('.form-error-banner');
-    if (!el) { el = Object.assign(document.createElement('div'), { className: 'form-error-banner' }); form.prepend(el); }
-    el.textContent = `Error: ${msg}`; el.style.display = 'block';
-}
+// ─── Entity Builder ───────────────────────────────────────────────────────────
 
-// ─── Reload / Redraw ──────────────────────────────────────────────────────────
+const { Render: Suppliers, Init: initSuppliers } = createEntityModule({
+    entityName: 'Suppliers',
+    entitySubtitle: 'Manage supplier information and contacts',
+    apiRoutes: {
+        list: API_ROUTES.SUPPLIERS.LIST,
+        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('suppliers', id),
+        create: API_ROUTES.SUPPLIERS.CREATE,
+        update: (id) => API_ROUTES.SUPPLIERS.UPDATE(id),
+        delete: (id) => API_ROUTES.SUPPLIERS.DELETE(id)
+    },
+    fetchList: fetchSuppliers,
+    fetchSingle: fetchSupplier,
+    tableHeaderHtml: `<tr class="tr">
+        <th class="th" style="width:50px;">ID</th>
+        <th class="th" style="min-width:160px;">Supplier</th>
+        <th class="th">Email</th>
+        <th class="th" style="width:130px;">Phone</th>
+        <th class="th" style="min-width:180px;">Address</th>
+        <th class="th" style="width:80px;">Status</th>
+        <th class="th" style="width:130px;">Created</th>
+        <th class="th" style="width:180px;">Actions</th>
+    </tr>`,
+    renderRow,
+    renderViewModal,
+    renderFormModal,
+    initFormHandlersOverride,
+    searchPlaceholder: 'Search name, email…',
+    createBtnText: '➕ New Supplier'
+});
 
-async function reloadSuppliers(container) {
-    const html = await Suppliers();
-    container.innerHTML = html;
-    await initSuppliers(container);
-}
-
-function redrawTable(container, list) {
-    container.querySelector('#entity-tbody').innerHTML =
-        list.length ? list.map(renderRow).join('') : emptyRow('No suppliers found.');
-    const lmc = container.querySelector('#entity-load-more-container');
-    if (list.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load More</button>`;
-    } else { lmc.style.display = 'none'; lmc.innerHTML = ''; }
-}
-
-// ─── Main View ────────────────────────────────────────────────────────────────
-
-const THEAD = `<tr class="tr">
-    <th class="th" style="width:50px;">ID</th>
-    <th class="th" style="min-width:160px;">Supplier</th>
-    <th class="th">Email</th>
-    <th class="th" style="width:130px;">Phone</th>
-    <th class="th" style="min-width:180px;">Address</th>
-    <th class="th" style="width:80px;">Status</th>
-    <th class="th" style="width:130px;">Created</th>
-    <th class="th" style="width:180px;">Actions</th>
-</tr>`;
-
-export async function Suppliers() {
-    _offset = 0;
-    const data = await fetchSuppliers(DEFAULT_LIMIT, 0, _query);
-    _lastResults = Array.isArray(data) ? data : [];
-    const rows = _lastResults.length ? _lastResults.map(renderRow).join('') : emptyRow('No suppliers found.');
-
-    const frag = getTemplate('tpl-admin-entity', {
-        'entity-title':    'Suppliers',
-        'entity-subtitle': `${_lastResults.length} supplier${_lastResults.length === 1 ? '' : 's'} found`,
-    });
-
-    frag.querySelector('#entity-search').placeholder = 'Search name, email…';
-    frag.querySelector('#entity-search').value = _query;
-    frag.querySelector('#entity-sort').style.display = 'none';
-    frag.querySelector('#entity-create-btn').innerHTML = '➕ New Supplier';
-    frag.querySelector('#entity-thead').innerHTML = THEAD;
-    frag.querySelector('#entity-tbody').innerHTML = rows;
-
-    const lmc = frag.querySelector('#entity-load-more-container');
-    if (_lastResults.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load More</button>`;
-    }
-
-    return frag.firstElementChild.outerHTML;
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-
-export function initSuppliers(container) {
-    if (!container) return null;
-    const ac = new AbortController();
-    const signal = ac.signal;
-
-    const debouncedSearch = debounce(async (e) => {
-        _query = e.target.value.trim(); _offset = 0;
-        const data = await fetchSuppliers(DEFAULT_LIMIT, 0, _query);
-        _lastResults = Array.isArray(data) ? data : [];
-        redrawTable(container, _lastResults);
-    }, 300);
-
-    container.addEventListener('input', (e) => { if (e.target.id === 'entity-search') debouncedSearch(e); }, { signal });
-
-    // View
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-view');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        try {
-            const sup = await fetchSupplier(btn.dataset.id);
-            openStandardModal({ title: `${escapeHtml(sup.name)} — Details`, bodyHtml: renderViewModal(sup), size: 'xl' });
-            const overlay = document.querySelector('.modal-overlay:last-child');
-            overlay?.addEventListener('click', async (me) => {
-                const editBtn = me.target.closest('.js-edit');
-                if (editBtn) {
-                    closeModal();
-                    setTimeout(async () => {
-                        const frag = await renderFormModal(parseInt(editBtn.dataset.id));
-                        openStandardModal({ title: 'Edit Supplier', bodyHtml: frag.firstElementChild.outerHTML, size: 'lg' });
-                        initFormHandlers(document.querySelector('.modal-overlay:last-child'), parseInt(editBtn.dataset.id), () => reloadSuppliers(container));
-                    }, 200);
-                }
-            });
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Edit (direct)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-edit');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        const id = parseInt(btn.dataset.id);
-        try {
-            const frag = await renderFormModal(id);
-            openStandardModal({ title: 'Edit Supplier', bodyHtml: frag.firstElementChild.outerHTML, size: 'lg' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), id, () => reloadSuppliers(container));
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Delete (inline)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-delete');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        if (!btn.dataset.confirmed) {
-            btn.dataset.confirmed = '1'; btn.innerHTML = '⚠️'; btn.style.background = '#fef9c3';
-            setTimeout(() => { if (btn.isConnected) { delete btn.dataset.confirmed; btn.innerHTML = '🗑'; btn.style.background = ''; }}, 3000);
-            return;
-        }
-        btn.disabled = true; btn.innerHTML = '…';
-        try {
-            await apiRequest(API_ROUTES.SUPPLIERS.DELETE(id), { method: 'DELETE' });
-            reloadSuppliers(container);
-        } catch (err) { btn.disabled = false; btn.innerHTML = '🗑'; alert('Delete failed: ' + err.message); }
-    }, { signal });
-
-    // Create
-    container.addEventListener('click', async (e) => {
-        if (!e.target.closest('#entity-create-btn')) return;
-        const frag = await renderFormModal(null);
-        openStandardModal({ title: 'Create Supplier', bodyHtml: frag.firstElementChild.outerHTML, size: 'lg' });
-        initFormHandlers(document.querySelector('.modal-overlay:last-child'), null, () => reloadSuppliers(container));
-    }, { signal });
-
-    // Load More
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-load-more-btn') return;
-        const btn = e.target; btn.disabled = true; btn.textContent = 'Loading…';
-        _offset += DEFAULT_LIMIT;
-        const data = await fetchSuppliers(DEFAULT_LIMIT, _offset, _query);
-        const list = Array.isArray(data) ? data : [];
-        if (!list.length) { btn.closest('#entity-load-more-container').style.display = 'none'; return; }
-        _lastResults = [..._lastResults, ...list];
-        container.querySelector('#entity-tbody').insertAdjacentHTML('beforeend', list.map(renderRow).join(''));
-        if (list.length < DEFAULT_LIMIT) { btn.closest('#entity-load-more-container').style.display = 'none'; }
-        else { btn.disabled = false; btn.textContent = 'Load More'; }
-    }, { signal });
-
-    // Refresh
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-refresh-btn') return;
-        e.target.innerHTML = '⌛'; e.target.disabled = true;
-        await reloadSuppliers(container);
-    }, { signal });
-
-    return { cleanup: () => ac.abort() };
-}
+export { Suppliers, initSuppliers };

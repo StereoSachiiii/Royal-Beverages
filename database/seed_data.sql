@@ -5,7 +5,7 @@ INSERT INTO categories (name, slug, description, image_url) VALUES
 ('Vodka', 'vodka', 'Pure, distilled spirits for cocktails and neat drinking.', 'vodka.jpg'),
 ('Rum', 'rum', 'Tropical and dark aged rums.', 'rum.jpg'),
 ('Wine', 'wine', 'Fine red, white and sparkling wines.', 'wine.jpg'),
-('Gin', 'gin', 'Botanical-infused spirits.', 'placeholder-spirit.png')
+('Gin', 'gin', 'Botanical-infused spirits.', 'gin.png')
 ON CONFLICT (slug) DO NOTHING;
 
 -- Default Suppliers
@@ -68,12 +68,13 @@ INSERT INTO stock (product_id, warehouse_id, quantity, reserved) VALUES
 (20, 1, 35, 0)
 ON CONFLICT (product_id, warehouse_id) DO NOTHING;
 
--- Default Admin User (Password: Admin123!)
+-- Default Admin User (Password: password)
+-- Hash generated with: password_hash('password', PASSWORD_BCRYPT)
 INSERT INTO users (name, email, password_hash, is_admin) VALUES
 ('System Admin', 'admin@royal-liquor.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE)
 ON CONFLICT (email) DO NOTHING;
 
--- Regular Users
+-- Regular Users (Password: password)
 INSERT INTO users (name, email, password_hash, is_admin) VALUES
 ('Jane Doe', 'jane@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE),
 ('John Smith', 'john@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE)

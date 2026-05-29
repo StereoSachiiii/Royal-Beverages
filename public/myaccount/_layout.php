@@ -2,7 +2,7 @@
 require_once dirname(dirname(__DIR__)) . "/src/Core/bootstrap.php";
 require_once dirname(__DIR__) . "/config/urls.php";
 
-$session = Session::getInstance();
+$session = \App\Core\Session::getInstance();
 $username = $session->getUsername() ?? 'Guest';
 $userEmail = $_SESSION['user_email'] ?? 'test@example.com'; 
 $currentPage = basename($_SERVER['SCRIPT_NAME'], '.php');
@@ -14,7 +14,7 @@ require_once dirname(__DIR__) . "/components/header.php";
 <div class="min-h-screen bg-[#fafafa]">
     <!-- Breadcrumb -->
     <div class="px-8 md:px-16 pt-12 pb-6">
-        <nav class="flex items-center gap-4 text-[10px] uppercase font-black tracking-[0.3em] text-gray-400">
+        <nav class="flex items-center gap-4 text-sm uppercase font-black tracking-[0.3em] text-gray-400">
             <span class="text-black italic">Your Account</span>
         </nav>
     </div>

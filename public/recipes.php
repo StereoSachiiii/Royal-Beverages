@@ -1,28 +1,23 @@
 <?php
 $pageName = 'recipes';
-$pageTitle = 'Cocktail Recipes - Royal Liquor';
+$pageTitle = 'Cocktail Recipes - Royal Beverages';
 require_once __DIR__ . "/components/header.php";
 ?>
 
 <main class="min-h-screen bg-white">
-    <!-- Breadcrumb & Header -->
-    <div class="px-8 md:px-16 pt-12 pb-8 text-center flex flex-col items-center">
-        <nav class="flex items-center justify-center gap-4 text-[10px] uppercase tracking-[0.3em] font-black text-gray-400 mb-12">
-            <a href="<?= BASE_URL ?>" class="hover:text-black transition-colors">Home</a>
-            <span class="text-gray-200">/</span>
-            <span class="text-black italic">The Vintages</span>
-        </nav>
-        
-        <div class="max-w-4xl mx-auto space-y-8 pb-12">
-            <div>
-                <span class="text-xs uppercase tracking-[0.4em] text-black font-extrabold mb-4 block italic">The Art of the Cocktail</span>
-                <h1 class="text-4xl md:text-6xl font-heading font-extrabold uppercase tracking-widest text-black leading-none">Cocktail <br>Vintages</h1>
-            </div>
-            <p class="text-gray-400 text-base max-w-2xl mx-auto italic font-light leading-relaxed">
-                Discover meticulously curated recipes crafted by our master distillers and guest mixologists.
-            </p>
-        </div>
-    </div>
+    <!-- Animated Hero Section -->
+    <?php
+    $heroTitle = 'Cocktail <br>Vintages';
+    $heroSubtitle = 'The Art of the Cocktail';
+    $heroDescription = 'Discover meticulously curated recipes crafted by our master distillers and guest mixologists.';
+    $heroId = 'recipesHero';
+    $heroOffset = '-17.5%';
+    $heroBreadcrumbs = [
+        ['url' => BASE_URL, 'label' => 'Home'],
+        ['url' => '', 'label' => 'The Vintages']
+    ];
+    require_once __DIR__ . '/components/animated-hero.php';
+    ?>
 
     <div class="px-8 md:px-16 pb-32">
         <div class="flex flex-col lg:flex-row gap-16">

@@ -13,7 +13,7 @@
                     Curated By AI
                 </span>
                 <h2 class="text-4xl lg:text-5xl font-heading tracking-widest uppercase mb-4">For You</h2>
-                <p class="text-xs uppercase tracking-[0.2em] text-gray-400 font-bold max-w-xl">Personalized selections mapped to your palate topology</p>
+                <p class="text-xs uppercase tracking-[0.2em] text-gray-400 font-bold max-w-xl">Handpicked selections tailored to your personal taste</p>
             </div>
             <a href="<?= PAGE_URLS['shop'] ?? '/shop.php' ?>" class="hidden md:inline-flex border border-black px-8 py-3 text-[10px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase font-black tracking-widest hover:bg-black hover:text-white hover:shadow-none transition-all items-center gap-2">
                 All Curations <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -71,7 +71,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     : `<span class="bg-gray-100 text-gray-500 text-[8px] font-black uppercase tracking-widest px-3 py-1">Depleted</span>`;
 
                 const price = `Rs. ${(product.price_cents / 100).toFixed(2)}`;
-                const image = product.image_url ? `<?= ASSET_URL ?>images/products/${product.image_url}` : `<?= ASSET_URL ?>images/placeholder.png`;
+                const imageFilename = product.image_url ? product.image_url.split('/').pop() : 'placeholder-product.png';
+                const image = `<?= BASE_URL ?>assets/images/${imageFilename}`;
 
                 return `
                 <a href="<?= BASE_URL ?>product.php?slug=${product.slug}" class="group w-[280px] lg:w-full bg-white border border-gray-100 p-8 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black">

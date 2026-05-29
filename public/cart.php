@@ -1,26 +1,22 @@
 <?php 
 $pageName = 'cart';
-$pageTitle = 'Your Choices - Royal Liquor';
+$pageTitle = 'Your Choices - Royal Beverages';
 require_once __DIR__.'/components/header.php'; 
 ?>
 
 <main class="min-h-screen bg-white pb-32">
-    <!-- Breadcrumb -->
-    <div class="px-8 md:px-16 pt-12 pb-6 flex justify-center">
-        <nav class="flex items-center gap-4 text-[10px] uppercase font-black tracking-[0.3em] text-gray-400 text-center">
-            <a href="<?= BASE_URL ?>" class="hover:text-gold transition-colors">Home</a>
-            <span>/</span>
-            <span class="text-black italic">Your Cart</span>
-        </nav>
-    </div>
-
-    <!-- Cinematic Header -->
-    <header class="px-8 md:px-16 py-20 border-b border-gray-100 mb-20 text-center">
-        <div class="max-w-[1440px] mx-auto">
-            <span class="text-xs uppercase tracking-[0.4em] text-gold font-extrabold mb-4 block italic">Selection</span>
-            <h1 class="text-4xl md:text-6xl font-heading font-extrabold uppercase tracking-tight text-black leading-none">Your <br>Cart</h1>
-        </div>
-    </header>
+    <?php
+    $heroTitle = 'Your <br class="hidden md:block">Cart';
+    $heroSubtitle = 'Selection';
+    $heroDescription = '';
+    $heroId = 'cartHero';
+    $heroOffset = '-17.5%';
+    $heroBreadcrumbs = [
+        ['url' => BASE_URL, 'label' => 'Home'],
+        ['url' => '', 'label' => 'Your Cart']
+    ];
+    require_once __DIR__ . '/components/animated-hero.php';
+    ?>
 
     <div class="px-8 md:px-16">
         <div class="max-w-[1440px] mx-auto lg:grid lg:grid-cols-3 gap-24">
@@ -116,8 +112,8 @@ const renderCartItem = (item) => {
                     </div>
                     
                     <div class="text-right">
-                        <span class="block text-[9px] uppercase tracking-widest text-gray-400 font-black mb-1 italic">$${unitPrice} / UNIT</span>
-                        <span class="text-3xl font-black tracking-tighter text-black">$${itemSubtotal}</span>
+                        <span class="block text-[9px] uppercase tracking-widest text-gray-400 font-black mb-1 italic">Rs. ${unitPrice} / UNIT</span>
+                        <span class="text-3xl font-black tracking-tighter text-black">Rs. ${itemSubtotal}</span>
                     </div>
                 </div>
             </div>
@@ -135,15 +131,15 @@ const renderCart = () => {
                 <h2 class="text-xl font-bold uppercase tracking-widest mb-8">Your cart is currently empty</h2>
                 <a href="shop.php" class="btn-premium px-16 h-16 flex items-center gap-4">Enter The Shop</a>
             </div>`;
-        cartSubtotalElement.textContent = '$0.00';
-        cartTotalElement.textContent = '$0.00';
+        cartSubtotalElement.textContent = 'Rs. 0.00';
+        cartTotalElement.textContent = 'Rs. 0.00';
         return;
     }
     
     const subtotal = (cart.getTotal() / 100).toFixed(2);
     cartItemsList.innerHTML = items.map(item => renderCartItem(item)).join('');
-    cartSubtotalElement.textContent = `$${subtotal}`;
-    cartTotalElement.textContent = `$${subtotal}`;
+    cartSubtotalElement.textContent = `Rs. ${subtotal}`;
+    cartTotalElement.textContent = `Rs. ${subtotal}`;
 
     // Add event listeners for removal and quantity
     document.querySelectorAll('.remove-item').forEach(btn => {

@@ -262,4 +262,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initializations
     initStars();
     loadRecentFeedback();
+
+    // Auto-scroll to reviews right as the hero section transitions to the left (1000ms after load)
+    setTimeout(() => {
+        const reviewsColumn = document.getElementById('reviewsColumn');
+        if (reviewsColumn) {
+            reviewsColumn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 1000);
 });

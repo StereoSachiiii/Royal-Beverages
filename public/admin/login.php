@@ -6,269 +6,219 @@ if ($session->isLoggedIn() && $session->isAdmin()) {
     header("Location: index.php");
     exit;
 }
+
+$csrfToken = $session->getCsrfInstance()->getToken();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workstation Authorization | Royal Beverages</title>
-    <link rel="stylesheet" href="assets/css/dashboard-tailwind.css">
+    <title>Admin Sign In | Royal Beverages</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..1000;1,14..32,100..1000&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background: #0a0a0c;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            font-family: 'Inter', system-ui, sans-serif;
-            color: white;
+        :root {
+            --gold: #D4AF37;
+            --gold-hover: #C49B28;
         }
-
-        .login-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(rgba(10, 10, 12, 0.85), rgba(10, 10, 12, 0.95)), 
-                        url('assets/img/auth-bg.png');
-            background-size: cover;
-            background-position: center;
-            filter: grayscale(20%);
+        .text-gold { color: var(--gold); }
+        .bg-gold { background-color: var(--gold); }
+        .hover\:text-gold:hover { color: var(--gold); }
+        .hover\:bg-gold:hover { background-color: var(--gold); }
+        .border-gold { border-color: var(--gold); }
+        .focus\:border-gold:focus { border-color: var(--gold); }
+        .ring-gold\/20 { --tw-ring-color: rgba(212, 175, 55, 0.2); }
+        .bg-gold\/5 { background-color: rgba(212, 175, 55, 0.05); }
+        .border-gold\/20 { border-color: rgba(212, 175, 55, 0.2); }
+        .selection\:bg-gold *::selection { background-color: var(--gold); }
+        .selection\:bg-gold ::selection { background-color: var(--gold); }
+        .auth-transition {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .auth-card {
-            width: 100%;
-            max-width: 420px;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .glint {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        }
-
-        .auth-header h1 {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .auth-header p {
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 32px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .auth-input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: white;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        .auth-input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
-        }
-
-        .btn-auth {
-            width: 100%;
-            background: white;
-            color: black;
-            font-weight: 700;
-            padding: 14px;
-            border-radius: 12px;
-            margin-top: 12px;
-            transition: all 0.2s ease;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-auth:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-auth:active {
-            transform: translateY(0);
-        }
-
-        .btn-auth:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 13px;
-            margin-bottom: 20px;
-            display: none;
-            animation: shake 0.4s ease;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(0,0,0,0.1);
-            border-top-color: black;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .bg-noise {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
         }
     </style>
 </head>
-<body>
-    <div class="login-bg"></div>
+<body class="h-full font-sans antialiased text-slate-900 bg-white selection:bg-gold selection:text-white">
 
-    <div class="auth-card">
-        <div class="glint"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
         
-        <div class="auth-header">
-            <h1>Royal Beverages</h1>
-            <p>Vault Access Protocol & Admin Workstation</p>
-        </div>
-
-        <div id="error-banner" class="error-message"></div>
-
-        <form id="login-form">
-            <div class="form-group">
-                <label class="form-label">Identifier (Email)</label>
-                <input type="email" id="email" class="auth-input" placeholder="admin@royal-liquor.com" required autocomplete="email">
+        <!-- Branding Panel (Left) - Hidden on mobile -->
+        <section class="hidden lg:flex flex-col justify-between p-16 bg-black text-white relative overflow-hidden">
+            <!-- Background Decorations -->
+            <div class="absolute inset-0 bg-noise pointer-events-none"></div>
+            <div class="absolute top-[-20%] right-[-10%] w-[80%] h-[80%] bg-gold/10 blur-[120px] rounded-full pointer-events-none"></div>
+            
+            <div class="relative z-10">
+                <a href="../index.php" class="inline-block group">
+                    <span class="text-xs font-black uppercase tracking-[0.4em] text-gold group-hover:text-white transition-colors">Royal Beverages</span>
+                    <div class="h-px w-0 group-hover:w-full bg-white transition-all duration-500"></div>
+                </a>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Authorization Key (Password)</label>
-                <input type="password" id="password" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
+            <div class="relative z-10 max-w-lg">
+                <label class="text-[10px] uppercase font-black tracking-[0.4em] text-gold mb-4 block italic auth-transition">Admin Access</label>
+                <h1 class="text-6xl font-black uppercase tracking-tighter leading-[0.9] mb-8 auth-transition">Manage the <br>Platform.</h1>
+                <p class="text-gray-400 text-sm leading-relaxed max-w-sm font-medium auth-transition">
+                    Access the admin dashboard to manage inventory, orders, users, and platform operations.
+                </p>
+                <div class="mt-12 h-[2px] w-24 bg-gold"></div>
             </div>
 
-            <button type="submit" id="submit-btn" class="btn-auth">
-                <span>Unlock Workstation</span>
-                <div class="spinner" id="spinner"></div>
-            </button>
-        </form>
+            <div class="relative z-10 flex justify-between items-center border-t border-white/10 pt-8">
+                <span class="text-[9px] uppercase font-bold tracking-widest text-gray-500 italic">Royal Core v3.0</span>
+                <div class="flex gap-4">
+                    <div class="w-2 h-2 rounded-full bg-gold"></div>
+                    <div class="w-2 h-2 rounded-full bg-white/10"></div>
+                </div>
+            </div>
+        </section>
 
-        <div class="mt-8 text-center">
-            <p class="text-[10px] text-[#444] uppercase tracking-widest font-bold">Secured by Royal Beverages Core v3.0</p>
-        </div>
+        <!-- Form Panel (Right) -->
+        <main class="flex flex-col items-center justify-center p-8 md:p-16 lg:p-24 bg-white relative">
+            <!-- Minimal Nav for Mobile -->
+            <div class="lg:hidden absolute top-8 left-8">
+                <a href="../index.php" class="text-[10px] font-black uppercase tracking-widest text-black">Royal Beverages</a>
+            </div>
+
+            <div class="w-full max-w-md">
+                
+                <!-- Login Module -->
+                <div id="loginContainer">
+                    <header class="mb-10">
+                        <h2 class="text-4xl font-black uppercase tracking-tight text-black leading-none mb-4">Admin Sign In</h2>
+                        <p class="text-sm text-gray-500 font-medium">Access the administrative dashboard.</p>
+                    </header>
+                    
+                    <div id="loginMessage" class="mb-8 p-4 text-[10px] uppercase font-black tracking-widest hidden border border-red-200 bg-red-50 text-red-600"></div>
+
+                    <form id="loginForm" class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400">Email Address</label>
+                            <input type="email" name="email" required autocomplete="email" 
+                                class="w-full h-14 bg-gray-50 border border-gray-300 px-6 text-sm font-bold focus:bg-white focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition-all rounded-none placeholder:text-gray-300"
+                                placeholder="your@email.com">
+                            <span class="error text-[9px] text-red-500 font-bold uppercase tracking-widest block mt-1" id="loginEmail-error"></span>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400">Password</label>
+                            <input type="password" name="password" required autocomplete="current-password" 
+                                class="w-full h-14 bg-gray-50 border border-gray-300 px-6 text-sm font-bold focus:bg-white focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition-all rounded-none">
+                            <span class="error text-[9px] text-red-500 font-bold uppercase tracking-widest block mt-1" id="loginPassword-error"></span>
+                        </div>
+
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                        <input type="hidden" name="action" value="login">
+                        
+                        <button type="submit" class="w-full h-16 bg-black text-white text-[10px] uppercase font-black tracking-[0.2em] hover:bg-gold transition-all duration-500 shadow-xl active:scale-[0.98] mt-4">
+                            Sign In to Dashboard
+                        </button>
+
+                        <!-- OAuth Button -->
+                        <button type="button" id="googleOAuthBtn" class="w-full h-16 bg-gray-100 border-2 border-gray-300 text-black text-[10px] uppercase font-black tracking-[0.2em] hover:bg-gray-200 hover:border-gray-400 transition-all duration-500 shadow-md active:scale-[0.98] flex items-center justify-center gap-3">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Sign In with Google
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="absolute bottom-8 text-center md:text-left text-gray-300 select-none">
+                <p class="text-[8px] uppercase font-black tracking-[0.5em] leading-loose">
+                    Admin Access Required <br class="md:hidden"> Secured & Monitored
+                </p>
+            </div>
+        </main>
     </div>
 
-    <script>
-        const form = document.getElementById('login-form');
-        const submitBtn = document.getElementById('submit-btn');
-        const spinner = document.getElementById('spinner');
-        const errorBanner = document.getElementById('error-banner');
+    <script type="module">
+        const loginForm = document.getElementById('loginForm');
+        const googleOAuthBtn = document.getElementById('googleOAuthBtn');
+        const loginMessage = document.getElementById('loginMessage');
 
-        form.addEventListener('submit', async (e) => {
+        // Regular login
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const formData = new FormData(loginForm);
+            const email = formData.get('email');
+            const password = formData.get('password');
 
-            // Reset UI
-            errorBanner.style.display = 'none';
-            submitBtn.disabled = true;
-            spinner.style.display = 'block';
+            loginMessage.style.display = 'none';
 
             try {
-                // API_BASE_URL = e.g. "http://localhost/api/v1/" — already contains the full base
                 const apiUrl = '<?= rtrim(API_BASE_URL, "/") ?>/users/login';
-                console.log('Attempting authentication against:', apiUrl);
-
+                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    credentials: 'include', // Forces session cookie persistence
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
-                if (!response.ok) {
-                    console.error('Fetch Response NOT OK:', response.status, response.statusText);
-                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-                }
-
                 const result = await response.json();
-                console.log('Auth API Result:', result);
 
                 if (!result.success) {
-                    throw new Error(result.message || 'Authorization failed');
+                    throw new Error(result.message || 'Login failed');
                 }
 
                 // Check if admin
-                if (!result.data.is_admin) {
-                     throw new Error('Access Revoked: Administrative privileges required.');
+                if (!result.data?.is_admin) {
+                    throw new Error('Admin access required.');
                 }
 
-                // Success! Redirect directly to the dashboard
-                console.log('Login successful. Redirecting to index.php...');
+                // Success - redirect
                 window.location.replace('index.php');
 
             } catch (err) {
-                console.error('Login Exception:', err);
-                errorBanner.textContent = err.message;
-                errorBanner.style.display = 'block';
-                submitBtn.disabled = false;
-                spinner.style.display = 'none';
+                loginMessage.textContent = err.message;
+                loginMessage.style.display = 'block';
+            }
+        });
+
+        // Google OAuth
+        googleOAuthBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const response = await fetch('<?= rtrim(API_BASE_URL, "/") ?>/auth/google/redirect', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    const result = await response.json();
+                    if (result.data?.redirect_url) {
+                        window.location.href = result.data.redirect_url;
+                    }
+                }
+            } catch (err) {
+                loginMessage.textContent = 'OAuth setup error: ' + err.message;
+                loginMessage.style.display = 'block';
             }
         });
     </script>

@@ -8,7 +8,7 @@ if (empty($testimonials)) {
     $testimonials = [
         ['rating' => 5, 'comment' => "The selection is incredible. Found a rare whisky I'd been searching for years.", 'user_name' => "James Mitchell", 'city' => "London", 'country' => "UK"],
         ['rating' => 5, 'comment' => "Best online liquor store I've used. The customer service is exceptional.", 'user_name' => "Sarah Chen", 'city' => "New York", 'country' => "USA"],
-        ['rating' => 5, 'comment' => "Royal Liquor has become my go-to. Premium quality and always reliable.", 'user_name' => "Rajesh Patel", 'city' => "Dubai", 'country' => "UAE"],
+        ['rating' => 5, 'comment' => "Royal Beverages has become my go-to. Premium quality and always reliable.", 'user_name' => "Rajesh Patel", 'city' => "Dubai", 'country' => "UAE"],
     ];
 }
 
@@ -34,14 +34,16 @@ function getInitials($name) {
                     <span class="<?= $i < $item['rating'] ? 'text-black' : 'text-gray-100' ?>">★</span>
                 <?php endfor; ?>
             </div>
-            <p class="text-lg text-black italic font-light leading-relaxed mb-12">"<?= htmlspecialchars($item['comment']) ?>"</p>
+            <p class="text-lg text-black italic font-light leading-relaxed mb-12">"<?= htmlspecialchars($item['comment'] ?? '') ?>"</p>
             <div class="flex flex-col items-center mt-auto">
                 <div class="w-12 h-12 bg-black text-white flex items-center justify-center font-bold text-[10px] uppercase mb-4 shadow-xl">
-                    <?= getInitials($item['user_name']) ?>
+                    <?= getInitials($item['user_name'] ?? '') ?>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[10px] font-black uppercase tracking-[0.4em] text-black mb-1"><?= htmlspecialchars($item['user_name']) ?></span>
-                    <span class="text-[9px] text-gray-400 font-bold tracking-[0.2em] italic"><?= htmlspecialchars($item['city']) ?>, <?= htmlspecialchars($item['country']) ?></span>
+                    <span class="text-[10px] font-black uppercase tracking-[0.4em] text-black mb-1"><?= htmlspecialchars($item['user_name'] ?? '') ?></span>
+                    <span class="text-[9px] text-gray-400 font-bold tracking-[0.2em] italic">
+                        <?= htmlspecialchars($item['city'] ?? '') ?><?= (!empty($item['city']) && !empty($item['country'])) ? ', ' : '' ?><?= htmlspecialchars($item['country'] ?? '') ?>
+                    </span>
                 </div>
             </div>
         </div>
@@ -60,15 +62,15 @@ function getInitials($name) {
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 py-16 border-t border-gray-100">
         <div class="text-center group">
             <span class="block text-4xl font-heading text-black font-black mb-2 transition-transform group-hover:scale-110">15K+</span>
-            <span class="text-[9px] text-gray-400 uppercase tracking-[0.3em] font-black">Satisfied Clients</span>
+            <span class="text-base text-black font-heading font-medium tracking-wider">Satisfied Clients</span>
         </div>
         <div class="text-center group">
             <span class="block text-4xl font-heading text-black font-black mb-2 transition-transform group-hover:scale-110">4.9</span>
-            <span class="text-[9px] text-gray-400 uppercase tracking-[0.3em] font-black">Average Rating</span>
+            <span class="text-base text-black font-heading font-medium tracking-wider">Average Rating</span>
         </div>
         <div class="text-center group">
             <span class="block text-4xl font-heading text-black font-black mb-2 transition-transform group-hover:scale-110">500+</span>
-            <span class="text-[9px] text-gray-400 uppercase tracking-[0.3em] font-black">Verified Vintages</span>
+            <span class="text-base text-black font-heading font-medium tracking-wider">Verified Vintages</span>
         </div>
     </div>
 </section>

@@ -3,14 +3,14 @@
     <div class="max-w-4xl mx-auto bg-white border border-gray-100 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.1)] p-8 md:p-12 pointer-events-auto flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
         <div class="flex-grow space-y-2 text-center md:text-left">
             <span class="text-[9px] uppercase font-black tracking-[0.4em] text-gray-400 block mb-2 italic">Privacy & Experience</span>
-            <p class="text-xs text-black font-light leading-relaxed italic max-w-2xl">
-                We utilize bespoke digital artifacts (cookies) to refine your browsing itinerary and analyze site traffic. 
-                By selecting "Accept Selection", you acknowledge our refined data protocols.
+            <p class="text-xs text-black font-light leading-relaxed max-w-2xl">
+                We use cookies to personalize your shopping experience, analyze site traffic, and recommend spirits tailored to your taste. 
+                By clicking "Accept", you agree to our use of cookies.
             </p>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 shrink-0 justify-center">
             <button id="cookieReject" class="btn-premium-outline px-10 h-14 !text-gray-400 border-gray-100 hover:border-black hover:text-black">Decline</button>
-            <button id="cookieAccept" class="btn-premium px-10 h-14">Accept Selection</button>
+            <button id="cookieAccept" class="btn-premium px-10 h-14">Accept</button>
         </div>
     </div>
 </div>

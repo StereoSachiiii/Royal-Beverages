@@ -126,7 +126,7 @@ class ProductController extends BaseController
     public function getByIdEnriched(int $id): array
     {
         return $this->handle(function () use ($id) {
-            $product = $this->service->getByIdAdmin($id);
+            $product = $this->service->getByIdEnriched($id);
             return $this->success('Product retrieved', $product);
         });
     }

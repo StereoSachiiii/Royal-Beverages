@@ -16,88 +16,84 @@ class WishlistController extends BaseController
         $this->service = $service;
     }
 
-    public function getMine(): void
+    public function getMine(): array
     {
         $userId = Session::getInstance()->getUserId();
         if (!$userId) {
-            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-            return;
+            return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
 
         try {
             $items = $this->service->getWishlist($userId);
-            $this->jsonResponse(['success' => true, 'data' => $items]);
+            return ['success' => true, 'data' => $items];
         } catch (\Exception $e) {
-            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            return ['success' => false, 'message' => $e->getMessage(), 'code' => 500];
         }
     }
 
-    public function add(): void
+    public function add(array $data = []): array
     {
         $userId = Session::getInstance()->getUserId();
         if (!$userId) {
-            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-            return;
+            return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
 
         try {
-            $data = $this->getJsonInput();
+            if (empty($data)) {
+                $data = $this->getJsonInput();
+            }
             $request = new CreateWishlistItemRequest($data);
             
             if ($request->product_id <= 0) {
-                $this->jsonResponse(['success' => false, 'message' => 'Invalid product id'], 400);
-                return;
+                return ['success' => false, 'message' => 'Invalid product id', 'code' => 400];
             }
 
-            $result = $this->service->addItem($userId, $request);
-            $this->jsonResponse($result);
+            return $this->service->addItem($userId, $request);
         } catch (\Exception $e) {
-            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            return ['success' => false, 'message' => $e->getMessage(), 'code' => 500];
         }
     }
 
-    public function remove(int $productId): void
+    public function remove(int $productId): array
     {
         $userId = Session::getInstance()->getUserId();
         if (!$userId) {
-            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-            return;
+            return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
 
         try {
-            $result = $this->service->removeItem($userId, $productId);
-            $this->jsonResponse($result);
+            return $this->service->removeItem($userId, $productId);
         } catch (\Exception $e) {
-            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            return ['success' => false, 'message' => $e->getMessage(), 'code' => 500];
         }
     }
 
-    public function syncBulk(): void
+    public function syncBulk(array $data = []): array
     {
         $userId = Session::getInstance()->getUserId();
         if (!$userId) {
-            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
-            return;
+            return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
 
         try {
-            $data = $this->getJsonInput();
+            if (empty($data)) {
+                $data = $this->getJsonInput();
+            }
             $productIds = $data['product_ids'] ?? [];
             
             if (!is_array($productIds)) {
-                $this->jsonResponse(['success' => false, 'message' => 'product_ids must be an array'], 400);
-                return;
+                return ['success' => false, 'message' => 'product_ids must be an array', 'code' => 400];
             }
 
             $mergedItems = $this->service->sync($userId, $productIds);
             
-            $this->jsonResponse([
+            return [
                 'success' => true,
                 'message' => 'Wishlist synchronized successfully',
                 'data' => $mergedItems
-            ]);
+            ];
         } catch (\Exception $e) {
-            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+            return ['success' => false, 'message' => $e->getMessage(), 'code' => 500];
         }
     }
 }

@@ -1,21 +1,15 @@
 /**
  * Warehouses.js — Warehouses management module.
  * Uses dashboard-tailwind.css classes throughout.
- * Rows rendered as inline HTML strings for correct table parsing.
+ * Uses EntityBuilder to eliminate boilerplate.
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatDate, formatNumber, debounce, openStandardModal, closeModal, getTemplate, getFormData } from '../../utils.js';
+import { apiRequest, escapeHtml, formatDate, formatNumber, getTemplate, closeModal } from '../../utils.js';
+import { createEntityModule } from '../../components/EntityBuilder.js';
 import { uploadImage } from '../../FormHelpers.js';
 
-const DEFAULT_LIMIT = 20;
-let _offset = 0;
-let _query  = '';
-let _lastResults = [];
-
-// ─── API ─────────────────────────────────────────────────────────────────────
-
-async function fetchWarehouses(limit = DEFAULT_LIMIT, offset = 0, query = '') {
+async function fetchWarehouses(limit = 20, offset = 0, query = '') {
     try {
         const url = API_ROUTES.ADMIN_VIEWS.LIST('warehouses') + buildQueryString({
             limit, offset,
@@ -32,7 +26,6 @@ async function fetchWarehouses(limit = DEFAULT_LIMIT, offset = 0, query = '') {
 
 async function fetchWarehouse(id) {
     try {
-        // Use the admin detail view which includes stock aggregates
         const url = API_ROUTES.ADMIN_VIEWS.DETAIL('warehouses', id);
         const res = await apiRequest(url);
         if (!res.success) throw new Error(res.message || 'Failed to fetch warehouse details');
@@ -83,10 +76,6 @@ function renderRow(war) {
     </tr>`;
 }
 
-function emptyRow(msg) {
-    return `<tr><td colspan="7" class="px-6 py-16 text-center text-sm text-gray-400">${escapeHtml(msg)}</td></tr>`;
-}
-
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(war) {
@@ -119,7 +108,6 @@ function renderViewModal(war) {
                 </div>
             </div>
 
-            <!-- Stats Grid -->
             <div class="flex" style="gap:12px;">
                 <div class="google-card flex-1 text-center" style="padding:16px;">
                     <div class="uppercase text-slate-400 font-bold" style="font-size:10px;letter-spacing:0.1em;margin-bottom:4px;">Stock Entries</div>
@@ -140,7 +128,6 @@ function renderViewModal(war) {
             </div>
 
             <div class="flex" style="gap:20px;">
-                <!-- Left: Details -->
                 <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
                     <div class="google-card" style="padding:16px;">
                         <h4 class="text-slate-400 font-bold uppercase" style="font-size:10px;letter-spacing:0.1em;margin-bottom:12px;border-bottom:1px solid var(--slate-100);padding-bottom:4px;">Warehouse Details</h4>
@@ -167,7 +154,6 @@ function renderViewModal(war) {
                     </div>
                 </div>
 
-                <!-- Right: Low Stock Alert -->
                 <div style="flex:1.2;display:flex;flex-direction:column;gap:16px;">
                     <div class="google-card" style="padding:16px;">
                         <h4 class="text-slate-400 font-bold uppercase" style="font-size:10px;letter-spacing:0.1em;margin-bottom:12px;border-bottom:1px solid var(--slate-100);padding-bottom:4px;">Low Stock Items</h4>
@@ -184,7 +170,7 @@ function renderViewModal(war) {
 
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
-async function renderFormModal(warehouseId = null) {
+async function renderFormModal(warehouseId) {
     const isEdit = warehouseId !== null;
     let war = {};
     if (isEdit) war = await fetchWarehouse(warehouseId);
@@ -208,10 +194,7 @@ async function renderFormModal(warehouseId = null) {
         if (footer) {
             const del = document.createElement('button');
             del.type = 'button';
-            del.className = 'btn btn-outline text-danger';
-            del.style.marginRight = 'auto';
-            del.id = 'war-delete-btn';
-            del.dataset.id = warehouseId;
+            del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
             del.innerHTML = '🗑️ Delete Warehouse';
             footer.prepend(del);
         }
@@ -219,25 +202,24 @@ async function renderFormModal(warehouseId = null) {
     return frag;
 }
 
-// ─── Form Handlers ────────────────────────────────────────────────────────────
+// ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
-function initFormHandlers(modalRoot, warehouseId, onSuccess) {
-    const isEdit = warehouseId !== null;
-    const form   = modalRoot.querySelector('#war-form');
-    const cancel = modalRoot.querySelector('#war-cancel');
-    const delBtn = modalRoot.querySelector('#war-delete-btn');
-    const imgInp = modalRoot.querySelector('#war-image-file');
-    const imgPre = modalRoot.querySelector('#war-image-preview');
-    const imgHid = modalRoot.querySelector('#war-image-hidden');
-
+function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
+    const isEdit = id !== null;
+    const form = modalRoot.querySelector('#war-form');
     if (!form) return;
-    if (cancel) cancel.addEventListener('click', () => closeModal());
 
+    const cancel = modalRoot.querySelector('#war-cancel');
+    if (cancel) cancel.addEventListener('click', closeModalFn);
+
+    const imgInp = form.querySelector('#war-image-file');
+    const imgPre = form.querySelector('#war-image-preview');
+    const imgHid = form.querySelector('#war-image-hidden');
     if (imgInp) {
         imgInp.addEventListener('change', async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
-            const label = modalRoot.querySelector('label[for="war-image-file"]');
+            const label = form.querySelector('label[for="war-image-file"]');
             if (label) label.textContent = 'Uploading…';
             try {
                 const url = await uploadImage(file, 'warehouses');
@@ -246,215 +228,85 @@ function initFormHandlers(modalRoot, warehouseId, onSuccess) {
                 if (label) label.textContent = '✅ Image uploaded';
             } catch (err) {
                 if (label) label.textContent = '❌ Upload failed';
-                console.error('[Warehouses] Image upload error:', err);
             }
         });
     }
 
+    const delBtn = modalRoot.querySelector('.js-delete-btn');
     if (delBtn) {
         delBtn.addEventListener('click', async () => {
             if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Click again to confirm';
+                delBtn.dataset.confirmed = '1';
+                delBtn.innerHTML = '⚠️ Confirm Delete?';
                 delBtn.classList.add('btn-warning');
                 setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete Warehouse'; delBtn.classList.remove('btn-warning'); }}, 3000);
                 return;
             }
             delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
             try {
-                await apiRequest(API_ROUTES.WAREHOUSES.DELETE(warehouseId), { method: 'DELETE' });
-                closeModal(); onSuccess?.();
+                await apiRequest(API_ROUTES.WAREHOUSES.DELETE(id), { method: 'DELETE' });
+                closeModalFn(); onSuccess?.(null, 'deleted');
             } catch (err) {
-                showFormError(form, err.message);
+                showFormErrorFn(form, err.message);
                 delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete Warehouse';
-                delete delBtn.dataset.confirmed;
             }
         });
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const submit = form.querySelector('[type="submit"]');
+        const submit = form.querySelector('button[type="submit"]');
         const orig = submit.innerHTML;
         submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
         try {
-            const data = getFormData(form);
-            const payload = { name: data.name, address: data.address || null, phone: data.phone || null, image_url: (imgHid ? imgHid.value : null) || data.image_url || null, is_active: data.is_active !== undefined };
-            const url = isEdit ? API_ROUTES.WAREHOUSES.UPDATE(warehouseId) : API_ROUTES.WAREHOUSES.CREATE;
+            const formData = new FormData(form);
+            const payload = {
+                name: formData.get('name'),
+                address: formData.get('address') || null,
+                phone: formData.get('phone') || null,
+                image_url: (imgHid ? imgHid.value : null) || formData.get('image_url') || null,
+                is_active: formData.get('is_active') !== null
+            };
+            const url = isEdit ? API_ROUTES.WAREHOUSES.UPDATE(id) : API_ROUTES.WAREHOUSES.CREATE;
             const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
             if (!res.success) throw new Error(res.message);
-            closeModal(); onSuccess?.();
+            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
         } catch (err) {
-            showFormError(form, err.message);
+            showFormErrorFn(form, err.message);
             submit.disabled = false; submit.innerHTML = orig;
         }
     });
 }
 
-function showFormError(form, msg) {
-    let el = form.querySelector('.form-error-banner');
-    if (!el) { el = Object.assign(document.createElement('div'), { className: 'form-error-banner' }); form.prepend(el); }
-    el.textContent = msg; el.style.display = 'block';
-}
+// ─── Entity Builder ───────────────────────────────────────────────────────────
 
-// ─── Reload / Redraw ──────────────────────────────────────────────────────────
+const { Render: Warehouses, Init: initWarehouses } = createEntityModule({
+    entityName: 'Warehouses',
+    entitySubtitle: 'Manage your warehouse locations and stock levels',
+    apiRoutes: {
+        list: () => API_ROUTES.ADMIN_VIEWS.LIST('warehouses'), // Needs wrapper since fetch uses custom URL
+        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('warehouses', id),
+        create: API_ROUTES.WAREHOUSES.CREATE,
+        update: (id) => API_ROUTES.WAREHOUSES.UPDATE(id),
+        delete: (id) => API_ROUTES.WAREHOUSES.DELETE(id)
+    },
+    fetchList: fetchWarehouses,
+    fetchSingle: fetchWarehouse,
+    tableHeaderHtml: `<tr class="tr">
+        <th class="th" style="width:50px;">ID</th>
+        <th class="th" style="min-width:220px;">Warehouse</th>
+        <th class="th" style="width:160px;">Stock Level</th>
+        <th class="th" style="width:130px;">Phone</th>
+        <th class="th" style="width:100px;">Status</th>
+        <th class="th" style="width:140px;">Last Updated</th>
+        <th class="th" style="width:140px;">Actions</th>
+    </tr>`,
+    renderRow,
+    renderViewModal,
+    renderFormModal,
+    initFormHandlersOverride,
+    searchPlaceholder: 'Search by name or address…',
+    createBtnText: 'Add Warehouse'
+});
 
-async function reloadWarehouses(container) {
-    const html = await Warehouses();
-    container.innerHTML = html;
-    await initWarehouses(container);
-}
-
-function redrawTable(container, list) {
-    container.querySelector('#entity-tbody').innerHTML =
-        list.length ? list.map(renderRow).join('') : emptyRow('No warehouses found.');
-    const lmc = container.querySelector('#entity-load-more-container');
-    if (list.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load more</button>`;
-    } else { lmc.style.display = 'none'; lmc.innerHTML = ''; }
-}
-
-// ─── Main View ────────────────────────────────────────────────────────────────
-
-const THEAD = `<tr class="tr">
-    <th class="th" style="width:50px;">ID</th>
-    <th class="th" style="min-width:220px;">Warehouse</th>
-    <th class="th" style="width:160px;">Stock Level</th>
-    <th class="th" style="width:130px;">Phone</th>
-    <th class="th" style="width:100px;">Status</th>
-    <th class="th" style="width:140px;">Last Updated</th>
-    <th class="th" style="width:140px;">Actions</th>
-</tr>`;
-
-export async function Warehouses() {
-    _offset = 0;
-    const data = await fetchWarehouses(DEFAULT_LIMIT, 0, _query);
-    _lastResults = Array.isArray(data) ? data : [];
-    const rows = _lastResults.length ? _lastResults.map(renderRow).join('') : emptyRow('No warehouses yet. Add your first warehouse.');
-
-    const frag = getTemplate('tpl-admin-entity', {
-        'entity-title':    'Warehouses',
-        'entity-subtitle': 'Manage your warehouse locations and stock levels',
-    });
-
-    frag.querySelector('#entity-search').placeholder = 'Search by name or address…';
-    frag.querySelector('#entity-search').value = _query;
-    frag.querySelector('#entity-sort').style.display = 'none';
-    frag.querySelector('#entity-create-btn').innerHTML = 'Add Warehouse';
-    frag.querySelector('#entity-thead').innerHTML = THEAD;
-    frag.querySelector('#entity-tbody').innerHTML = rows;
-
-    const lmc = frag.querySelector('#entity-load-more-container');
-    if (_lastResults.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load more</button>`;
-    }
-
-    return frag.firstElementChild.outerHTML;
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-
-export function initWarehouses(container) {
-    if (!container) return null;
-    const ac = new AbortController();
-    const signal = ac.signal;
-
-    const performSearch = debounce(async (q) => {
-        _query = q; _offset = 0;
-        const data = await fetchWarehouses(DEFAULT_LIMIT, 0, _query);
-        _lastResults = Array.isArray(data) ? data : [];
-        redrawTable(container, _lastResults);
-    }, 300);
-
-    container.addEventListener('input', (e) => { if (e.target.id === 'entity-search') performSearch(e.target.value.trim()); }, { signal });
-
-    // View
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-view');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        try {
-            const war = await fetchWarehouse(btn.dataset.id);
-            openStandardModal({ title: `${escapeHtml(war.name)} — Details`, bodyHtml: renderViewModal(war), size: 'xl' });
-            const overlay = document.querySelector('.modal-overlay:last-child');
-            overlay?.addEventListener('click', async (me) => {
-                const editBtn = me.target.closest('.js-edit');
-                if (editBtn) {
-                    closeModal();
-                    setTimeout(async () => {
-                        const f = await renderFormModal(editBtn.dataset.id);
-                        openStandardModal({ title: 'Edit Warehouse', bodyHtml: f.firstElementChild.outerHTML, size: 'xl' });
-                        initFormHandlers(document.querySelector('.modal-overlay:last-child'), editBtn.dataset.id, () => reloadWarehouses(container));
-                    }, 200);
-                }
-            });
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Edit (direct)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-edit');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        try {
-            const f = await renderFormModal(btn.dataset.id);
-            openStandardModal({ title: 'Edit Warehouse', bodyHtml: f.firstElementChild.outerHTML, size: 'xl' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), btn.dataset.id, () => reloadWarehouses(container));
-        } catch (err) {
-             openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Delete
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-delete');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        if (!btn.dataset.confirmed) {
-            btn.dataset.confirmed = '1'; btn.innerHTML = '⚠️'; btn.style.background = '#fef9c3';
-            setTimeout(() => { if (btn.isConnected) { delete btn.dataset.confirmed; btn.innerHTML = '🗑'; btn.style.background = ''; }}, 3000);
-            return;
-        }
-        btn.disabled = true; btn.innerHTML = '…';
-        try {
-            await apiRequest(API_ROUTES.WAREHOUSES.DELETE(id), { method: 'DELETE' });
-            reloadWarehouses(container);
-        } catch (err) { btn.disabled = false; btn.innerHTML = '🗑'; alert('Delete failed: ' + err.message); }
-    }, { signal });
-
-    // Create
-    container.addEventListener('click', async (e) => {
-        if (!e.target.closest('#entity-create-btn')) return;
-        try {
-            const f = await renderFormModal(null);
-            openStandardModal({ title: 'Add New Warehouse', bodyHtml: f.firstElementChild.outerHTML, size: 'xl' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), null, () => reloadWarehouses(container));
-        } catch (err) {
-             openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Load More
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-load-more-btn') return;
-        const btn = e.target; btn.disabled = true; btn.textContent = 'Loading…';
-        _offset += DEFAULT_LIMIT;
-        const data = await fetchWarehouses(DEFAULT_LIMIT, _offset, _query);
-        const list = Array.isArray(data) ? data : [];
-        if (!list.length) { btn.closest('#entity-load-more-container').style.display = 'none'; return; }
-        _lastResults = [..._lastResults, ...list];
-        container.querySelector('#entity-tbody').insertAdjacentHTML('beforeend', list.map(renderRow).join(''));
-        if (list.length < DEFAULT_LIMIT) { btn.closest('#entity-load-more-container').style.display = 'none'; }
-        else { btn.disabled = false; btn.textContent = 'Load more'; }
-    }, { signal });
-
-    // Refresh
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-refresh-btn') return;
-        e.target.innerHTML = '⌛'; e.target.disabled = true;
-        await reloadWarehouses(container);
-    }, { signal });
-
-    return { cleanup: () => ac.abort() };
-}
+export { Warehouses, initWarehouses };

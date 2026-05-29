@@ -94,6 +94,7 @@ require_once __DIR__ . "/header.php";
     import { API } from '<?= BASE_URL ?>assets/js/api-helper.js';
     import { cart } from '<?= BASE_URL ?>assets/js/cart-service.js';
     import { toast } from '<?= BASE_URL ?>assets/js/toast.js';
+    import { isInWishlist, toggleWishlistItem } from '<?= BASE_URL ?>assets/js/wishlist-storage.js';
 
     let productsData = [];
     const PRODUCTS_PER_PAGE = 12;
@@ -126,45 +127,47 @@ require_once __DIR__ . "/header.php";
     const renderProductCard = (product) => {
         const isAvailable = product.is_available && product.available_stock > 0;
         const price = (product.price_cents / 100).toFixed(2);
-        const rating = parseFloat(product.avg_rating) || 0;
-        const fullStars = Math.floor(rating);
         const isPremium = product.price_cents > 10000;
         
-        const starsHtml = Array.from({length: 5}, (_, i) => 
-            `<span class="${i < fullStars ? 'text-black' : 'text-gray-300'} text-[10px]">★</span>`
-        ).join('');
-        
         let badgeHtml = '';
-        if (isPremium) badgeHtml = 'Vintage Reserve';
-        else if (product.available_stock < 20 && isAvailable) badgeHtml = `Limited Release: ${product.available_stock}`;
+        if (isPremium) badgeHtml = 'Vintage';
+        else if (product.available_stock < 20 && isAvailable) badgeHtml = `Low Stock: ${product.available_stock}`;
 
         return `
-            <div class="card-premium group ${!isAvailable ? 'opacity-40 grayscale' : ''}" data-id="${product.id}">
-                <div class="card-premium-image-wrapper !bg-gray-50/50 p-6 flex flex-col">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-[9px] uppercase font-black tracking-widest text-black">${product.category_name || 'Spirit'}</span>
-                        <div class="flex">${starsHtml}</div>
-                    </div>
-                    
+            <div class="group w-full bg-white border border-gray-100 p-8 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black ${!isAvailable ? 'opacity-40 grayscale' : ''}" data-id="${product.id}">
+                <!-- Badges -->
+                <div class="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                    ${!isAvailable ? `<span class="bg-gray-100 text-gray-500 text-[8px] font-black uppercase tracking-widest px-3 py-1">Depleted</span>` : ''}
+                    ${badgeHtml ? `<span class="bg-black text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 shadow-sm">${badgeHtml}</span>` : ''}
+                </div>
+
+                <!-- Image -->
+                <a href="product.php?id=${product.id}" class="block h-56 mb-8 mt-4 relative flex items-center justify-center cursor-pointer btn-quick-view" data-id="${product.id}">
                     <img src="${fixImagePath(product.image_url)}" 
                          alt="${product.name}" 
-                         class="card-premium-image !object-contain h-[260px] mx-auto transition-all duration-700 group-hover:scale-105" 
+                         class="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl" 
                          loading="lazy"
                          onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'; this.onerror=null;">
+                </a>
+
+                <!-- Meta -->
+                <div class="text-center flex flex-col flex-grow items-center justify-end w-full">
+                    <span class="text-[9px] uppercase font-black tracking-[0.3em] text-gray-400 mb-2 truncate max-w-full block">
+                        ${product.category_name || 'Spirit'}
+                    </span>
+                    <h3 class="text-sm font-heading uppercase tracking-widest mb-4 group-hover:text-gold transition-colors line-clamp-2 px-2">
+                        ${product.name}
+                    </h3>
+                    <span class="text-xs font-black tracking-widest mb-8 uppercase">Rs. ${price}</span>
                     
-                    ${badgeHtml ? `<div class="absolute top-1/2 left-0 -translate-y-1/2 -rotate-90 origin-left ml-4 text-[8px] font-black uppercase tracking-[0.3em] text-gray-300 py-1 px-4 border border-gray-200 bg-white shadow-sm">${badgeHtml}</div>` : ''}
-                </div>
-                
-                <div class="p-8 flex flex-col items-center text-center">
-                    <h2 class="text-sm font-extrabold uppercase tracking-widest mb-4 line-clamp-1 group-hover:text-gray-500 transition-colors">${product.name}</h2>
-                    <div class="text-lg font-bold tracking-tight mb-8">Rs. ${price}</div>
-                    
+                    <!-- Action Buttons -->
                     <div class="flex gap-2 w-full mt-auto">
-                        <button class="btn-premium-outline flex-grow text-[9px] h-12 btn-quick-view" data-id="${product.id}">
-                            View Specs
+                        <button class="btn-premium-outline flex-grow h-12 text-[9px] flex items-center justify-center btn-quick-view" data-id="${product.id}" style="padding: 0 0.5rem;">View Details</button>
+                        <button class="btn-premium-outline w-12 h-12 flex-shrink-0 flex items-center justify-center btn-add-wishlist hover:bg-red-50 transition-colors" style="padding: 0;" data-id="${product.id}" title="Add to Wishlist">
+                            <svg class="w-4 h-4" fill="${isInWishlist(product.id) ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                         </button>
-                        <button class="btn-premium w-12 h-12 flex items-center justify-center p-0 btn-add-cart" data-id="${product.id}" ${!isAvailable ? 'disabled' : ''}>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                        <button class="btn-premium w-12 h-12 flex-shrink-0 flex items-center justify-center btn-add-cart" style="padding: 0;" data-id="${product.id}" ${!isAvailable ? 'disabled' : ''} title="Add to Cart">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         </button>
                     </div>
                 </div>
@@ -277,6 +280,16 @@ require_once __DIR__ . "/header.php";
                 await cart.add(productId, qty);
                 toast.success('Successfully added to cart');
                 if (btn.id === 'modalAddToCart') closeProductModal();
+            }
+
+            if (ev.closest('.btn-add-wishlist')) {
+                const btn = ev.closest('.btn-add-wishlist');
+                const id = btn.dataset.id;
+                const adding = !isInWishlist(id);
+                // Optimistic UI — flip heart immediately
+                const svg = btn.querySelector('svg');
+                if (svg) svg.setAttribute('fill', adding ? 'currentColor' : 'none');
+                toggleWishlistItem(id); // toasts handled inside wishlist-storage.js
             }
         });
         

@@ -72,7 +72,7 @@ if (!str_starts_with($uri, $apiPrefix)) {
     if ($cleanUri === '') $cleanUri = '/';
 }
 
-$router  = new Router();
+$router  = new Router($container);
 
 // Load namespaced routes
 RouteLoader::load($router);

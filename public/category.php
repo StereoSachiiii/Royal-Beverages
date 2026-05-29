@@ -1,617 +1,108 @@
 <?php
 $pageName = 'category';
-$pageTitle = 'Category - Royal Liquor';
+$pageTitle = 'Category - Royal Beverages';
 require_once __DIR__ . "/components/header.php";
 
 $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <main class="category-page">
     <div class="container">
-        <!-- Breadcrumb -->
-        <nav class="breadcrumb flex justify-center items-center py-10 gap-4 text-[10px] uppercase font-black tracking-[.3em] text-gray-400">
-            <a href="<?= BASE_URL ?>" class="hover:text-gold transition-colors">Home</a>
-            <span>/</span>
-            <a href="<?= BASE_URL ?>shop.php" class="hover:text-gold transition-colors">Shop</a>
-            <span>/</span>
-            <span class="text-black italic" id="breadcrumbCategory">Loading...</span>
-        </nav>
+        <?php
+        $heroTitle = '<span id="heroTitle">Loading...</span>';
+        $heroSubtitle = 'Collection';
+        $heroDescription = '';
+        $heroId = 'categoryHero';
+        $heroOffset = '15%';
+        $heroBreadcrumbs = [
+            ['url' => BASE_URL, 'label' => 'Home'],
+            ['url' => BASE_URL . 'shop.php', 'label' => 'The Shop'],
+            ['url' => '', 'label' => '<span id="breadcrumbCategory">Collection</span>']
+        ];
+        
+        $heroExtraHtml = '
+        <p class="text-gray-500 font-light italic max-w-2xl text-lg mb-8" id="heroDescription"></p>
+        ';
+        
+        require_once __DIR__ . '/components/animated-hero.php';
+        ?>
 
-        <!-- Category Hero -->
-        <section class="category-hero relative py-24 mb-20 overflow-hidden bg-black text-white" id="categoryHero">
-            <div class="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center px-8">
-                <div class="inline-block px-6 py-2 bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] mb-10">Collection</div>
-                <h1 class="text-5xl md:text-7xl font-heading font-extrabold uppercase tracking-widest leading-none mb-8 italic" id="heroTitle">Loading...</h1>
-                <p class="text-gray-400 font-light italic text-lg leading-relaxed mb-12 max-w-2xl" id="heroDescription"></p>
-                <div class="flex items-center justify-center gap-16 py-8 border-y border-white/10 w-full max-w-xl">
-                    <div class="flex flex-col">
-                        <span class="text-3xl font-heading font-black mb-1" id="productCount">0</span>
-                        <span class="text-[9px] uppercase tracking-widest text-gray-500 font-black">Vintages</span>
-                    </div>
-                    <div class="w-px h-10 bg-white/10"></div>
-                    <div class="flex flex-col">
-                        <span class="text-3xl font-heading font-black mb-1" id="priceRange">$0 - $0</span>
-                        <span class="text-[9px] uppercase tracking-widest text-gray-500 font-black">Price Range</span>
-                    </div>
-                    <div class="w-px h-10 bg-white/10"></div>
-                    <div class="flex flex-col">
-                        <span class="text-3xl font-heading font-black mb-1" id="avgRating">—</span>
-                        <span class="text-[9px] uppercase tracking-widest text-gray-500 font-black">Rating</span>
-                    </div>
-                </div>
+        <!-- Category Stats -->
+        <div class="flex items-center justify-center gap-16 py-12 border-b border-gray-100 w-full max-w-2xl mx-auto mb-16">
+            <div class="flex flex-col text-center">
+                <span class="text-3xl font-heading font-black mb-1 text-black" id="productCount">0</span>
+                <span class="text-[9px] uppercase tracking-widest text-gray-400 font-black">Vintages</span>
             </div>
-            
-            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 to-transparent"></div>
-        </section>
+            <div class="w-px h-10 bg-gray-200"></div>
+            <div class="flex flex-col text-center">
+                <span class="text-3xl font-heading font-black mb-1 text-black" id="priceRange">$0 - $0</span>
+                <span class="text-[9px] uppercase tracking-widest text-gray-400 font-black">Price Range</span>
+            </div>
+            <div class="w-px h-10 bg-gray-200"></div>
+            <div class="flex flex-col text-center">
+                <span class="text-3xl font-heading font-black mb-1 text-black" id="avgRating">—</span>
+                <span class="text-[9px] uppercase tracking-widest text-gray-400 font-black">Rating</span>
+            </div>
+        </div>
 
-        <!-- Flavor Summary -->
-        <section class="flavor-summary" id="flavorSummary" style="display: none;">
-            <h3>Flavor Profile</h3>
-            <div class="flavor-bars" id="flavorBars"></div>
-            <div class="flavor-tags" id="flavorTags"></div>
+        <!-- Flavor Profile: High Contrast Radar Chart -->
+        <section id="flavorSummary" class="hidden mb-16 p-10 bg-gray-50/50 border border-gray-100/50 max-w-4xl mx-auto mt-16">
+            <div class="flex flex-col items-center mb-8 text-center">
+                <span class="text-[10px] uppercase tracking-[0.4em] text-black font-black mb-2">Category Average</span>
+                <h3 class="text-2xl font-heading uppercase tracking-widest italic">Tasting Archetype</h3>
+            </div>
+            <div class="relative h-[400px] w-full flex items-center justify-center">
+                <canvas id="flavorChart"></canvas>
+            </div>
+            <div id="flavorTags" class="mt-8 flex flex-wrap justify-center gap-2"></div>
         </section>
 
         <!-- Products Section -->
-        <section class="category-products">
-            <div class="section-header">
-                <h2 class="section-title">Products in this Collection</h2>
-                <div class="section-controls">
-                    <select id="sortSelect" class="sort-select">
-                        <option value="newest">Newest</option>
-                        <option value="price_asc">Price ↑</option>
-                        <option value="price_desc">Price ↓</option>
+        <section class="mb-32 max-w-[1440px] mx-auto px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-12 border-b border-gray-100 pb-6">
+                <h2 class="text-2xl font-serif italic text-black">Products in this Collection</h2>
+                <div class="mt-4 sm:mt-0 flex items-center gap-3">
+                    <span class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Sort By:</span>
+                    <select id="sortSelect" class="bg-transparent border-none outline-none text-[10px] uppercase font-black tracking-widest cursor-pointer text-black hover:text-gray-500 transition-colors">
+                        <option value="newest">Newest Arrival</option>
+                        <option value="price_asc">Price Low-High</option>
+                        <option value="price_desc">Price High-Low</option>
                         <option value="name_asc">A-Z</option>
-                        <option value="rating">Top Rated</option>
+                        <option value="rating">Highest Rated</option>
                     </select>
                 </div>
             </div>
 
-            <div class="products-grid" id="productsGrid">
-                <div class="skeleton-loader">
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8" id="productsGrid">
+                <!-- Skeleton Loader -->
+                <div class="col-span-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
+                    <div class="bg-gray-50 rounded-lg aspect-[3/4] animate-pulse"></div>
+                    <div class="bg-gray-50 rounded-lg aspect-[3/4] animate-pulse"></div>
+                    <div class="bg-gray-50 rounded-lg aspect-[3/4] animate-pulse"></div>
+                    <div class="bg-gray-50 rounded-lg aspect-[3/4] animate-pulse"></div>
                 </div>
             </div>
 
-            <div class="empty-state" id="emptyState" style="display: none;">
-                <div class="empty-icon">🍾</div>
-                <h3>No products in this category yet</h3>
-                <p>Check back soon for new arrivals</p>
-                <a href="<?= BASE_URL ?>shop.php" class="btn btn-black">Browse All Products</a>
+            <div id="emptyState" class="hidden py-32 text-center flex flex-col items-center">
+                <div class="text-4xl mb-6">∅</div>
+                <h2 class="text-xs uppercase tracking-[0.3em] font-black mb-4">No Products Found</h2>
+                <p class="text-gray-400 text-sm italic font-light mb-8">Check back soon for new arrivals in this collection.</p>
+                <a href="<?= BASE_URL ?>shop.php" class="btn-premium px-12">Browse All Products</a>
             </div>
         </section>
 
         <!-- Related Categories -->
-        <section class="related-categories" id="relatedCategories">
-            <h2 class="section-title">Explore Other Collections</h2>
-            <div class="categories-grid" id="categoriesGrid"></div>
-        </section>
+        <?php
+            $categoriesSectionTitle = 'Explore Other Collections';
+            $categoriesSectionSubtitle = 'Discover More';
+            $categoriesExcludeId = $categoryId;
+            require_once __DIR__ . '/components/categories.php';
+        ?>
     </div>
 </main>
 
-<style>
-.category-page {
-    background: var(--white);
-    min-height: 100vh;
-    padding-bottom: var(--space-3xl);
-}
 
-.breadcrumb {
-    padding: var(--space-lg) 0;
-    font-size: 0.9rem;
-    color: var(--gray-500);
-}
-
-.breadcrumb a {
-    color: var(--gray-500);
-    text-decoration: none;
-}
-
-.breadcrumb a:hover {
-    color: var(--black);
-}
-
-.breadcrumb .separator {
-    margin: 0 var(--space-sm);
-}
-
-.breadcrumb .current {
-    color: var(--black);
-}
-
-/* Category Hero */
-.category-hero {
-    position: relative;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-    border-radius: var(--radius-xl);
-    padding: var(--space-3xl);
-    margin-bottom: var(--space-2xl);
-    overflow: hidden;
-    min-height: 350px;
-    display: flex;
-    align-items: center;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-    max-width: 600px;
-}
-
-.hero-badge {
-    display: inline-block;
-    padding: var(--space-xs) var(--space-md);
-    background: var(--black);
-    color: var(--white);
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-lg);
-}
-
-.hero-title {
-    font-family: var(--font-serif);
-    font-size: 3.5rem;
-    font-weight: 300;
-    font-style: italic;
-    color: var(--white);
-    margin-bottom: var(--space-md);
-    line-height: 1.1;
-}
-
-.hero-description {
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.7);
-    line-height: 1.7;
-    margin-bottom: var(--space-xl);
-}
-
-.hero-stats {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xl);
-}
-
-.stat {
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-value {
-    font-family: var(--font-serif);
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--black);
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-divider {
-    width: 1px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.hero-visual {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 50%;
-    height: 100%;
-    z-index: 1;
-}
-
-.hero-pattern {
-    position: absolute;
-    right: -100px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.45) 0%, transparent 60%);
-    border-radius: 50%;
-}
-
-.hero-pattern::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-}
-
-/* Flavor Summary */
-.flavor-summary {
-    background: var(--gray-50);
-    border-radius: var(--radius-xl);
-    padding: var(--space-xl);
-    margin-bottom: var(--space-2xl);
-}
-
-.flavor-summary h3 {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    font-style: italic;
-    margin-bottom: var(--space-lg);
-}
-
-.flavor-bars {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-lg);
-    margin-bottom: var(--space-lg);
-}
-
-.flavor-bar-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-}
-
-.flavor-bar-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-}
-
-.flavor-bar-label span:first-child {
-    color: var(--gray-600);
-}
-
-.flavor-bar-label span:last-child {
-    font-weight: 600;
-    color: var(--black);
-}
-
-.flavor-bar {
-    height: 6px;
-    background: var(--gray-200);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.flavor-bar-fill {
-    height: 100%;
-    background: var(--black);
-    border-radius: 3px;
-    transition: width 0.8s ease;
-}
-
-.flavor-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-}
-
-.flavor-tag {
-    padding: var(--space-xs) var(--space-md);
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-full);
-    font-size: 0.85rem;
-    color: var(--gray-700);
-}
-
-/* Products Section */
-.category-products {
-    margin-bottom: var(--space-3xl);
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-xl);
-}
-
-.section-title {
-    font-family: var(--font-serif);
-    font-size: 1.75rem;
-    font-weight: 400;
-    font-style: italic;
-}
-
-.sort-select {
-    padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-md);
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-size: 0.9rem;
-    background: var(--white);
-}
-
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-xl);
-}
-
-/* Skeleton Loader */
-.skeleton-loader {
-    display: contents;
-}
-
-.skeleton-card {
-    background: var(--gray-100);
-    border-radius: var(--radius-lg);
-    aspect-ratio: 3/4;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes skeleton-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Product Card */
-.product-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    transition: all var(--duration-normal);
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-}
-
-.product-card:hover {
-    border-color: var(--black);
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-4px);
-}
-
-.product-card-image {
-    aspect-ratio: 1/1;
-    overflow: hidden;
-    position: relative;
-}
-
-.product-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform var(--duration-slow);
-}
-
-.product-card:hover .product-card-image img {
-    transform: scale(1.08);
-}
-
-.product-badge {
-    position: absolute;
-    top: var(--space-md);
-    left: var(--space-md);
-    padding: var(--space-xs) var(--space-sm);
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    border-radius: var(--radius-sm);
-    background: var(--black);
-    color: var(--white);
-}
-
-.product-card-info {
-    padding: var(--space-lg);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.product-card-name {
-    font-family: var(--font-serif);
-    font-size: 1.1rem;
-    font-weight: 500;
-    font-style: italic;
-    color: var(--black);
-    margin-bottom: var(--space-sm);
-    line-height: 1.3;
-}
-
-.product-card-rating {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-sm);
-    font-size: 0.85rem;
-}
-
-.product-card-rating .stars {
-    color: var(--gold);
-}
-
-.product-card-rating .count {
-    color: var(--gray-500);
-}
-
-.product-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--gray-100);
-}
-
-.product-card-price {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--gold);
-}
-
-.btn-add-cart {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--black);
-    color: var(--white);
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    transition: all var(--duration-fast);
-}
-
-.btn-add-cart:hover {
-    background: var(--gold);
-    color: var(--black);
-    transform: scale(1.1);
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: var(--space-3xl);
-}
-
-.empty-icon {
-    font-size: 4rem;
-    margin-bottom: var(--space-lg);
-}
-
-.empty-state h3 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    margin-bottom: var(--space-sm);
-}
-
-.empty-state p {
-    color: var(--gray-500);
-    margin-bottom: var(--space-xl);
-}
-
-/* Related Categories */
-.related-categories {
-    border-top: 1px solid var(--gray-200);
-    padding-top: var(--space-2xl);
-}
-
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-lg);
-    margin-top: var(--space-xl);
-}
-
-.category-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--space-xl);
-    background: var(--gray-50);
-    border-radius: var(--radius-lg);
-    text-decoration: none;
-    color: inherit;
-    transition: all var(--duration-fast);
-}
-
-.category-card:hover {
-    background: var(--black);
-    color: var(--white);
-}
-
-.category-card:hover .category-card-name {
-    color: var(--gold);
-}
-
-.category-card-icon {
-    font-size: 2.5rem;
-    margin-bottom: var(--space-md);
-}
-
-.category-card-name {
-    font-family: var(--font-serif);
-    font-size: 1.1rem;
-    font-style: italic;
-    transition: color var(--duration-fast);
-}
-
-.category-card-count {
-    font-size: 0.8rem;
-    color: var(--gray-500);
-    margin-top: var(--space-xs);
-}
-
-.category-card:hover .category-card-count {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .products-grid,
-    .categories-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .hero-title {
-        font-size: 2.5rem;
-    }
-    
-    .hero-visual {
-        width: 40%;
-    }
-}
-
-@media (max-width: 768px) {
-    .products-grid,
-    .categories-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .flavor-bars {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .category-hero {
-        padding: var(--space-xl);
-        min-height: 280px;
-    }
-    
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-stats {
-        flex-wrap: wrap;
-        gap: var(--space-md);
-    }
-    
-    .stat-divider {
-        display: none;
-    }
-    
-    .hero-visual {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .products-grid,
-    .categories-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .flavor-bars {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
 
 <script type="module">
 import { API } from '<?= BASE_URL ?>assets/js/api-helper.js';
@@ -636,6 +127,12 @@ const init = async () => {
     renderProducts();
     renderRelatedCategories();
     setupEventListeners();
+
+    // Trigger hero shrink animation after 1 second
+    setTimeout(() => {
+        const hero = document.getElementById('categoryHero');
+        if (hero) hero.classList.add('shrunk');
+    }, 1000);
 };
 
 // Load data
@@ -692,24 +189,26 @@ const renderCategory = () => {
     }
     
     // Update page title
-    document.title = `${categoryData.name} - Royal Liquor`;
+    document.title = `${categoryData.name} - Royal Beverages`;
 };
+
+let flavorChartInstance = null;
 
 // Render flavor summary
 const renderFlavorSummary = () => {
     // Calculate average flavors across all products in category
     const flavorAttrs = ['sweetness', 'bitterness', 'strength', 'smokiness', 'fruitiness', 'spiciness'];
-    const flavorSums = {};
+    const flavorSums = { sweetness: 0, bitterness: 0, strength: 0, smokiness: 0, fruitiness: 0, spiciness: 0 };
     const tagCounts = {};
     let validProducts = 0;
     
     productsData.forEach(p => {
         try {
             const flavor = typeof p.flavor_profile === 'string' ? JSON.parse(p.flavor_profile) : p.flavor_profile;
-            if (flavor.sweetness != null) {
+            if (flavor && flavor.sweetness != null) {
                 validProducts++;
                 flavorAttrs.forEach(attr => {
-                    flavorSums[attr] = (flavorSums[attr] || 0) + (flavor[attr] || 0);
+                    flavorSums[attr] += (flavor[attr] || 0);
                 });
                 (flavor.tags || []).forEach(tag => {
                     tagCounts[tag] = (tagCounts[tag] || 0) + 1;
@@ -722,25 +221,64 @@ const renderFlavorSummary = () => {
     
     // Show flavor summary
     const container = document.getElementById('flavorSummary');
-    container.style.display = 'block';
+    container.classList.remove('hidden');
+    container.classList.add('block');
     
-    // Render bars
-    const barsHtml = flavorAttrs.map(attr => {
-        const avg = (flavorSums[attr] / validProducts).toFixed(1);
-        const percent = (avg / 10) * 100;
-        return `
-            <div class="flavor-bar-item">
-                <div class="flavor-bar-label">
-                    <span>${attr.charAt(0).toUpperCase() + attr.slice(1)}</span>
-                    <span>${avg}/10</span>
-                </div>
-                <div class="flavor-bar">
-                    <div class="flavor-bar-fill" style="width: ${percent}%"></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    document.getElementById('flavorBars').innerHTML = barsHtml;
+    // Render Chart
+    const ctx = document.getElementById('flavorChart').getContext('2d');
+    const labels = ['Sweet', 'Bitter', 'Strength', 'Smoke', 'Fruit', 'Spice'];
+    const values = flavorAttrs.map(attr => flavorSums[attr] / validProducts);
+
+    if (flavorChartInstance) flavorChartInstance.destroy();
+
+    flavorChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Category Average',
+                data: values,
+                fill: true,
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                borderColor: 'rgb(0, 0, 0)',
+                pointBackgroundColor: 'rgb(0, 0, 0)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(0, 0, 0)',
+                borderWidth: 1.5,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { display: true, color: 'rgba(0, 0, 0, 0.05)' },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: { display: false },
+                    pointLabels: {
+                        font: { family: 'Inter', size: 9, weight: '900' },
+                        color: '#000',
+                        padding: 15
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#000',
+                    titleFont: { size: 10 },
+                    bodyFont: { size: 10 },
+                    callbacks: {
+                        label: (ctx) => `${ctx.label}: ${ctx.raw.toFixed(1)}/10`
+                    }
+                }
+            }
+        }
+    });
     
     // Render top tags
     const topTags = Object.entries(tagCounts)
@@ -749,83 +287,90 @@ const renderFlavorSummary = () => {
     
     if (topTags.length > 0) {
         document.getElementById('flavorTags').innerHTML = 
-            topTags.map(([tag]) => `<span class="flavor-tag">${tag}</span>`).join('');
+            topTags.map(([tag]) => `<span class="bg-black text-white text-[9px] uppercase font-black tracking-widest px-3 py-1">${tag}</span>`).join('');
     }
 };
 
-// Render products
 const renderProducts = () => {
     const grid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
     
     if (productsData.length === 0) {
-        grid.style.display = 'none';
-        emptyState.style.display = 'block';
+        grid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
         return;
     }
     
-    grid.style.display = 'grid';
-    emptyState.style.display = 'none';
+    grid.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    emptyState.classList.remove('flex');
     grid.innerHTML = productsData.map(renderProductCard).join('');
 };
 
-// Render product card
+// Helper to fix image paths
+const fixImagePath = (url) => {
+    if (!url) return '<?= BASE_URL ?>assets/images/placeholder-product.png';
+    if (url.includes('products/')) {
+        const filename = url.split('/').pop();
+        return '<?= BASE_URL ?>assets/images/' + filename;
+    }
+    return '<?= BASE_URL ?>assets/images/' + url.split('/').pop();
+};
+
 const renderProductCard = (p) => {
     const price = (p.price_cents / 100).toFixed(2);
-    const rating = parseFloat(p.avg_rating) || 0;
-    const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
     const inStock = p.available_stock > 0;
-    const isBestseller = (p.units_sold || 0) > 100;
+    const isPremium = p.price_cents >= 10000;
+    
+    let badgeHtml = '';
+    if (isPremium) badgeHtml = 'Vintage';
+    else if (p.available_stock < 20 && inStock) badgeHtml = `Low Stock: ${p.available_stock}`;
 
     return `
-        <article class="product-card">
-            <a href="product.php?id=${p.id}" class="product-card-image">
-                <img src="${p.image_url}" alt="${p.name}" loading="lazy">
-                ${isBestseller ? '<span class="product-badge">Bestseller</span>' : ''}
+        <div class="group w-full bg-white border border-gray-100 p-8 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black ${!inStock ? 'opacity-40 grayscale' : ''}" data-id="${p.id}">
+            <div class="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                ${!inStock ? `<span class="bg-gray-100 text-gray-500 text-[8px] font-black uppercase tracking-widest px-3 py-1">Depleted</span>` : ''}
+                ${badgeHtml ? `<span class="bg-black text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 shadow-sm">${badgeHtml}</span>` : ''}
+            </div>
+
+            <a href="product.php?id=${p.id}" class="block h-56 mb-8 mt-4 relative flex items-center justify-center cursor-pointer">
+                <img src="${fixImagePath(p.image_url)}" 
+                     alt="${p.name}" 
+                     class="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl" 
+                     loading="lazy"
+                     onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'">
             </a>
-            <div class="product-card-info">
-                <h3 class="product-card-name">${p.name}</h3>
-                <div class="product-card-rating">
-                    <span class="stars">${stars}</span>
-                    <span class="count">(${rating.toFixed(1)})</span>
-                </div>
-                <div class="product-card-footer">
-                    <span class="product-card-price">$${price}</span>
-                    <button class="btn-add-cart" data-id="${p.id}" ${!inStock ? 'disabled' : ''} title="${inStock ? 'Add to Cart' : 'Out of Stock'}">
-                        +
+
+            <div class="text-center flex flex-col flex-grow items-center justify-end w-full">
+                <span class="text-[9px] uppercase font-black tracking-[0.3em] text-gray-400 mb-2 truncate max-w-full block">
+                    ${p.category_name || 'Spirit'}
+                </span>
+                <h3 class="text-sm font-heading uppercase tracking-widest mb-4 group-hover:text-gold transition-colors line-clamp-2 px-2">
+                    ${p.name}
+                </h3>
+                <span class="text-xs font-black tracking-widest mb-8 uppercase">$${price}</span>
+                
+                <div class="flex gap-2 w-full mt-auto">
+                    <a href="product.php?id=${p.id}" class="btn-premium-outline flex-grow h-12 text-[9px] flex items-center justify-center" style="padding: 0 0.5rem;">View Details</a>
+                    <button class="btn-premium-outline w-12 h-12 flex-shrink-0 flex items-center justify-center btn-add-wishlist hover:bg-red-50 hover:text-red-600 transition-colors" style="padding: 0;" data-id="${p.id}" title="Add to Wishlist">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </button>
+                    <button class="btn-premium w-12 h-12 flex-shrink-0 flex items-center justify-center btn-add-cart" style="padding: 0;" data-id="${p.id}" ${!inStock ? 'disabled' : ''} title="Add to Cart">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </button>
                 </div>
             </div>
-        </article>
+        </div>
     `;
-};
-
-// Render related categories
-const renderRelatedCategories = () => {
-    const otherCategories = allCategories.filter(c => c.id !== categoryId).slice(0, 4);
-    
-    if (otherCategories.length === 0) {
-        document.getElementById('relatedCategories').style.display = 'none';
-        return;
-    }
-
-    const icons = ['🥃', '🍷', '🍺', '🥂', '🍸', '🍹'];
-    
-    document.getElementById('categoriesGrid').innerHTML = otherCategories.map((c, i) => `
-        <a href="category.php?id=${c.id}" class="category-card">
-            <div class="category-card-icon">${icons[i % icons.length]}</div>
-            <span class="category-card-name">${c.name}</span>
-            <span class="category-card-count">${c.product_count || 0} products</span>
-        </a>
-    `).join('');
 };
 
 // Show error
 const showError = (message) => {
     document.getElementById('categoryHero').innerHTML = `
-        <div class="hero-content">
-            <h1 class="hero-title" style="color: var(--error);">${message}</h1>
-            <a href="<?= BASE_URL ?>shop.php" class="btn btn-gold" style="margin-top: 20px;">Browse All Products</a>
+        <div class="flex flex-col items-center justify-center py-32 w-full text-center">
+            <h1 class="text-4xl font-heading uppercase tracking-widest text-red-500 mb-8">${message}</h1>
+            <a href="<?= BASE_URL ?>shop.php" class="btn-premium px-12 h-14">Browse All Products</a>
         </div>
     `;
 };

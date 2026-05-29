@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 $pageName = 'feedback';
-$pageTitle = 'Customer Reviews - Royal Liquor';
+$pageTitle = 'Customer Reviews - Royal Beverages';
 
 require_once __DIR__ . '/components/header.php';
 
-$session = Session::getInstance();
+$session = \App\Core\Session::getInstance();
 $isLoggedIn = $session->isLoggedIn();
 $userId = $session->get('user_id');
 
@@ -17,18 +17,19 @@ $initialFeedback = $feedbackRepo->getAllPaginated(12, 0, true);
 ?>
 
 <main class="min-h-screen pt-20" data-user-id="<?= $userId ?? 'null' ?>">
-    <!-- Hero Section -->
-    <section class="max-w-[1440px] mx-auto px-8 py-24 border-b border-gray-100">
-        <div class="flex flex-col items-center text-center">
-            <span class="text-[10px] uppercase tracking-[0.4em] text-black font-black mb-6 animate-premium-fade">Customer Voice</span>
-            <h1 class="text-6xl md:text-8xl font-heading uppercase tracking-widest font-extrabold mb-10 leading-none antialiased">
-                Customer Reviews
-            </h1>
-            <p class="text-gray-400 text-sm font-light italic max-w-xl leading-relaxed">
-                We invite our distinguished clientele to share their experiences. Your insights ensure the perpetual refinement of our curated collection.
-            </p>
-        </div>
-    </section>
+    <!-- Animated Hero Section -->
+    <?php
+    $heroTitle = 'Customer Reviews';
+    $heroSubtitle = 'Customer Voice';
+    $heroDescription = 'We invite our distinguished clientele to share their experiences. Your insights ensure the perpetual refinement of our curated collection.';
+    $heroId = 'feedbackHero';
+    $heroOffset = '15%';
+    $heroBreadcrumbs = [
+        ['url' => BASE_URL, 'label' => 'Home'],
+        ['url' => '', 'label' => 'Customer Reviews']
+    ];
+    require_once __DIR__ . '/components/animated-hero.php';
+    ?>
 
     <!-- Submission Section -->
     <section class="max-w-[1440px] mx-auto px-8 py-32 grid grid-cols-1 lg:grid-cols-12 gap-24">
@@ -87,7 +88,7 @@ $initialFeedback = $feedbackRepo->getAllPaginated(12, 0, true);
                 <div class="p-12 bg-gray-50 border border-gray-100 flex flex-col items-center text-center">
                     <svg class="w-12 h-12 text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     <p class="text-xs uppercase font-black tracking-widest text-black mb-8">Members Only</p>
-                    <p class="text-[10px] text-gray-400 tracking-widest leading-loose mb-10">Sign in to share your refined perspective with the Royal Liquor community.</p>
+                    <p class="text-[10px] text-gray-400 tracking-widest leading-loose mb-10">Sign in to share your refined perspective with the Royal Beverages community.</p>
                     <a href="auth.php" class="btn-premium px-12">Sign In</a>
                 </div>
                 <?php endif; ?>
@@ -95,7 +96,7 @@ $initialFeedback = $feedbackRepo->getAllPaginated(12, 0, true);
         </div>
 
         <!-- Feedback Thread Column -->
-        <div class="lg:col-span-7">
+        <div class="lg:col-span-7" id="reviewsColumn">
             <div class="mb-16">
                 <h2 class="text-2xl font-heading uppercase tracking-widest font-extrabold mb-4">The Directory</h2>
                 <div class="w-12 h-px bg-black"></div>

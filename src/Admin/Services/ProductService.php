@@ -141,6 +141,15 @@ class ProductService
         return $this->repo->getAllEnriched($limit, $offset);
     }
 
+    public function getByIdEnriched(int $id): array
+    {
+        $product = $this->repo->getByIdEnriched($id);
+        if (!$product) {
+            throw new NotFoundException('Product not found');
+        }
+        return $product;
+    }
+
     public function getTopSellers(int $limit = 10): array
     {
         return $this->repo->getTopSellers($limit);

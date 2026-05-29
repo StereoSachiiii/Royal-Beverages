@@ -7,8 +7,22 @@ export const updateCartCount = (count = null) => {
     const cartCountHeader = document.querySelector('.count-display');
     const finalCount = count !== null ? count : cart.getCount();
 
-    if (cartCount) cartCount.textContent = finalCount || '';
-    if (cartCountHeader) cartCountHeader.textContent = finalCount || '';
+    if (cartCount) {
+        cartCount.textContent = finalCount || '';
+        if (!finalCount || finalCount == 0) cartCount.classList.add('hidden');
+        else cartCount.classList.remove('hidden');
+    }
+    
+    if (cartCountHeader) {
+        cartCountHeader.textContent = finalCount || '';
+        if (!finalCount || finalCount == 0) {
+            cartCountHeader.classList.add('hidden');
+            cartCountHeader.classList.remove('flex');
+        } else {
+            cartCountHeader.classList.remove('hidden');
+            cartCountHeader.classList.add('flex');
+        }
+    }
 };
 
 // Listen for cart changes globally
@@ -44,10 +58,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     const openMobileSidebar = () => {
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
         mobileSidebar.classList.remove('-translate-x-full');
         mobileSidebar.classList.add('translate-x-0');
         sidebarOverlay.classList.remove('opacity-0', 'invisible');
         sidebarOverlay.classList.add('opacity-100', 'visible');
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
         document.body.style.overflow = 'hidden';
     };
 
@@ -58,6 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             sidebarOverlay.classList.add('opacity-0', 'invisible');
             sidebarOverlay.classList.remove('opacity-100', 'visible');
             document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
     };
 
@@ -71,10 +88,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     const openProfileSidebar = () => {
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
         profileSidebar.classList.remove('translate-x-full');
         profileSidebar.classList.add('translate-x-0');
         sidebarOverlay.classList.remove('opacity-0', 'invisible');
         sidebarOverlay.classList.add('opacity-100', 'visible');
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
         document.body.style.overflow = 'hidden';
     };
 
@@ -85,6 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             sidebarOverlay.classList.add('opacity-0', 'invisible');
             sidebarOverlay.classList.remove('opacity-100', 'visible');
             document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
     };
 

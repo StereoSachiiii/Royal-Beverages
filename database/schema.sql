@@ -34,6 +34,8 @@ CREATE TABLE users (
     phone             VARCHAR(20),
     password_hash     VARCHAR(255) NOT NULL,
     profile_image_url VARCHAR(500),
+    oauth_provider    VARCHAR(50),
+    oauth_provider_id VARCHAR(255),
     is_admin          BOOLEAN DEFAULT FALSE,
     is_active         BOOLEAN DEFAULT TRUE,
     is_anonymized     BOOLEAN DEFAULT FALSE,

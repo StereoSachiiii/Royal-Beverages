@@ -201,7 +201,7 @@ class ProductRepository extends BaseRepository
 {
     $stmt = $this->pdo->prepare("
         SELECT 
-            p.id, p.name, p.slug, p.description, p.price_cents, p.image_url,
+            p.id, p.category_id, p.name, p.slug, p.description, p.price_cents, p.image_url,
             p.is_active, p.created_at, p.updated_at,
             c.name as category_name,
             s.name as supplier_name,
@@ -228,8 +228,8 @@ class ProductRepository extends BaseRepository
         LEFT JOIN feedback f ON p.id = f.product_id AND f.is_active = TRUE
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         WHERE p.deleted_at IS NULL
-        GROUP BY p.id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
-        ORDER BY p.created_at DESC
+        GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
+        ORDER BY (COALESCE(SUM(st.quantity - st.reserved), 0) > 0) DESC, p.created_at DESC
         LIMIT :limit OFFSET :offset
     ");
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -242,7 +242,7 @@ public function getByIdEnriched(int $id): ?array
 {
     $stmt = $this->pdo->prepare("
         SELECT 
-            p.id, p.name, p.slug, p.description, p.price_cents, p.image_url,
+            p.id, p.category_id, p.name, p.slug, p.description, p.price_cents, p.image_url,
             p.is_active, p.created_at, p.updated_at,
             c.name as category_name,
             s.name as supplier_name,
@@ -269,7 +269,7 @@ public function getByIdEnriched(int $id): ?array
         LEFT JOIN feedback f ON p.id = f.product_id AND f.is_active = TRUE
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         WHERE p.id = :id AND p.deleted_at IS NULL
-        GROUP BY p.id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
+        GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
     ");
     $stmt->bindValue(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
@@ -281,7 +281,7 @@ public function getTopSellers(int $limit = 10): array
 {
     $stmt = $this->pdo->prepare("
         SELECT 
-            p.id, p.name, p.slug, p.description, p.price_cents, p.image_url,
+            p.id, p.category_id, p.name, p.slug, p.description, p.price_cents, p.image_url,
             p.is_active, p.created_at, p.updated_at,
             c.name as category_name,
             s.name as supplier_name,
@@ -308,7 +308,7 @@ public function getTopSellers(int $limit = 10): array
         LEFT JOIN feedback f ON p.id = f.product_id AND f.is_active = TRUE
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         WHERE p.deleted_at IS NULL
-        GROUP BY p.id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
+        GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
         ORDER BY units_sold DESC, p.name ASC  -- Tie-breaker by name
         LIMIT :limit
     ");
@@ -322,7 +322,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
     $searchTerm = '%' . $query . '%';
     $stmt = $this->pdo->prepare("
         SELECT 
-            p.id, p.name, p.slug, p.description, p.price_cents, p.image_url,
+            p.id, p.category_id, p.name, p.slug, p.description, p.price_cents, p.image_url,
             p.is_active, p.created_at, p.updated_at,
             c.name as category_name,
             s.name as supplier_name,
@@ -350,7 +350,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         WHERE p.deleted_at IS NULL
         AND (p.name ILIKE :search OR p.description ILIKE :search OR c.name ILIKE :search OR fp.tags @> ARRAY[:search]::text[])
-        GROUP BY p.id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
+        GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
         ORDER BY p.name ASC
         LIMIT :limit OFFSET :offset
     ");
@@ -405,7 +405,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
 
     $sql = "
         SELECT 
-            p.id, p.name, p.slug, p.description, p.price_cents, p.image_url,
+            p.id, p.category_id, p.name, p.slug, p.description, p.price_cents, p.image_url,
             p.created_at, p.updated_at,
             c.name as category_name,
             s.name as supplier_name,
@@ -435,7 +435,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
         LEFT JOIN feedback f ON p.id = f.product_id AND f.is_active = TRUE
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         $whereSql
-        GROUP BY p.id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength,
+        GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength,
                  fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
         ORDER BY $order
         LIMIT :limit OFFSET :offset

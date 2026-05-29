@@ -1,47 +1,31 @@
 /**
  * Categories.js — Consolidated Categories domain module.
- *
- * Rows rendered as inline HTML strings to avoid the getTemplate
- * browser-parsing bug that orphans <tr> elements outside the table.
+ * Uses EntityBuilder to eliminate boilerplate.
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatNumber, formatDate, debounce, openStandardModal, closeModal, getTemplate, getFormData } from '../../utils.js';
+import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import { createEntityModule } from '../../components/EntityBuilder.js';
 import { uploadImage } from '../../FormHelpers.js';
 
-const DEFAULT_LIMIT = 20;
-let _offset = 0;
-let _query  = '';
-let _lastResults = [];
-
-// ─── API ─────────────────────────────────────────────────────────────────────
-
-async function fetchCategories(limit = DEFAULT_LIMIT, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.CATEGORIES.LIST + buildQueryString({
-            limit, offset, enriched: 'true',
-            ...(query ? { search: query } : {})
-        });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch categories');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-        console.error('[Categories]', err);
-        return [];
-    }
+async function fetchCategories(limit = 20, offset = 0, query = '') {
+    const url = API_ROUTES.CATEGORIES.LIST + buildQueryString({
+        limit, offset, enriched: 'true',
+        ...(query ? { search: query } : {})
+    });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch categories');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
 }
 
 async function fetchCategory(id) {
-    try {
-        const url = API_ROUTES.CATEGORIES.GET(id) + buildQueryString({ enriched: 'true' });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch category');
-        return res.data;
-    } catch (err) { throw err; }
+    const url = API_ROUTES.CATEGORIES.GET(id) + buildQueryString({ enriched: 'true' });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch category');
+    return res.data;
 }
 
-// ─── Row Renderer (inline HTML — avoids getTemplate table-parsing bug) ────────
-
+// ─── Row Renderer ─────────────────────────────────────────────────────────────
 function renderRow(cat) {
     const isActive = cat.is_active !== false && cat.is_active !== 'f';
     const statusBadge = isActive
@@ -81,16 +65,10 @@ function renderRow(cat) {
                     </button>
                 </div>
             </td>
-        </tr>
-    `;
-}
-
-function emptyRow(msg) {
-    return `<tr><td colspan="5" class="px-8 py-20 text-center text-xs font-medium text-gray-400">${escapeHtml(msg)}</td></tr>`;
+        </tr>`;
 }
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
-
 function renderViewModal(cat) {
     const avgPrice = cat.avg_price_cents ? (cat.avg_price_cents / 100).toFixed(2) : '—';
     const minPrice = cat.min_price_cents ? (cat.min_price_cents / 100).toFixed(2) : '—';
@@ -113,7 +91,6 @@ function renderViewModal(cat) {
 
     return `
         <div style="display:flex;flex-direction:column;gap:20px;">
-            <!-- Header -->
             <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
                 ${cat.image_url
                     ? `<img src="${escapeHtml(cat.image_url)}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;" alt="${escapeHtml(cat.name)}">`
@@ -128,7 +105,6 @@ function renderViewModal(cat) {
                 </div>
             </div>
 
-            <!-- Stats Grid -->
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
                 <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;text-align:center;">
                     <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.05em;">Products</div>
@@ -171,8 +147,7 @@ function renderViewModal(cat) {
 }
 
 // ─── Form Builder ─────────────────────────────────────────────────────────────
-
-async function renderFormModal(categoryId = null) {
+async function renderFormModal(categoryId) {
     const isEdit = categoryId !== null;
     let cat = {};
     if (isEdit) cat = await fetchCategory(categoryId);
@@ -192,9 +167,7 @@ async function renderFormModal(categoryId = null) {
         if (footer) {
             const del = document.createElement('button');
             del.type = 'button';
-            del.className = 'btn btn-outline text-danger mr-auto';
-            del.id = 'cat-delete-btn';
-            del.dataset.id = categoryId;
+            del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
             del.innerHTML = '🗑️ Delete';
             footer.prepend(del);
         }
@@ -202,21 +175,15 @@ async function renderFormModal(categoryId = null) {
     return frag;
 }
 
-// ─── Form Handlers ────────────────────────────────────────────────────────────
-
-function initFormHandlers(modalRoot, categoryId, onSuccess) {
-    const isEdit  = categoryId !== null;
-    const form    = modalRoot.querySelector('#cat-form');
-    const cancel  = modalRoot.querySelector('#cat-cancel');
-    const delBtn  = modalRoot.querySelector('#cat-delete-btn');
-    const imgFile = modalRoot.querySelector('#cat-image-file');
-    const imgPrev = modalRoot.querySelector('#cat-image-preview');
-    const imgHid  = modalRoot.querySelector('#cat-image-hidden');
-    const nameInp = modalRoot.querySelector('[name="name"]');
-    const slugInp = modalRoot.querySelector('[name="slug"]');
-
+// ─── Custom Form Handlers ─────────────────────────────────────────────────────
+function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
+    const isEdit = id !== null;
+    const form = modalRoot.querySelector('#cat-form');
     if (!form) return;
 
+    const nameInp = form.querySelector('[name="name"]');
+    const slugInp = form.querySelector('[name="slug"]');
+    
     // Auto-slug
     if (!isEdit && nameInp && slugInp) {
         nameInp.addEventListener('input', () => {
@@ -227,12 +194,19 @@ function initFormHandlers(modalRoot, categoryId, onSuccess) {
         slugInp.addEventListener('input', () => { slugInp.dataset.manual = '1'; });
     }
 
-    // Image upload
+    // Cancel
+    const cancel = modalRoot.querySelector('.js-cancel');
+    if (cancel) cancel.addEventListener('click', closeModalFn);
+
+    // Image Upload
+    const imgFile = form.querySelector('input[type="file"]');
     if (imgFile) {
+        const imgPrev = modalRoot.querySelector(`#${imgFile.id.replace('-file', '-preview')}`);
+        const imgHid  = modalRoot.querySelector(`#${imgFile.id.replace('-file', '-hidden')}`);
         imgFile.addEventListener('change', async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
-            const label = modalRoot.querySelector('label[for="cat-image-file"]');
+            const label = modalRoot.querySelector(`label[for="${imgFile.id}"]`);
             if (label) label.textContent = 'Uploading…';
             try {
                 const url = await uploadImage(file, 'categories');
@@ -241,248 +215,84 @@ function initFormHandlers(modalRoot, categoryId, onSuccess) {
                 if (label) label.textContent = '✅ Change Image';
             } catch (err) {
                 if (label) label.textContent = '✗ Upload Failed';
-                console.error('[Categories] Image upload error:', err);
             }
         });
     }
 
-    if (cancel) cancel.addEventListener('click', () => closeModal());
-
     // Delete
+    const delBtn = modalRoot.querySelector('.js-delete-btn');
     if (delBtn) {
         delBtn.addEventListener('click', async () => {
             if (!delBtn.dataset.confirmed) {
                 delBtn.dataset.confirmed = '1';
                 delBtn.innerHTML = '⚠️ Confirm Delete?';
                 delBtn.classList.add('btn-warning');
-                setTimeout(() => {
-                    delete delBtn.dataset.confirmed;
-                    delBtn.innerHTML = '🗑️ Delete';
-                    delBtn.classList.remove('btn-warning');
-                }, 3000);
+                setTimeout(() => { if(delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete'; delBtn.classList.remove('btn-warning'); }}, 3000);
                 return;
             }
             delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
             try {
-                await apiRequest(API_ROUTES.CATEGORIES.DELETE(categoryId), { method: 'DELETE' });
-                closeModal();
-                onSuccess?.(null, 'deleted');
+                await apiRequest(API_ROUTES.CATEGORIES.DELETE(id), { method: 'DELETE' });
+                closeModalFn(); onSuccess?.(null, 'deleted');
             } catch (err) {
-                showFormError(form, err.message);
+                showFormErrorFn(form, err.message);
                 delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete';
                 delete delBtn.dataset.confirmed;
             }
         });
     }
 
-    // Submit
+    // Custom Submit handling to bypass standard getFormData due to ID mismatches
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const submit = form.querySelector('[type="submit"]');
         const orig   = submit.innerHTML;
-        submit.disabled = true;
-        submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
+        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
         try {
-            const data    = getFormData(form);
+            const formData = new FormData(form);
+            const imgHid = modalRoot.querySelector('#cat-image-hidden');
             const payload = {
-                name:        data.name,
-                slug:        data.slug || undefined,
-                description: data.description || '',
-                image_url:   (imgHid ? imgHid.value : null) || data.image_url || null,
-                is_active:   data.is_active !== undefined,
+                name:        formData.get('name'),
+                slug:        formData.get('slug') || undefined,
+                description: formData.get('description') || '',
+                image_url:   (imgHid ? imgHid.value : null) || formData.get('image_url') || null,
+                is_active:   formData.get('is_active') !== null,
             };
-            const url    = isEdit ? API_ROUTES.CATEGORIES.UPDATE(categoryId) : API_ROUTES.CATEGORIES.CREATE;
-            const method = isEdit ? 'PUT' : 'POST';
-            const res    = await apiRequest(url, { method, body: payload });
+            const url    = isEdit ? API_ROUTES.CATEGORIES.UPDATE(id) : API_ROUTES.CATEGORIES.CREATE;
+            const res    = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
             if (!res.success) throw new Error(res.message || 'Request failed');
-            closeModal();
-            onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
         } catch (err) {
-            showFormError(form, err.message);
+            showFormErrorFn(form, err.message);
             submit.disabled = false; submit.innerHTML = orig;
         }
     });
 }
 
-function showFormError(form, msg) {
-    let el = form.querySelector('.form-error-banner');
-    if (!el) {
-        el = Object.assign(document.createElement('div'), { className: 'form-error-banner' });
-        form.prepend(el);
-    }
-    el.textContent = `Error: ${msg}`;
-    el.style.display = 'block';
-}
-
-// ─── Page Reload Helper ───────────────────────────────────────────────────────
-
-async function reloadCategories(container) {
-    const html = await Categories();
-    container.innerHTML = html;
-    await initCategories(container);
-}
-
-function redrawTable(container, list) {
-    container.querySelector('#entity-tbody').innerHTML =
-        list.length ? list.map(renderRow).join('') : emptyRow('No categories found.');
-    const lmc = container.querySelector('#entity-load-more-container');
-    if (list.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load More</button>`;
-    } else {
-        lmc.style.display = 'none';
-        lmc.innerHTML = '';
-    }
-}
-
-// ─── Main View ────────────────────────────────────────────────────────────────
-
-const THEAD = `
-    <tr>
+// ─── Entity Builder ───────────────────────────────────────────────────────────
+const { Render: Categories, Init: initCategories } = createEntityModule({
+    entityName: 'Categories',
+    apiRoutes: {
+        list: API_ROUTES.CATEGORIES.LIST,
+        detail: (id) => API_ROUTES.CATEGORIES.GET(id),
+        create: API_ROUTES.CATEGORIES.CREATE,
+        update: (id) => API_ROUTES.CATEGORIES.UPDATE(id),
+        delete: (id) => API_ROUTES.CATEGORIES.DELETE(id)
+    },
+    fetchList: fetchCategories,
+    fetchSingle: fetchCategory,
+    tableHeaderHtml: `<tr>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Category</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Products</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
-    </tr>`;
+    </tr>`,
+    renderRow,
+    renderViewModal,
+    renderFormModal,
+    initFormHandlersOverride,
+    searchPlaceholder: 'Search by name or description…'
+});
 
-
-export async function Categories() {
-    _offset = 0;
-    const data = await fetchCategories(DEFAULT_LIMIT, 0, _query);
-    _lastResults = Array.isArray(data) ? data : [];
-    const rows = _lastResults.length ? _lastResults.map(renderRow).join('') : emptyRow('No categories found.');
-
-    const frag = getTemplate('tpl-admin-entity', {
-        'entity-title':    'Categories',
-        'entity-subtitle': `${_lastResults.length} categor${_lastResults.length === 1 ? 'y' : 'ies'} found`,
-    });
-
-    frag.querySelector('#entity-search').value = _query;
-    frag.querySelector('#entity-search').placeholder = 'Search by name or description…';
-    frag.querySelector('#entity-sort').remove();
-    frag.querySelector('#entity-create-btn').innerHTML = 'Add Category';
-    frag.querySelector('#entity-thead').innerHTML = THEAD;
-    frag.querySelector('#entity-tbody').innerHTML = rows;
-
-    const lmc = frag.querySelector('#entity-load-more-container');
-    if (_lastResults.length === DEFAULT_LIMIT) {
-        lmc.classList.remove('hidden');
-    }
-
-    return frag.firstElementChild.outerHTML;
-}
-
-// ─── Listeners / Init ─────────────────────────────────────────────────────────
-
-export function initCategories(container) {
-    if (!container) return null;
-    const ac     = new AbortController();
-    const signal = ac.signal;
-
-    const debouncedSearch = debounce(async (e) => {
-        _query  = e.target.value.trim();
-        _offset = 0;
-        const data = await fetchCategories(DEFAULT_LIMIT, 0, _query);
-        _lastResults = Array.isArray(data) ? data : [];
-        redrawTable(container, _lastResults);
-    }, 300);
-
-    container.addEventListener('input', (e) => {
-        if (e.target.id === 'entity-search') debouncedSearch(e);
-    }, { signal });
-
-    // Modal Action Redirects (Edit from inside View Modal)
-    // We attach this to container using signal so it cleans up.
-    container.addEventListener('click', async (e) => {
-        const editBtn = e.target.closest('.modal-overlay .js-edit');
-        if (!editBtn) return;
-        
-        const id = parseInt(editBtn.dataset.id);
-        closeModal();
-        setTimeout(async () => {
-            const frag = await renderFormModal(id);
-            openStandardModal({ title: 'Edit Category', bodyHtml: frag.firstElementChild.outerHTML, size: 'lg' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), id, () => reloadCategories(container));
-        }, 200);
-    }, { signal });
-
-    // View
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-view');
-        if (!btn || e.target.closest('.modal-overlay')) return; // Ignore if inside another modal
-        try {
-            const cat = await fetchCategory(btn.dataset.id);
-            openStandardModal({ title: `${escapeHtml(cat.name)} — Details`, bodyHtml: renderViewModal(cat), size: 'xl' });
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Edit (direct)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-edit');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        const id = parseInt(btn.dataset.id);
-        try {
-            const frag = await renderFormModal(id);
-            openStandardModal({ title: 'Edit Category', bodyHtml: frag.firstElementChild.outerHTML, size: 'lg' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), id, () => reloadCategories(container));
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Delete (direct from row)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-delete');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        if (!btn.dataset.confirmed) {
-            btn.dataset.confirmed = '1';
-            btn.innerHTML = '⚠️';
-            btn.style.background = '#fef9c3';
-            setTimeout(() => { if (btn.isConnected) { delete btn.dataset.confirmed; btn.innerHTML = '🗑'; btn.style.background = ''; }}, 3000);
-            return;
-        }
-        btn.disabled = true; btn.innerHTML = '…';
-        try {
-            await apiRequest(API_ROUTES.CATEGORIES.DELETE(id), { method: 'DELETE' });
-            reloadCategories(container);
-        } catch (err) {
-            btn.disabled = false; btn.innerHTML = '🗑';
-            alert('Delete failed: ' + err.message);
-        }
-    }, { signal });
-
-    // Create
-    container.addEventListener('click', async (e) => {
-        if (!e.target.closest('#entity-create-btn')) return;
-        const frag = await renderFormModal(null);
-        openStandardModal({ title: 'Create Category', bodyHtml: frag.firstElementChild.outerHTML, size: 'lg' });
-        initFormHandlers(document.querySelector('.modal-overlay:last-child'), null, () => reloadCategories(container));
-    }, { signal });
-
-    // Load More
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-load-more-btn') return;
-        const btn = e.target; btn.disabled = true; btn.textContent = 'Loading…';
-        _offset += DEFAULT_LIMIT;
-        const data = await fetchCategories(DEFAULT_LIMIT, _offset, _query);
-        const list = Array.isArray(data) ? data : [];
-        if (!list.length) { btn.closest('#entity-load-more-container').style.display = 'none'; return; }
-        _lastResults = [..._lastResults, ...list];
-        container.querySelector('#entity-tbody').insertAdjacentHTML('beforeend', list.map(renderRow).join(''));
-        if (list.length < DEFAULT_LIMIT) { btn.closest('#entity-load-more-container').style.display = 'none'; }
-        else { btn.disabled = false; btn.textContent = 'Load More'; }
-    }, { signal });
-
-    // Refresh
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-refresh-btn') return;
-        e.target.innerHTML = '⌛'; e.target.disabled = true;
-        await reloadCategories(container);
-    }, { signal });
-
-    return { cleanup: () => ac.abort() };
-}
+export { Categories, initCategories };

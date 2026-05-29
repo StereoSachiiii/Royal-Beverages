@@ -6,7 +6,7 @@
 // Base URL - all API requests use the dynamically injected API_BASE_URL or fallback
 const BASE_URL = window.ADMIN_CONFIG?.API_BASE_URL ? window.ADMIN_CONFIG.API_BASE_URL.replace(/\/$/, '') : '/api/v1';
 
-export const API_ROUTES = {
+const API_ROUTES = {
     PRODUCTS: {
         LIST: `${BASE_URL}/products`,
         ENRICHED_ALL: `${BASE_URL}/products/enriched/all`,
@@ -181,3 +181,57 @@ export const queryBuilders = {
     search: (query, limit = 50, offset = 0) => buildQueryString({ search: query, limit, offset }),
     withId: (id) => buildQueryString({ id })
 };
+
+// Build AdminAPI here to avoid circular module imports between admin-api.js and this file
+import { apiRequest } from './utils.js';
+
+const AdminAPI = {};
+
+function _getMethod(action) {
+    if (action === 'CREATE') return 'POST';
+    if (action === 'UPDATE') return 'PUT';
+    if (action === 'DELETE') return 'DELETE';
+    return 'GET';
+}
+
+Object.entries(API_ROUTES).forEach(([modelKey, endpoints]) => {
+    const model = modelKey.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    AdminAPI[model] = {};
+
+    Object.entries(endpoints).forEach(([actionKey, pathOrFn]) => {
+        const action = actionKey.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        const method = _getMethod(actionKey);
+
+        AdminAPI[model][action] = async (...args) => {
+            let url = '';
+            let payload = null;
+            if (typeof pathOrFn === 'function') {
+                const urlArg = args.shift();
+                url = pathOrFn(urlArg);
+            } else {
+                url = pathOrFn;
+            }
+
+            if (args.length > 0) payload = args.shift();
+
+            const options = { method };
+
+            if (payload) {
+                if (method === 'GET' || method === 'DELETE') {
+                    if (typeof payload === 'object' && payload !== null && !(payload instanceof FormData)) {
+                        url += buildQueryString(payload);
+                    }
+                } else {
+                    options.body = payload;
+                }
+            }
+
+            return await apiRequest(url, options);
+        };
+    });
+});
+
+// Expose globally for non-module inline scripts
+window.AdminAPI = AdminAPI;
+
+export { API_ROUTES, AdminAPI };

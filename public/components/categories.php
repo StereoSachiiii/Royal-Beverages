@@ -1,14 +1,18 @@
 <?php
 require_once __DIR__ . "/../config/urls.php";
+
+$sectionTitle = $categoriesSectionTitle ?? 'Browse Collections';
+$sectionSubtitle = $categoriesSectionSubtitle ?? 'Discovery';
+$excludeCategoryId = $categoriesExcludeId ?? 0;
 ?>
 
 <section class="section max-w-[1440px] mx-auto px-8">
     <div class="flex flex-col items-center mb-16">
-        <span class="text-xs uppercase tracking-[0.4em] text-black font-extrabold mb-4 text-center">Discovery</span>
-        <h2 class="text-3xl font-heading text-center uppercase tracking-widest font-extrabold">Browse Collections</h2>
+        <span class="text-xs uppercase tracking-[0.4em] text-black font-extrabold mb-4 text-center"><?= htmlspecialchars($sectionSubtitle) ?></span>
+        <h2 class="text-3xl font-heading text-center uppercase tracking-widest font-extrabold"><?= htmlspecialchars($sectionTitle) ?></h2>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 justify-center justify-items-center categories-container">
+    <div class="flex flex-row flex-wrap justify-center items-center gap-12 categories-container">
         <!-- Categories injected here -->
     </div>
 </section>
@@ -43,31 +47,36 @@ require_once __DIR__ . "/../config/urls.php";
         }
     };
 
+    const fixImagePath = (path) => path ? (path.startsWith('http') ? path : `<?= BASE_URL ?>assets/images/${path}`) : `<?= BASE_URL ?>assets/images/placeholder-product.png`;
+
     const renderCard = (cat) => {
         const productCount = parseInt(cat.product_count) || 0;
         return `
-            <div class="card-premium group relative overflow-hidden" data-id="${cat.id}">
-                <div class="card-premium-image-wrapper !bg-gray-100 overflow-hidden">
-                    <img src="${cat.image_url}" 
+            <div class="card-premium group w-full max-w-sm bg-white border border-gray-100 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black" data-id="${cat.id}">
+                <div class="card-premium-image-wrapper !bg-gray-50/50 overflow-hidden cursor-pointer relative p-6">
+                    <img src="${fixImagePath(cat.image_url)}" 
                          alt="${cat.name}" 
-                         class="card-premium-image !object-cover h-[400px] w-full transition-transform duration-1000 group-hover:scale-110" 
+                         class="card-premium-image !object-contain h-[260px] w-full transition-transform duration-1000 group-hover:scale-110" 
                          loading="lazy"
                          onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'; this.onerror=null;">
                     
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center z-10">
                         <div class="text-white text-[10px] font-black uppercase tracking-[0.3em] border border-white/30 px-6 py-3 backdrop-blur-sm">View Series</div>
                     </div>
                 </div>
                 
-                <div class="p-8 text-center bg-white">
-                    <div class="text-[9px] uppercase tracking-[0.4em] text-black font-bold mb-3">${productCount} Varieties</div>
-                    <h3 class="text-xl font-heading font-extrabold uppercase tracking-widest mb-6">${cat.name}</h3>
+                <div class="p-8 flex flex-col w-full flex-grow">
+                    <div class="flex flex-col items-center justify-center flex-grow mb-8 text-center">
+                        <span class="text-[9px] uppercase font-black tracking-[0.3em] text-gray-400 mb-2 block">
+                            ${productCount} Varieties
+                        </span>
+                        <h3 class="text-sm font-heading uppercase tracking-widest group-hover:text-gold transition-colors">
+                            ${cat.name}
+                        </h3>
+                    </div>
                     
-                    <div class="flex items-stretch gap-2">
-                        <a href="<?= BASE_URL ?>category.php?id=${cat.id}" class="btn-premium flex-grow text-[9px]">Browse</a>
-                        <button class="btn-premium-outline w-12 flex items-center justify-center btn-details-category" data-id="${cat.id}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </button>
+                    <div class="flex gap-2 w-full mt-auto relative z-20">
+                        <a href="<?= BASE_URL ?>category.php?id=${cat.id}" class="btn-premium-outline flex-grow h-12 text-[9px] flex items-center justify-center cursor-pointer" style="padding: 0 0.5rem;">Browse Collection</a>
                     </div>
                 </div>
             </div>
@@ -78,7 +87,7 @@ require_once __DIR__ . "/../config/urls.php";
         if (!cat) return `<div class="p-20 text-center uppercase tracking-widest text-red-500">Resource Unreachable</div>`;
         return `
             <div class="w-full md:w-1/2 bg-[#f4f4f4] flex items-center justify-center p-8 md:p-12 h-[300px] md:h-auto">
-                <img src="${cat.image_url}" alt="${cat.name}" class="w-full h-full object-contain max-h-[400px]" onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'">
+                <img src="${fixImagePath(cat.image_url)}" alt="${cat.name}" class="w-full h-full object-contain max-h-[400px]" onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'">
             </div>
             <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
                 <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-400 mb-2">Series Overview</span>
@@ -108,7 +117,11 @@ require_once __DIR__ . "/../config/urls.php";
         const container = document.querySelector('.categories-container');
         if (!container) return;
 
-        categoriesData = await fetchCategories();
+        const excludeId = <?= (int)$excludeCategoryId ?>;
+        const allCategories = await fetchCategories();
+        
+        categoriesData = excludeId > 0 ? allCategories.filter(c => c.id != excludeId) : allCategories;
+
         if (categoriesData.length === 0) {
             container.innerHTML = '<div class="col-span-full py-32 text-center uppercase tracking-widest text-gray-400 font-bold">No collections found.</div>';
             return;
@@ -126,9 +139,10 @@ require_once __DIR__ . "/../config/urls.php";
         const modal = document.getElementById('detailModalCategory');
         const modalContent = document.getElementById('detailModalCategoryContent');
         const body = document.getElementById('modalBodyCategory');
-        const btn = e.target.closest('.btn-details-category');
+        const clickable = e.target.closest('.btn-details-category') || e.target.closest('.card-premium-image-wrapper');
+        const card = e.target.closest('.card-premium');
         
-        if (btn) {
+        if (clickable && card) {
             modal.classList.remove('opacity-0', 'invisible');
             modal.classList.add('opacity-100', 'visible');
             modalContent.classList.remove('scale-95');
@@ -136,7 +150,8 @@ require_once __DIR__ . "/../config/urls.php";
             document.body.style.overflow = 'hidden';
 
             body.innerHTML = '<div class="w-full p-20 text-center uppercase tracking-widest text-[10px] font-black animate-pulse">Loading Collection...</div>';
-            const cat = categoriesData.find(c => c.id == btn.dataset.id);
+            const catId = card.dataset.id;
+            const cat = categoriesData.find(c => c.id == catId);
             setTimeout(() => { body.innerHTML = renderDetail(cat); }, 400);
         }
 

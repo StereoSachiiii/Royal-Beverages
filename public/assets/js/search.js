@@ -132,7 +132,7 @@ const renderResults = (products, categories, query) => {
                     <span class="autocomplete-name">${highlightMatch(p.name, query)}</span>
                     <span class="autocomplete-meta">${p.category_name || 'Spirits'}</span>
                 </div>
-                <span class="autocomplete-price">$${(p.price_cents / 100).toFixed(2)}</span>
+                <span class="autocomplete-price">Rs. ${(p.price_cents / 100).toFixed(2)}</span>
             </a>
         `).join('');
     } else if (autocompleteProducts) {

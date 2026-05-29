@@ -3,7 +3,7 @@ require_once __DIR__ . "/../../src/Core/bootstrap.php";
 require_once __DIR__ . "/../config/urls.php";
 require_once __DIR__ . "/../config/page-assets.php";
 
-$session = Session::getInstance();
+$session = \App\Core\Session::getInstance();
 $username = $session->getUsername();
 $pageName = $pageName ?? 'home'; 
 ?>
@@ -13,8 +13,8 @@ $pageName = $pageName ?? 'home';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Royal Liquor - Premium spirits and fine wines">
-    <title><?= $pageTitle ?? 'Royal Liquor - Premium Spirits' ?></title>
+    <meta name="description" content="Royal Beverages - Premium spirits and fine wines">
+    <title><?= $pageTitle ?? 'Royal Beverages - Premium Spirits' ?></title>
     <link rel="icon" type="image/png" href="<?= ASSET_URL ?>images/favicon.png">
     
     
@@ -47,7 +47,6 @@ $pageName = $pageName ?? 'home';
     <!-- Sidebar Header -->
     <div class="flex items-center justify-between p-10 border-b border-gray-50">
         <div class="flex flex-col">
-            <span class="text-[10px] uppercase font-black tracking-[0.4em] text-black mb-1">Navigation</span>
             <h2 class="text-xl font-heading tracking-widest uppercase">The Menu</h2>
         </div>
         <button id="mobileClose" class="w-12 h-12 flex items-center justify-center border border-gray-100 hover:bg-black hover:text-white transition-all duration-300 group">
@@ -57,31 +56,48 @@ $pageName = $pageName ?? 'home';
     
     <!-- Main Navigation -->
     <nav class="flex-grow p-12 overflow-y-auto">
-        <ul class="space-y-12 list-none p-0 m-0">
+        <ul class="space-y-10 list-none p-0 m-0">
             <li class="group">
                 <a href="<?= BASE_URL ?>" class="flex items-end justify-between hover:text-gray-500 transition-all duration-300">
-                    <span class="text-3xl font-black uppercase tracking-widest leading-none">Home</span>
-                    <span class="text-[10px] font-black text-gray-200 group-hover:text-gray-400 transition-colors">01</span>
+                    <span class="text-3xl font-heading font-normal uppercase tracking-widest leading-none">Home</span>
+                    <span class="text-[10px] font-heading font-normal text-gray-200 group-hover:text-gray-400 transition-colors">01</span>
                 </a>
             </li>
             <li class="group">
                 <a href="<?= PAGE_URLS['shop'] ?>" class="flex items-end justify-between hover:text-gray-500 transition-all duration-300">
-                    <span class="text-3xl font-black uppercase tracking-widest leading-none">Shop</span>
-                    <span class="text-[10px] font-black text-gray-200 group-hover:text-gray-400 transition-colors">02</span>
+                    <span class="text-3xl font-heading font-normal uppercase tracking-widest leading-none">Shop</span>
+                    <span class="text-[10px] font-heading font-normal text-gray-200 group-hover:text-gray-400 transition-colors">02</span>
+                </a>
+            </li>
+            <li class="group">
+                <a href="<?= PAGE_URLS['shop'] ?>#categoryFilters" class="flex items-end justify-between hover:text-gray-500 transition-all duration-300">
+                    <span class="text-3xl font-heading font-normal uppercase tracking-widest leading-none">Categories</span>
+                    <span class="text-[10px] font-heading font-normal text-gray-200 group-hover:text-gray-400 transition-colors">03</span>
                 </a>
             </li>
             <li class="group">
                 <a href="<?= BASE_URL ?>recipes.php" class="flex items-end justify-between hover:text-gray-500 transition-all duration-300">
-                    <span class="text-3xl font-black uppercase tracking-widest leading-none">Vintages</span>
-                    <span class="text-[10px] font-black text-gray-200 group-hover:text-gray-400 transition-colors">03</span>
+                    <span class="text-3xl font-heading font-normal uppercase tracking-widest leading-none">Recipes</span>
+                    <span class="text-[10px] font-heading font-normal text-gray-200 group-hover:text-gray-400 transition-colors">04</span>
                 </a>
             </li>
-
+            <li class="group">
+                <a href="<?= BASE_URL ?>feedback.php" class="flex items-end justify-between hover:text-gray-500 transition-all duration-300">
+                    <span class="text-3xl font-heading font-normal uppercase tracking-widest leading-none">Reviews</span>
+                    <span class="text-[10px] font-heading font-normal text-gray-200 group-hover:text-gray-400 transition-colors">05</span>
+                </a>
+            </li>
+            <li class="group">
+                <a href="<?= BASE_URL ?>faq.php" class="flex items-end justify-between hover:text-gray-500 transition-all duration-300">
+                    <span class="text-3xl font-heading font-normal uppercase tracking-widest leading-none">FAQ</span>
+                    <span class="text-[10px] font-heading font-normal text-gray-200 group-hover:text-gray-400 transition-colors">06</span>
+                </a>
+            </li>
         </ul>
 
         <div class="mt-20 pt-12 border-t border-gray-50 space-y-4">
-            <a href="<?= PAGE_URLS['account'] ?>" class="block text-[10px] uppercase font-black tracking-[0.3em] text-gray-400 hover:text-black transition-colors">Client Account</a>
-            <a href="<?= PAGE_URLS['contact'] ?>" class="block text-[10px] uppercase font-black tracking-[0.3em] text-gray-400 hover:text-black transition-colors">Concierge</a>
+            <a href="<?= PAGE_URLS['account'] ?>" class="block text-sm font-medium text-black hover:text-gray-500 transition-colors">My Account</a>
+            <a href="<?= PAGE_URLS['contact'] ?>" class="block text-sm font-medium text-black hover:text-gray-500 transition-colors">Contact Us</a>
         </div>
     </nav>
 
@@ -136,7 +152,7 @@ $pageName = $pageName ?? 'home';
         <!-- Center: Brand -->
         <div class="flex-1 flex justify-center text-center">
             <a href="<?= BASE_URL ?>" class="block group">
-                <span class="text-2xl font-heading tracking-[0.4em] uppercase font-extrabold group-hover:text-gray-600 transition-colors">Royal Liquor</span>
+                <span class="text-2xl font-heading tracking-[0.4em] uppercase font-extrabold group-hover:text-gray-600 transition-colors">Royal Beverages</span>
             </a>
         </div>
 
@@ -155,7 +171,7 @@ $pageName = $pageName ?? 'home';
 
             <!-- Cart -->
             <a href="<?= PAGE_URLS['cart'] ?>" id="cart" class="group relative p-2 text-black hover:text-gray-500 transition-all duration-300">
-                <div class="count-display absolute top-1 right-1 bg-black text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white shadow-sm ring-2 ring-transparent group-hover:ring-black transition-all">0</div>
+                <div class="count-display absolute top-1 right-1 bg-black text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white shadow-sm ring-2 ring-transparent group-hover:ring-black transition-all hidden">0</div>
                 <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </a>
 

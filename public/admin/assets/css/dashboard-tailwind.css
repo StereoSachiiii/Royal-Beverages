@@ -192,7 +192,6 @@ a { text-decoration: none; color: inherit; transition: var(--transition); }
 .shadow-lg { box-shadow: var(--shadow-lg); }
 
 /* 6. COMPONENTS */
-}
 .btn-primary:hover {
     background-color: var(--slate-800);
     box-shadow: var(--shadow-md);
@@ -381,11 +380,7 @@ a { text-decoration: none; color: inherit; transition: var(--transition); }
 .overflow-hidden { overflow: hidden; }
 
 /* 9. RESPONSIVE UTILITIES (md: min-width 768px) */
-.-translate-x-full { transform: translateX(-100%); }
-.translate-x-0 { transform: translateX(0); }
-.transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 500ms; }
 .duration-500 { transition-duration: 500ms; }
-
 @media (min-width: 768px) {
     .md\:block { display: block !important; }
     .md\:flex { display: flex !important; }
@@ -397,8 +392,6 @@ a { text-decoration: none; color: inherit; transition: var(--transition); }
 }
 
 /* Visibility */
-.opacity-0 { opacity: 0; }
-.opacity-100 { opacity: 100; }
 .transition-opacity { transition-property: opacity; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 
 /* Base interactive */

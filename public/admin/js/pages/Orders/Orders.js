@@ -1,20 +1,14 @@
 /**
  * Orders.js — Modernized Orders domain module.
  * Uses dashboard-tailwind.css classes throughout.
- * Rows rendered as inline HTML strings for correct table parsing.
+ * Uses EntityBuilder to eliminate boilerplate.
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatDate, debounce, saveState, getState, openStandardModal, closeModal, getTemplate, getFormData } from '../../utils.js';
+import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import { createEntityModule } from '../../components/EntityBuilder.js';
 
-const DEFAULT_LIMIT = 20;
-let _offset = 0;
-let _query  = getState('admin:orders:query', '');
-let _lastResults = [];
-
-// ─── API ─────────────────────────────────────────────────────────────────────
-
-async function fetchOrders(limit = DEFAULT_LIMIT, offset = 0, query = '') {
+async function fetchOrders(limit = 20, offset = 0, query = '') {
     try {
         const url = API_ROUTES.ORDERS.LIST + buildQueryString({
             limit, offset,
@@ -72,10 +66,10 @@ function getStatusClass(status) {
     const s = (status || 'pending').toLowerCase();
     switch (s) {
         case 'delivered': case 'completed': case 'paid': return 'badge-active';
-        case 'processing': case 'shipped': case 'shipped': return 'badge-info';
-        case 'cancelled': case 'returned':                return 'badge-inactive';
-        case 'pending':                                   return 'badge-warning';
-        default:                                         return 'badge-info';
+        case 'processing': case 'shipped': return 'badge-info';
+        case 'cancelled': case 'returned': return 'badge-inactive';
+        case 'pending': return 'badge-warning';
+        default: return 'badge-info';
     }
 }
 
@@ -83,39 +77,40 @@ function formatCurrency(cents) {
     return (cents / 100).toFixed(2);
 }
 
-// ─── Row Renderer (inline HTML for correct parsing) ───────────────────────────
+// ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderRow(o) {
     const statusBadge = `<span class="badge ${getStatusClass(o.status)}">${escapeHtml(o.status || 'pending')}</span>`;
     const created = o.created_at ? formatDate(o.created_at) : '—';
     const orderNum = o.order_number || `#${o.id}`;
     
-    return `<tr class="tr">
-        <td class="td font-mono text-slate-400" style="font-size:11px;">#${escapeHtml(String(o.id))}</td>
-        <td class="td">
+    return `<tr class="tr group hover:bg-gray-50/50 transition-colors">
+        <td class="px-8 py-5 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(o.id))}</td>
+        <td class="px-8 py-5">
             <div class="font-bold text-black" style="font-size:13px;">${escapeHtml(orderNum)}</div>
             <div class="text-slate-500" style="font-size:11px;">${o.item_count || 0} items</div>
         </td>
-        <td class="td">${statusBadge}</td>
-        <td class="td font-bold font-mono text-black" style="font-size:13px;">Rs ${formatCurrency(o.total_cents || 0)}</td>
-        <td class="td">
+        <td class="px-8 py-5">${statusBadge}</td>
+        <td class="px-8 py-5 font-bold font-mono text-black" style="font-size:13px;">Rs ${formatCurrency(o.total_cents || 0)}</td>
+        <td class="px-8 py-5">
             <div class="font-semibold text-black" style="font-size:12px;">${escapeHtml(o.user_name || 'Guest User')}</div>
             <div class="text-slate-500" style="font-size:11px;">${escapeHtml(o.user_email || '')}</div>
         </td>
-        <td class="td text-slate-500" style="font-size:11px;white-space:nowrap;">${created}</td>
-        <td class="td" style="white-space:nowrap;">
-            <div class="flex items-center" style="gap:6px;">
-                <button class="btn btn-outline btn-sm js-view" data-id="${o.id}" title="View Details">👁 View</button>
-                <button class="btn btn-primary btn-sm js-edit" data-id="${o.id}" title="Edit Order">✏️ Edit</button>
-                <button class="btn btn-outline btn-sm js-delete" data-id="${o.id}" title="Void"
-                    style="color:var(--danger);border-color:var(--danger);">🗑</button>
+        <td class="px-8 py-5 text-slate-500" style="font-size:11px;white-space:nowrap;">${created}</td>
+        <td class="px-8 py-5 text-right">
+            <div class="flex items-center justify-end gap-2">
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 text-black hover:bg-black hover:text-white transition-all js-view" data-id="${o.id}" title="View details">
+                    <span class="text-[10px]">👁️</span>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 text-black hover:bg-black hover:text-white transition-all js-edit" data-id="${o.id}" title="Edit Order">
+                    <span class="text-[10px]">✏️</span>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all js-delete" data-id="${o.id}" title="Void Order">
+                    <span class="text-[10px]">🗑️</span>
+                </button>
             </div>
         </td>
     </tr>`;
-}
-
-function emptyRow(msg) {
-    return `<tr class="tr"><td colspan="7" class="td text-center text-slate-500" style="padding:48px;">${escapeHtml(msg)}</td></tr>`;
 }
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
@@ -136,8 +131,7 @@ function renderViewModal(o) {
     `).join('');
 
     return `
-        <div class="flex flex-col" style="gap:20px;">
-            <!-- Header Section -->
+        <div class="flex flex-col" style="gap:20px; padding: 8px;">
             <div class="flex items-center justify-between" style="padding-bottom:16px;border-bottom:1px solid var(--slate-100);">
                 <div>
                      <h3 class="font-bold text-black" style="font-size:22px;letter-spacing:-0.02em;">Order ${escapeHtml(o.order_number || `#${o.id}`)}</h3>
@@ -150,9 +144,7 @@ function renderViewModal(o) {
             </div>
 
             <div class="flex" style="gap:20px;">
-                <!-- Left Column: manifestation & summary -->
                 <div style="flex:2;display:flex;flex-direction:column;gap:16px;">
-                    <!-- Customer Summary -->
                     <div class="google-card flex items-center" style="padding:16px;gap:14px;background:var(--slate-50);">
                          <div class="thumb-md rounded-full bg-white border flex items-center justify-center text-xl shadow-sm">👤</div>
                          <div>
@@ -162,7 +154,6 @@ function renderViewModal(o) {
                          </div>
                     </div>
 
-                    <!-- Manifest Table -->
                     <div>
                          <h4 class="text-slate-400 font-bold uppercase" style="font-size:11px;letter-spacing:0.05em;margin-bottom:8px;">Manifest (${items.length} items)</h4>
                          <div class="table-container">
@@ -187,9 +178,7 @@ function renderViewModal(o) {
                     </div>
                 </div>
 
-                <!-- Right Column: Logistics -->
                 <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
-                    <!-- Logistics -->
                     <div class="google-card" style="padding:16px;">
                         <h4 class="text-slate-400 font-bold uppercase" style="font-size:11px;letter-spacing:0.05em;margin-bottom:12px;border-bottom:1px solid var(--slate-100);padding-bottom:4px;">Logistics</h4>
                         ${shipping.address_line1 ? `
@@ -211,7 +200,6 @@ function renderViewModal(o) {
                         ` : '<div class="text-slate-400 italic" style="font-size:11px;padding:10px 0;">No logistics data (Self-Pickup or Guest)</div>'}
                     </div>
 
-                    <!-- Internal Notes -->
                     <div style="padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;">
                          <h4 class="text-amber-500 font-bold uppercase" style="font-size:10px;letter-spacing:0.05em;margin-bottom:6px;">Internal Narrative</h4>
                          <p class="text-amber-800 italic" style="font-size:11px;line-height:1.5;">${escapeHtml(o.notes || 'No internal annotations for this session.')}</p>
@@ -227,7 +215,7 @@ function renderViewModal(o) {
 
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
-async function renderFormModal(id = null) {
+async function renderFormModal(id) {
     const isEdit = id !== null;
     const [deps, o] = await Promise.all([
         fetchDependencies(),
@@ -253,14 +241,12 @@ async function renderFormModal(id = null) {
         submit_text:    isEdit ? 'Save Protocol' : 'Execute Order'
     });
 
-    // Populate Users
     const uSel = frag.querySelector('#ord-user-select');
     if (uSel) {
         uSel.innerHTML = '<option value="">Select Customer (Required)</option>' + 
             deps.users.map(u => `<option value="${u.id}" ${o.user_id == u.id ? 'selected' : ''}>${escapeHtml(u.name || u.username)} (${escapeHtml(u.email)})</option>`).join('');
     }
 
-    // Populate Carts (Create Only)
     if (!isEdit) {
         const cSel = frag.querySelector('#ord-cart-select');
         if (cSel) {
@@ -274,7 +260,6 @@ async function renderFormModal(id = null) {
         if (statusSel) statusSel.value = o.status || 'pending';
     }
 
-    // Populate Addresses
     const sSel = frag.querySelector('#ord-shipping-select');
     const bSel = frag.querySelector('#ord-billing-select');
     const addrOptions = addresses.map(a => `<option value="${a.id}">${escapeHtml(a.recipient_name || 'Address')} - ${escapeHtml(a.address_line1)}, ${escapeHtml(a.city)} (${escapeHtml(a.address_type)})</option>`).join('');
@@ -293,10 +278,7 @@ async function renderFormModal(id = null) {
         if (footer) {
             const del = document.createElement('button');
             del.type = 'button';
-            del.className = 'btn btn-outline text-danger';
-            del.style.marginRight = 'auto';
-            del.id = 'ord-delete-btn';
-            del.dataset.id = id;
+            del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
             del.innerHTML = '🗑️ Void Order';
             footer.prepend(del);
         }
@@ -305,16 +287,12 @@ async function renderFormModal(id = null) {
     return frag;
 }
 
-// ─── Form Handlers ────────────────────────────────────────────────────────────
+// ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
-function initFormHandlers(modalRoot, id, onSuccess) {
+function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
     const isEdit = id !== null;
-    const form   = modalRoot.querySelector('#ord-form');
-    const cancel = modalRoot.querySelector('#ord-cancel');
-    const delBtn = modalRoot.querySelector('#ord-delete-btn');
-
+    const form = modalRoot.querySelector('#ord-form');
     if (!form) return;
-    if (cancel) cancel.addEventListener('click', () => closeModal());
 
     const uSel = form.querySelector('#ord-user-select');
     const sSel = form.querySelector('#ord-shipping-select');
@@ -337,20 +315,22 @@ function initFormHandlers(modalRoot, id, onSuccess) {
              if (sSel) {
                  sSel.disabled = false;
                  sSel.innerHTML = '<option value="">Select shipping address...</option>' + options;
-                 // Auto-select first shipping address if available
                  const ship = addrs.find(a => a.address_type === 'shipping' || a.address_type === 'both');
                  if (ship) sSel.value = ship.id;
              }
              if (bSel) {
                  bSel.disabled = false;
                  bSel.innerHTML = '<option value="">Select billing address...</option>' + options;
-                 // Auto-select first billing address if available
                  const bill = addrs.find(a => a.address_type === 'billing' || a.address_type === 'both');
                  if (bill) bSel.value = bill.id;
              }
         });
     }
 
+    const cancel = modalRoot.querySelector('#ord-cancel');
+    if (cancel) cancel.addEventListener('click', closeModalFn);
+
+    const delBtn = modalRoot.querySelector('.js-delete-btn');
     if (delBtn) {
         delBtn.addEventListener('click', async () => {
             if (!delBtn.dataset.confirmed) {
@@ -363,209 +343,71 @@ function initFormHandlers(modalRoot, id, onSuccess) {
             delBtn.disabled = true; delBtn.innerHTML = 'Voiding…';
             try {
                 await apiRequest(API_ROUTES.ORDERS.DELETE(id), { method: 'DELETE' });
-                closeModal(); onSuccess?.();
-            } catch (err) { showFormError(form, err.message); delBtn.disabled = false; delBtn.innerHTML = '🗑️ Void Order'; }
+                closeModalFn(); onSuccess?.(null, 'deleted');
+            } catch (err) {
+                showFormErrorFn(form, err.message);
+                delBtn.disabled = false; delBtn.innerHTML = '🗑️ Void Order';
+            }
         });
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const submit = form.querySelector('button[type="submit"]');
-        const orig   = submit.innerHTML;
+        const orig = submit.innerHTML;
         submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating Order…';
         try {
-            const data    = getFormData(form);
+            const formData = new FormData(form);
             const payload = {
-                user_id:             parseInt(data.user_id),
-                status:              data.status,
-                order_number:        data.order_number,
-                total_cents:         parseInt(data.total_cents),
-                notes:               data.notes || null,
-                shipping_address_id: data.shipping_address_id ? parseInt(data.shipping_address_id) : null,
-                billing_address_id:  data.billing_address_id ? parseInt(data.billing_address_id) : null,
-                ...(isEdit ? {} : { cart_id: parseInt(data.cart_id) })
+                user_id:             parseInt(formData.get('user_id')),
+                status:              formData.get('status'),
+                order_number:        formData.get('order_number'),
+                total_cents:         parseInt(formData.get('total_cents')),
+                notes:               formData.get('notes') || null,
+                shipping_address_id: formData.get('shipping_address_id') ? parseInt(formData.get('shipping_address_id')) : null,
+                billing_address_id:  formData.get('billing_address_id') ? parseInt(formData.get('billing_address_id')) : null,
+                ...(isEdit ? {} : { cart_id: parseInt(formData.get('cart_id')) })
             };
             const url = isEdit ? API_ROUTES.ORDERS.UPDATE(id) : API_ROUTES.ORDERS.CREATE;
             const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
             if (!res.success) throw new Error(res.message);
-            closeModal(); onSuccess?.();
+            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
         } catch (err) {
-            showFormError(form, err.message);
+            showFormErrorFn(form, err.message);
             submit.disabled = false; submit.innerHTML = orig;
         }
     });
 }
 
-function showFormError(form, msg) {
-    let el = form.querySelector('.form-error-banner');
-    if (!el) { el = Object.assign(document.createElement('div'), { className: 'form-error-banner' }); form.prepend(el); }
-    el.textContent = `Error: ${msg}`; el.style.display = 'block';
-}
+// ─── Entity Builder ───────────────────────────────────────────────────────────
 
-// ─── Reload / Redraw ──────────────────────────────────────────────────────────
+const { Render: Orders, Init: initOrders } = createEntityModule({
+    entityName: 'Transaction Ledger',
+    entitySubtitle: 'Managing purchase history and synthesized orders',
+    apiRoutes: {
+        list: API_ROUTES.ORDERS.LIST,
+        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('orders', id),
+        create: API_ROUTES.ORDERS.CREATE,
+        update: (id) => API_ROUTES.ORDERS.UPDATE(id),
+        delete: (id) => API_ROUTES.ORDERS.DELETE(id)
+    },
+    fetchList: fetchOrders,
+    fetchSingle: fetchOrder,
+    tableHeaderHtml: `<tr>
+        <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
+        <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Reference/Items</th>
+        <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
+        <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Total</th>
+        <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Customer Profile</th>
+        <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Recorded At</th>
+        <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
+    </tr>`,
+    renderRow,
+    renderViewModal,
+    renderFormModal,
+    initFormHandlersOverride,
+    searchPlaceholder: 'Search by Order # or User…',
+    createBtnText: '➕ New Order'
+});
 
-async function reloadOrders(container) {
-    const html = await Orders();
-    container.innerHTML = html;
-    await initOrders(container);
-}
-
-function redrawTable(container, list) {
-    container.querySelector('#entity-tbody').innerHTML =
-        list.length ? list.map(renderRow).join('') : emptyRow('No order records found.');
-    const lmc = container.querySelector('#entity-load-more-container');
-    if (list.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load More</button>`;
-    } else { lmc.style.display = 'none'; lmc.innerHTML = ''; }
-}
-
-// ─── Main View ────────────────────────────────────────────────────────────────
-
-const THEAD = `<tr class="tr">
-    <th class="th" style="width:50px;">ID</th>
-    <th class="th" style="min-width:180px;">Reference/Items</th>
-    <th class="th" style="width:100px;">Status</th>
-    <th class="th" style="width:120px;">Total</th>
-    <th class="th" style="min-width:180px;">Customer Profile</th>
-    <th class="th" style="width:150px;">Recorded At</th>
-    <th class="th" style="width:180px;">Actions</th>
-</tr>`;
-
-export async function Orders() {
-    _offset = 0;
-    const data = await fetchOrders(DEFAULT_LIMIT, 0, _query);
-    _lastResults = Array.isArray(data) ? data : [];
-    const rows = _lastResults.length ? _lastResults.map(renderRow).join('') : emptyRow('No order records found.');
-
-    const frag = getTemplate('tpl-admin-entity', {
-        'entity-title':    'Transaction Ledger',
-        'entity-subtitle': 'Managing purchase history and synthesized orders',
-    });
-
-    frag.querySelector('#entity-search').placeholder = 'Search by Order # or User…';
-    frag.querySelector('#entity-search').value = _query;
-    frag.querySelector('#entity-sort').style.display = 'none';
-    frag.querySelector('#entity-create-btn').innerHTML = '➕ New Order';
-    frag.querySelector('#entity-thead').innerHTML = THEAD;
-    frag.querySelector('#entity-tbody').innerHTML = rows;
-
-    const lmc = frag.querySelector('#entity-load-more-container');
-    if (_lastResults.length === DEFAULT_LIMIT) {
-        lmc.style.display = 'flex';
-        lmc.innerHTML = `<button id="entity-load-more-btn" class="btn btn-outline" style="padding:0 48px;">Load More</button>`;
-    }
-
-    return frag.firstElementChild.outerHTML;
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-
-export function initOrders(container) {
-    if (!container) return null;
-    const ac = new AbortController();
-    const signal = ac.signal;
-
-    const performSearch = debounce(async (q) => {
-        _query = q; saveState('admin:orders:query', _query); _offset = 0;
-        const data = await fetchOrders(DEFAULT_LIMIT, 0, _query);
-        _lastResults = Array.isArray(data) ? data : [];
-        redrawTable(container, _lastResults);
-    }, 300);
-
-    container.addEventListener('input', (e) => {
-        if (e.target.id === 'entity-search') performSearch(e.target.value.trim());
-    }, { signal });
-
-    // Modal Action Redirects (Edit from inside View Modal)
-    // We attach this to container using signal so it cleans up.
-    container.addEventListener('click', async (e) => {
-        const editBtn = e.target.closest('.modal-overlay .js-edit');
-        if (!editBtn) return;
-        
-        const id = editBtn.dataset.id;
-        closeModal();
-        setTimeout(async () => {
-            const f = await renderFormModal(id);
-            openStandardModal({ title: 'Edit Order', bodyHtml: f.firstElementChild.outerHTML, size: 'xl' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), id, () => reloadOrders(container));
-        }, 200);
-    }, { signal });
-
-    // View Detail
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-view');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        try {
-            const o = await fetchOrder(btn.dataset.id);
-            openStandardModal({ title: `Order ${escapeHtml(o.order_number || '#' + o.id)} Detail`, bodyHtml: renderViewModal(o), size: 'xl' });
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Edit Modal (Direct or from modal)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-edit');
-        if (!btn || e.target.closest('.modal-overlay')) return;
-        try {
-            const f = await renderFormModal(btn.dataset.id);
-            openStandardModal({ title: 'Edit Order', bodyHtml: f.firstElementChild.outerHTML, size: 'xl' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), btn.dataset.id, () => reloadOrders(container));
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Delete (inline)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.js-delete');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        if (!btn.dataset.confirmed) {
-            btn.dataset.confirmed = '1'; btn.innerHTML = '⚠️'; btn.style.background = '#fef9c3';
-            setTimeout(() => { if (btn.isConnected) { delete btn.dataset.confirmed; btn.innerHTML = '🗑'; btn.style.background = ''; }}, 3000);
-            return;
-        }
-        btn.disabled = true; btn.innerHTML = '…';
-        try {
-            await apiRequest(API_ROUTES.ORDERS.DELETE(id), { method: 'DELETE' });
-            reloadOrders(container);
-        } catch (err) { btn.disabled = false; btn.innerHTML = '🗑'; alert('Void failed: ' + err.message); }
-    }, { signal });
-
-    // Create
-    container.addEventListener('click', async (e) => {
-        if (!e.target.closest('#entity-create-btn')) return;
-        try {
-            const f = await renderFormModal(null);
-            openStandardModal({ title: 'Draft Transaction Protocol', bodyHtml: f.firstElementChild.outerHTML, size: 'xl' });
-            initFormHandlers(document.querySelector('.modal-overlay:last-child'), null, () => reloadOrders(container));
-        } catch (err) {
-            openStandardModal({ title: 'Error', bodyHtml: `<p class="text-danger" style="padding:12px;">${escapeHtml(err.message)}</p>` });
-        }
-    }, { signal });
-
-    // Load More
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-load-more-btn') return;
-        const btn = e.target; btn.disabled = true; btn.textContent = 'Loading…';
-        _offset += DEFAULT_LIMIT;
-        const data = await fetchOrders(DEFAULT_LIMIT, _offset, _query);
-        const list = Array.isArray(data) ? data : [];
-        if (!list.length) { btn.closest('#entity-load-more-container').style.display = 'none'; return; }
-        _lastResults = [..._lastResults, ...list];
-        container.querySelector('#entity-tbody').insertAdjacentHTML('beforeend', list.map(renderRow).join(''));
-        if (list.length < DEFAULT_LIMIT) { btn.closest('#entity-load-more-container').style.display = 'none'; }
-        else { btn.disabled = false; btn.textContent = 'Load More'; }
-    }, { signal });
-
-    // Refresh
-    container.addEventListener('click', async (e) => {
-        if (e.target.id !== 'entity-refresh-btn') return;
-        e.target.innerHTML = '⌛'; e.target.disabled = true;
-        await reloadOrders(container);
-    }, { signal });
-
-    return { cleanup: () => ac.abort() };
-}
+export { Orders, initOrders };

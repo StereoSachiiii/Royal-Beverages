@@ -1,11 +1,11 @@
-# Royal Liquor — E-Commerce Platform
+# Royal Beverages — E-Commerce Platform
 
 An e-commerce platform built with Vanilla PHP 8.2 and JavaScript. No frameworks.
 Custom MVC architecture, Reflection-based DI container, regex router, multi-warehouse stock engine.
 
 For the full technical breakdown, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
----
+
 
 ## Key Features
 
@@ -53,6 +53,10 @@ Tailwind v3.4. No manual CSS files.
 ### Backend
 Custom PSR-4 autoloader. Classes added to `src/` are loaded automatically via `src/Core/bootstrap.php`.
 
+The Router is decoupled from the global `$GLOBALS['container']` state by accepting the DI Container instance via the constructor, supporting clean controller-string resolution (`[Controller::class, 'method']`) dynamically during dispatch.
+
+Routes are automatically discovered and loaded dynamically via `glob()` scanning of the route definition files, eliminating the need to manually update a hardcoded route registry.
+
 ---
 
 ## Security
@@ -61,3 +65,6 @@ Custom PSR-4 autoloader. Classes added to `src/` are loaded automatically via `s
 - **Strict Types**: Enforced in all `src/` files.
 - **Passwords**: BCrypt via `password_hash()`.
 - **SQL**: Prepared statements everywhere.
+
+---
+

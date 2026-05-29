@@ -405,4 +405,9 @@ class UserRepository extends BaseRepository
     {
         return array_map(fn($row) => $this->mapToModel($row), $rows);
     }
+
+    public function count(): int
+    {
+        return (int)$this->fetchColumn("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL");
+    }
 }

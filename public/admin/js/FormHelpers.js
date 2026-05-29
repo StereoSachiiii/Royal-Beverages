@@ -10,9 +10,16 @@ export async function uploadImage(file, entity) {
     formData.append('image', file);
     formData.append('entity', entity);
 
+    const headers = {};
+    const csrfToken = window.ADMIN_CONFIG?.CSRF_TOKEN;
+    if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+    }
+
     const response = await fetch(API_ROUTES.IMAGES.UPLOAD, {
         method: 'POST',
         credentials: 'same-origin',
+        headers,
         body: formData
     });
 

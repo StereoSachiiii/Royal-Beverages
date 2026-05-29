@@ -34,9 +34,8 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       # Map the schema files so they automatically execute when the database is created
-      - ./create_db.sql:/docker-entrypoint-initdb.d/01_create_db.sql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/02_schema.sql
-      - ./seed_data.sql:/docker-entrypoint-initdb.d/03_seed_data.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/03_seed_data.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s

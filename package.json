@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "php vendor/phpunit/phpunit/phpunit",
     "build:css": "npx tailwindcss -i ./public/css/royal.css -o ./public/css/main.css --minify",
     "dev:css": "npx tailwindcss -i ./public/css/royal.css -o ./public/css/main.css --watch"
   },

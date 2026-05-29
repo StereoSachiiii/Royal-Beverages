@@ -389,6 +389,13 @@ export async function apiRequest(url, {
         credentials,
     };
 
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())) {
+        const csrfToken = window.ADMIN_CONFIG?.CSRF_TOKEN;
+        if (csrfToken) {
+            opts.headers['X-CSRF-Token'] = csrfToken;
+        }
+    }
+
     if (method !== 'GET' && body !== undefined) {
         opts.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
@@ -438,181 +445,7 @@ export async function apiRequest(url, {
     }
 }
 
-// ============================================================================
-// Entity Handler Utility - Scoped to Page Container
-// ============================================================================
 
-/**
- * Entity handler configuration
- * @typedef {Object} EntityHandlerConfig
- * @property {string} viewClass - CSS class for view buttons (e.g., '.product-view')
- * @property {string} editClass - CSS class for edit buttons (e.g., '.product-edit')
- * @property {Function} renderModal - Function(id) that returns modal HTML
- * @property {string} viewTitle - Modal title for view action
- * @property {string} editTitle - Modal title for edit action
- * @property {string} editPath - Path to edit form (e.g., 'manage/product/update.php')
- * @property {string} [modalSize='lg'] - Modal size ('lg', 'xl')
- * @property {Function} [onLoadMore] - Handler for load more button
- * @property {string} [loadMoreId] - ID of load more button
- * @property {Function} [onRefresh] - Handler for refresh button
- * @property {string} [refreshId] - ID of refresh button
- * @property {Function} [onSearch] - Handler for search input
- * @property {string} [searchId] - ID of search input
- * @property {string} [createClass] - CSS class for create buttons (e.g., '.product-create')
- * @property {string} [createPath] - Path to create form (e.g., 'manage/product/create.php')
- * @property {string} [createTitle] - Modal title for create action
- * @property {Function} [onSortChange] - Handler for sort select change
- * @property {string} [sortId] - ID of sort select
- */
-
-/**
- * Creates scoped entity handlers attached to the page container
- * Listeners are automatically cleaned up when the page container is cleared
- * @param {HTMLElement} container - Page container element (usually #content)
- * @param {EntityHandlerConfig} config - Handler configuration
- * @returns {Object} Controller with cleanup method
- */
-export function createEntityHandler(container, config) {
-    if (!container) {
-        console.warn('createEntityHandler: container is required');
-        return { cleanup: () => {} };
-    }
-
-    const {
-        viewClass,
-        editClass,
-        renderModal,
-        viewTitle,
-        editTitle,
-        editPath,
-        modalSize = 'lg',
-        onLoadMore,
-        loadMoreId,
-        onRefresh,
-        refreshId,
-        onSearch,
-        searchId,
-        createClass,
-        createPath,
-        createTitle,
-        onSortChange,
-        sortId
-    } = config;
-
-    const abortController = new AbortController();
-    const signal = abortController.signal;
-
-    // View button handler - scoped to container
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest(viewClass);
-        if (!btn || !btn.dataset.id) return;
-
-        const id = btn.dataset.id;
-        try {
-            const html = await renderModal(parseInt(id));
-            openStandardModal({
-                title: viewTitle,
-                bodyHtml: html,
-                size: modalSize
-            });
-        } catch (error) {
-            openStandardModal({
-                title: 'Error',
-                bodyHtml: `<div class="admin-entity__empty">⚠️ ${escapeHtml(error.message)}</div>`
-            });
-        }
-    }, { signal });
-
-    // Edit button handler - scoped to container
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest(editClass);
-        if (!btn || !btn.dataset.id) return;
-        
-        console.log('[Entity Handler] Edit button clicked:', { editClass, id: btn.dataset.id });
-
-        const id = btn.dataset.id;
-        openFormModal(`${editPath}?id=${encodeURIComponent(id)}`, editTitle);
-    }, { signal });
-
-    // Load more handler
-    if (onLoadMore && loadMoreId) {
-        container.addEventListener('click', async (e) => {
-            if (e.target.id !== loadMoreId) return;
-            const btn = e.target;
-            btn.disabled = true;
-            const originalText = btn.textContent;
-            btn.textContent = 'Loading...';
-
-            try {
-                await onLoadMore(btn);
-            } catch (error) {
-                console.error('Load more error:', error);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
-        }, { signal });
-    }
-
-    // Refresh handler
-    if (onRefresh && refreshId) {
-        container.addEventListener('click', async (e) => {
-            if (e.target.id !== refreshId) return;
-            const btn = e.target;
-            btn.disabled = true;
-            const originalText = btn.textContent;
-            btn.textContent = 'Refreshing...';
-
-            try {
-                await onRefresh(btn);
-            } catch (error) {
-                console.error('Refresh error:', error);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
-        }, { signal });
-    }
-
-    // Create button handler
-    if (createClass && createPath) {
-        container.addEventListener('click', (e) => {
-            const btn = e.target.closest(createClass);
-            if (!btn) return;
-            e.preventDefault();
-            console.log('[Entity Handler] Create button clicked:', { createClass });
-            openFormModal(createPath, createTitle || 'Create');
-        }, { signal });
-    }
-
-    // Search handler with debounce
-    if (onSearch && searchId) {
-        const debouncedSearch = debounce(async (e) => {
-            await onSearch(e);
-        }, 300);
-
-        container.addEventListener('input', (e) => {
-            if (e.target && e.target.id === searchId) {
-                debouncedSearch(e);
-            }
-        }, { signal });
-    }
-
-    // Sort change handler
-    if (onSortChange && sortId) {
-        container.addEventListener('change', (e) => {
-            if (e.target && e.target.id === sortId) {
-                onSortChange(e);
-            }
-        }, { signal });
-    }
-
-    return {
-        cleanup: () => {
-            abortController.abort();
-        }
-    };
-}
 
 /**
  * getFormData — Serialization utility for SPA forms.

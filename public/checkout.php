@@ -9,7 +9,7 @@ if (!$session->isLoggedIn()) {
 }
 
 $pageName = 'checkout';
-$pageTitle = 'Checkout - Royal Liquor';
+$pageTitle = 'Checkout - Royal Beverages';
 require_once __DIR__ . "/components/header.php"; 
 
 $userId = $session->getUserId();
@@ -18,10 +18,12 @@ $userId = $session->getUserId();
 <main class="min-h-screen bg-[#fafafa] pb-32">
     <!-- Breadcrumb -->
     <div class="px-8 md:px-16 pt-12 pb-6 flex justify-center">
-        <nav class="flex items-center gap-4 text-[10px] uppercase font-black tracking-[0.3em] text-gray-400 text-center">
+        <nav class="flex items-center gap-4 text-sm uppercase font-black tracking-[0.3em] text-gray-400 text-center">
             <a href="<?= BASE_URL ?>" class="hover:text-gold transition-colors">Home</a>
             <span>/</span>
-            <span class="text-black italic">Checkout</span>
+            <a href="cart.php" class="hover:text-gold transition-colors">Cart</a>
+            <span>/</span>
+            <span class="text-black italic">Secure Checkout</span>
         </nav>
     </div>
 
@@ -43,12 +45,12 @@ $userId = $session->getUserId();
                         <div id="address-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Populated via JS -->
                             <div class="h-32 flex items-center justify-center border border-dashed border-gray-200 col-span-full">
-                                <span class="text-[9px] uppercase font-black tracking-widest text-gray-300 animate-pulse">Loading Profiles...</span>
+                                <span class="text-[9px] uppercase font-black tracking-widest text-gray-300 animate-pulse">Loading Addresses...</span>
                             </div>
                         </div>
 
                         <button id="btn-add-address" class="w-full h-16 border-2 border-dashed border-gray-200 text-[10px] uppercase font-black tracking-widest text-gray-400 hover:border-gold hover:text-gold transition-all">
-                            + Add New Profile
+                            + Add New Address
                         </button>
                     </div>
 
@@ -77,7 +79,7 @@ $userId = $session->getUserId();
                             </div>
                             <div class="md:col-span-2 flex gap-4 pt-4">
                                 <button type="button" id="btn-cancel-address" class="flex-1 h-16 border border-gray-300 text-[10px] uppercase font-bold tracking-widest hover:bg-gray-50 transition-colors">Cancel</button>
-                                <button type="submit" class="flex-1 h-16 bg-black text-white text-[10px] uppercase font-black tracking-widest hover:bg-gold transition-all shadow-xl active:scale-95">Save Profile</button>
+                                <button type="submit" class="flex-1 h-16 bg-black text-white text-[10px] uppercase font-black tracking-widest hover:bg-gold transition-all shadow-xl active:scale-95">Save Address</button>
                             </div>
                         </form>
                     </div>
@@ -146,7 +148,6 @@ $userId = $session->getUserId();
 
                 <!-- Step 4: Success -->
                 <section id="step-success" class="checkout-step hidden py-24 text-center">
-                    <div class="w-24 h-24 bg-black border-4 border-gold rounded-full flex items-center justify-center mx-auto mb-10 text-gold text-4xl shadow-2xl">✓</div>
                     <h2 class="text-6xl font-black uppercase tracking-tighter mb-4 italic">Complete</h2>
                     <p class="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-400 mb-12">Order <span id="success-order-id" class="text-black">#000000</span> secure and processing.</p>
                     <div class="flex gap-4 justify-center">
@@ -280,7 +281,7 @@ const renderSummary = () => {
 
 const renderAddresses = () => {
     if (state.addresses.length === 0) {
-        ui.addressList.innerHTML = `<div class="col-span-full py-12 text-center text-[10px] uppercase font-bold text-gray-300 italic border border-dashed border-gray-100">No saved profiles found.</div>`;
+        ui.addressList.innerHTML = `<div class="col-span-full p-6 text-center bg-red-50 border border-red-200 text-xs uppercase font-black text-red-600 tracking-widest shadow-sm">Please add a new address before continuing</div>`;
         return;
     }
 

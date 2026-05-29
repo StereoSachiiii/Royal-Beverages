@@ -37,8 +37,7 @@ class FlavorProfileService
 
     public function getAll(int $limit = 50, int $offset = 0): array
     {
-        $profiles = $this->repo->getAll($limit, $offset);
-        return array_map(fn($p) => $p->toArray(), $profiles);
+        return $this->repo->getAll($limit, $offset);
     }
 
     public function getByProductId(int $productId): array

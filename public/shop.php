@@ -1,28 +1,22 @@
 <?php
 $pageName = 'shop';
-$pageTitle = 'Shop All - Royal Liquor';
+$pageTitle = 'Shop All - Royal Beverages';
 require_once __DIR__ . "/components/header.php";
 ?>
 
 <main class="min-h-screen bg-white">
-    <!-- Breadcrumb & Header -->
-    <div class="px-8 md:px-16 pt-12 pb-8 text-center flex flex-col items-center">
-        <nav class="flex items-center justify-center gap-4 text-[10px] uppercase tracking-[0.3em] font-black text-gray-400 mb-12">
-            <a href="<?= BASE_URL ?>" class="hover:text-black transition-colors">Home</a>
-            <span class="text-gray-200">/</span>
-            <span class="text-black italic">The Shop</span>
-        </nav>
-        
-        <div class="max-w-4xl mx-auto space-y-8 pb-12">
-            <div>
-                <span class="text-xs uppercase tracking-[0.4em] text-black font-extrabold mb-4 block italic">Purveyors of Excellence</span>
-                <h1 class="text-4xl md:text-6xl font-heading font-extrabold uppercase tracking-widest text-black leading-none">Shop All <br>Spirits</h1>
-            </div>
-            <p class="text-gray-400 text-base max-w-2xl mx-auto italic font-light leading-relaxed">
-                Discover our meticulously curated collection of world-class spirits, rare releases, and artisanal craft beverages.
-            </p>
-        </div>
-    </div>
+    <?php
+    $heroTitle = 'Shop All <br class="hidden md:block">Spirits';
+    $heroSubtitle = 'Purveyors of Excellence';
+    $heroDescription = 'Discover our meticulously curated collection of world-class spirits, rare releases, and artisanal craft beverages.';
+    $heroId = 'shopHero';
+    $heroOffset = '-17.5%';
+    $heroBreadcrumbs = [
+        ['url' => BASE_URL, 'label' => 'Home'],
+        ['url' => '', 'label' => 'The Shop']
+    ];
+    require_once __DIR__ . '/components/animated-hero.php';
+    ?>
 
     <div class="px-8 md:px-16 pb-32">
         <div class="flex flex-col lg:flex-row gap-16">
@@ -81,17 +75,7 @@ require_once __DIR__ . "/components/header.php";
                     </div>
                 </div>
 
-                <!-- Availability -->
-                <div class="space-y-6 pt-6 border-t border-gray-100">
-                    <label class="flex items-center gap-3 cursor-pointer group">
-                        <input type="checkbox" id="inStockOnly" class="w-4 h-4 accent-black">
-                        <span class="text-[10px] uppercase tracking-widest font-bold group-hover:text-black transition-colors">In Stock Only</span>
-                    </label>
-                    <label class="flex items-center gap-3 cursor-pointer group">
-                        <input type="checkbox" id="premiumOnly" class="w-4 h-4 accent-black">
-                        <span class="text-[10px] uppercase tracking-widest font-bold group-hover:text-black transition-colors">Vintage Reserve</span>
-                    </label>
-                </div>
+
             </aside>
 
             <!-- Main Listing Area -->
@@ -101,6 +85,18 @@ require_once __DIR__ . "/components/header.php";
                     <div id="resultsCount" class="text-[10px] uppercase tracking-[0.3em] font-black text-gray-400 italic">Searching collection...</div>
                     
                     <div class="flex items-center gap-6">
+                        <!-- Checkboxes moved here -->
+                        <div class="flex items-center gap-6 border-r border-gray-200 pr-6">
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" id="inStockOnly" class="w-3.5 h-3.5 accent-black">
+                                <span class="text-[9px] uppercase tracking-widest font-bold text-gray-400 group-hover:text-black transition-colors">In Stock Only</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" id="premiumOnly" class="w-3.5 h-3.5 accent-black">
+                                <span class="text-[9px] uppercase tracking-widest font-bold text-gray-400 group-hover:text-black transition-colors">Vintage Reserve</span>
+                            </label>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <span class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Priority:</span>
                             <select id="sortSelect" class="bg-transparent border-none outline-none text-[10px] uppercase font-black tracking-widest cursor-pointer text-black hover:text-gray-500 transition-colors">
@@ -140,6 +136,7 @@ require_once __DIR__ . "/components/header.php";
 import { API } from '<?= BASE_URL ?>assets/js/api-helper.js';
 import { cart } from '<?= BASE_URL ?>assets/js/cart-service.js';
 import { toast } from '<?= BASE_URL ?>assets/js/toast.js';
+import { isInWishlist, toggleWishlistItem } from '<?= BASE_URL ?>assets/js/wishlist-storage.js';
 
 let productsData = [];
 let categoriesData = [];
@@ -176,6 +173,12 @@ const init = async () => {
     populateCategoryFilters();
     applyFilters();
     setupEventListeners();
+
+    // Trigger hero shrink animation after 1 second
+    setTimeout(() => {
+        const hero = document.getElementById('shopHero');
+        if (hero) hero.classList.add('shrunk');
+    }, 1000);
 };
 
 const loadData = async () => {
@@ -202,7 +205,7 @@ const populateCategoryFilters = () => {
             <label class="group flex items-center justify-between cursor-pointer">
                 <input type="radio" name="category" value="${c.id}" class="hidden peer">
                 <span class="text-[10px] uppercase font-bold tracking-widest peer-checked:text-black transition-colors">${c.name}</span>
-                <span class="text-[9px] text-gray-300 font-bold">(${productsData.filter(p => p.category_id === c.id).length})</span>
+                <span class="text-[9px] text-gray-300 font-bold">(${productsData.filter(p => p.category_id == c.id).length})</span>
             </label>
         `).join('')}
     `;
@@ -210,34 +213,52 @@ const populateCategoryFilters = () => {
 
 const renderProductCard = (p) => {
     const price = (p.price_cents / 100).toFixed(2);
-    const rating = parseFloat(p.avg_rating) || 0;
     const inStock = p.available_stock > 0;
     const isPremium = p.price_cents >= 10000;
     
+    let badgeHtml = '';
+    if (isPremium) badgeHtml = 'Vintage';
+    else if (p.available_stock < 20 && inStock) badgeHtml = `Low Stock: ${p.available_stock}`;
+
     return `
-        <article class="group relative ${!inStock ? 'opacity-40 grayscale' : ''}">
-            <a href="product.php?id=${p.id}" class="block overflow-hidden bg-gray-50 flex items-center justify-center p-8 h-[400px]">
-                <img src="${fixImagePath(p.image_url)}" alt="${p.name}" class="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105" loading="lazy" onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'">
-                ${isPremium ? `<div class="absolute top-6 left-6 px-3 py-1 bg-black text-white text-[8px] font-black uppercase tracking-widest">Vintage</div>` : ''}
+        <div class="group w-full bg-white border border-gray-100 p-8 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black ${!inStock ? 'opacity-40 grayscale' : ''}" data-id="${p.id}">
+            <!-- Badges -->
+            <div class="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                ${!inStock ? `<span class="bg-gray-100 text-gray-500 text-[8px] font-black uppercase tracking-widest px-3 py-1">Depleted</span>` : ''}
+                ${badgeHtml ? `<span class="bg-black text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 shadow-sm">${badgeHtml}</span>` : ''}
+            </div>
+
+            <!-- Image -->
+            <a href="product.php?id=${p.id}" class="block h-56 mb-8 mt-4 relative flex items-center justify-center cursor-pointer">
+                <img src="${fixImagePath(p.image_url)}" 
+                     alt="${p.name}" 
+                     class="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl" 
+                     loading="lazy"
+                     onerror="this.src='<?= BASE_URL ?>assets/images/placeholder-product.png'">
             </a>
-            <div class="mt-8 text-center px-4">
-                <span class="text-[9px] uppercase tracking-[0.3em] text-black font-extrabold mb-2 block">${p.category_name || 'Spirit'}</span>
-                <h3 class="text-sm font-extrabold uppercase tracking-widest mb-3 line-clamp-1">${p.name}</h3>
-                <div class="flex items-center justify-center gap-4 mb-6">
-                    <span class="text-lg font-bold tracking-tight">Rs. ${price}</span>
-                    <div class="w-1 h-1 bg-gray-200 rounded-full"></div>
-                    <div class="flex text-black text-[10px] items-center gap-1 font-black">
-                        ★ <span>${rating.toFixed(1)}</span>
-                    </div>
-                </div>
-                <div class="flex gap-2 invisible group-hover:visible transition-all">
-                    <a href="product.php?id=${p.id}" class="btn-premium-outline flex-grow h-12 text-[9px] flex items-center justify-center">View Specs</a>
-                    <button class="btn-premium w-12 h-12 flex items-center justify-center btn-add-cart" data-id="${p.id}" ${!inStock ? 'disabled' : ''}>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+
+            <!-- Meta -->
+            <div class="text-center flex flex-col flex-grow items-center justify-end w-full">
+                <span class="text-[9px] uppercase font-black tracking-[0.3em] text-gray-400 mb-2 truncate max-w-full block">
+                    ${p.category_name || 'Spirit'}
+                </span>
+                <h3 class="text-sm font-heading uppercase tracking-widest mb-4 group-hover:text-gold transition-colors line-clamp-2 px-2">
+                    ${p.name}
+                </h3>
+                <span class="text-xs font-black tracking-widest mb-8 uppercase">Rs. ${price}</span>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2 w-full mt-auto">
+                    <a href="product.php?id=${p.id}" class="btn-premium-outline flex-grow h-12 text-[9px] flex items-center justify-center" style="padding: 0 0.5rem;">View Details</a>
+                    <button class="btn-premium-outline w-12 h-12 flex-shrink-0 flex items-center justify-center btn-add-wishlist hover:bg-red-50 transition-colors" style="padding: 0;" data-id="${p.id}" title="Add to Wishlist">
+                        <svg class="w-4 h-4" fill="${isInWishlist(p.id) ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </button>
+                    <button class="btn-premium w-12 h-12 flex-shrink-0 flex items-center justify-center btn-add-cart" style="padding: 0;" data-id="${p.id}" ${!inStock ? 'disabled' : ''} title="Add to Cart">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     </button>
                 </div>
             </div>
-        </article>
+        </div>
     `;
 };
 
@@ -318,6 +339,17 @@ const setupEventListeners = () => {
             const productId = addCartBtn.dataset.id;
             await cart.add(productId, 1);
             toast.success('Added to Cart');
+        }
+
+        const wishlistBtn = e.target.closest('.btn-add-wishlist');
+        if (wishlistBtn) {
+            const id = wishlistBtn.dataset.id;
+            const adding = !isInWishlist(id);
+            // Optimistic UI — flip heart immediately
+            const svg = wishlistBtn.querySelector('svg');
+            if (svg) svg.setAttribute('fill', adding ? 'currentColor' : 'none');
+            wishlistBtn.classList.toggle('text-red-500', adding);
+            toggleWishlistItem(id); // fire-and-forget (toasts handled inside)
         }
     });
 };
