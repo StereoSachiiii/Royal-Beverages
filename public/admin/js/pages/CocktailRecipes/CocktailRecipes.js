@@ -9,29 +9,41 @@ import { createEntityModule } from '../../components/EntityBuilder.js';
 import { initImageUpload } from '../../FormHelpers.js';
 
 async function fetchRecipes(limit = 20, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.COCKTAIL_RECIPES.LIST + buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch recipes');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) { console.error('[CocktailRecipes] Fetch failed', err); return []; }
+  try {
+    const url =
+      API_ROUTES.COCKTAIL_RECIPES.LIST +
+      buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch recipes');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error('[CocktailRecipes] Fetch failed', err);
+    return [];
+  }
 }
 
 async function fetchRecipe(id) {
-    try {
-        const res = await apiRequest(API_ROUTES.ADMIN_VIEWS.DETAIL('cocktail_recipes', id));
-        if (!res.success) throw new Error(res.message || 'Failed to fetch recipe');
-        return res.data;
-    } catch (err) { throw err; }
+  try {
+    const res = await apiRequest(API_ROUTES.ADMIN_VIEWS.DETAIL('cocktail_recipes', id));
+    if (!res.success) throw new Error(res.message || 'Failed to fetch recipe');
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderRow(r) {
-    const diffClass = r.difficulty === 'hard' ? 'badge-danger' : r.difficulty === 'medium' ? 'badge-warning' : 'badge-active';
-    const statusBadge = `<span class="badge ${r.is_active ? 'badge-active' : 'badge-inactive'} js-toggle-status cursor-pointer hover:opacity-80 transition-all" data-id="${r.id}" data-active="${r.is_active}">${r.is_active ? 'Active' : 'Draft'}</span>`;
+  const diffClass =
+    r.difficulty === 'hard'
+      ? 'badge-danger'
+      : r.difficulty === 'medium'
+        ? 'badge-warning'
+        : 'badge-active';
+  const statusBadge = `<span class="badge ${r.is_active ? 'badge-active' : 'badge-inactive'} js-toggle-status cursor-pointer hover:opacity-80 transition-all" data-id="${r.id}" data-active="${r.is_active}">${r.is_active ? 'Active' : 'Draft'}</span>`;
 
-    return `<tr class="group hover:bg-gray-50/50 transition-colors">
+  return `<tr class="group hover:bg-gray-50/50 transition-colors">
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(r.id))}</td>
         <td class="px-6 py-4">
             <div class="flex items-center" style="gap:10px;">
@@ -61,11 +73,18 @@ function renderRow(r) {
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(r) {
-    const ingredients = r.ingredients || [];
-    const cost = (r.estimated_cost_cents || 0) / 100;
-    const diffClass = r.difficulty === 'hard' ? 'badge-danger' : r.difficulty === 'medium' ? 'badge-warning' : 'badge-active';
+  const ingredients = r.ingredients || [];
+  const cost = (r.estimated_cost_cents || 0) / 100;
+  const diffClass =
+    r.difficulty === 'hard'
+      ? 'badge-danger'
+      : r.difficulty === 'medium'
+        ? 'badge-warning'
+        : 'badge-active';
 
-    const ingredientsHtml = ingredients.map(ing => `
+  const ingredientsHtml = ingredients
+    .map(
+      (ing) => `
         <div class="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-xs">
             <div style="display:flex;flex-direction:column;">
                 <span class="text-sm font-bold text-black">${escapeHtml(ing.product_name)}</span>
@@ -73,9 +92,11 @@ function renderViewModal(r) {
             </div>
             <span class="bg-slate-50 px-3 py-1 rounded-lg text-xs font-mono font-bold text-slate-600 border border-slate-100">${ing.quantity} ${escapeHtml(ing.unit)}</span>
         </div>
-    `).join('');
+    `
+    )
+    .join('');
 
-    return `
+  return `
         <div class="flex flex-col" style="gap:24px; padding:8px;">
             <div class="flex items-start justify-between" style="padding-bottom:20px;border-bottom:1px solid var(--slate-100);">
                 <div class="flex" style="gap:20px;">
@@ -122,130 +143,154 @@ function renderViewModal(r) {
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
 async function renderFormModal(id = null) {
-    const isEdit = id !== null;
-    let r = {};
-    if (isEdit) r = await fetchRecipe(id);
+  const isEdit = id !== null;
+  let r = {};
+  if (isEdit) r = await fetchRecipe(id);
 
-    const frag = getTemplate('tpl-cocktail-recipe-form', {
-        id:               isEdit ? id : '',
-        name:             escapeHtml(r.name || ''),
-        description:      escapeHtml(r.description || ''),
-        instructions:     escapeHtml(r.instructions || ''),
-        preparation_time: r.preparation_time || 5,
-        serves:           r.serves || 1,
-        active_checked:   r.is_active !== false ? 'checked' : '',
-        image_url:        r.image_url || '',
-        preview_url:      r.image_url || '',
-        preview_display:  r.image_url ? 'block' : 'hidden',
-        delete_display:   isEdit ? 'block' : 'none',
-        submit_text:      isEdit ? 'Save Changes' : 'Create Recipe'
-    });
+  const frag = getTemplate('tpl-cocktail-recipe-form', {
+    id: isEdit ? id : '',
+    name: escapeHtml(r.name || ''),
+    description: escapeHtml(r.description || ''),
+    instructions: escapeHtml(r.instructions || ''),
+    preparation_time: r.preparation_time || 5,
+    serves: r.serves || 1,
+    active_checked: r.is_active !== false ? 'checked' : '',
+    image_url: r.image_url || '',
+    preview_url: r.image_url || '',
+    preview_display: r.image_url ? 'block' : 'hidden',
+    delete_display: isEdit ? 'block' : 'none',
+    submit_text: isEdit ? 'Save Changes' : 'Create Recipe',
+  });
 
-    const diffSel = frag.querySelector('#crec-difficulty');
-    if (diffSel && isEdit) diffSel.value = r.difficulty || 'easy';
+  const diffSel = frag.querySelector('#crec-difficulty');
+  if (diffSel && isEdit) diffSel.value = r.difficulty || 'easy';
 
-    if (isEdit) {
-        const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button'; del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Delete Recipe';
-            footer.prepend(del);
-        }
+  if (isEdit) {
+    const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Delete Recipe';
+      footer.prepend(del);
     }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#crec-form');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#crec-form');
+  if (!form) return;
 
-    const cancel = modalRoot.querySelector('#crec-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
+  const cancel = modalRoot.querySelector('#crec-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
 
-    initImageUpload(modalRoot, 'cocktail-recipes', 'crec-file-input', (url) => {
-        modalRoot.querySelector('#crec-image-url').value = url;
-        const preview = modalRoot.querySelector('#crec-preview');
-        preview.src = url; preview.classList.remove('hidden');
+  initImageUpload(modalRoot, 'cocktail-recipes', 'crec-file-input', (url) => {
+    modalRoot.querySelector('#crec-image-url').value = url;
+    const preview = modalRoot.querySelector('#crec-preview');
+    preview.src = url;
+    preview.classList.remove('hidden');
+  });
+
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm Delete?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Delete Recipe';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Deleting…';
+      try {
+        await apiRequest(API_ROUTES.COCKTAIL_RECIPES.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Delete Recipe';
+      }
     });
+  }
 
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Confirm Delete?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete Recipe'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
-            try {
-                await apiRequest(API_ROUTES.COCKTAIL_RECIPES.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) { showFormErrorFn(form, err.message); delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete Recipe'; }
-        });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = form.querySelector('button[type="submit"]');
+    const orig = submit.innerHTML;
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
+    try {
+      const formData = new FormData(form);
+      const payload = {
+        name: formData.get('name'),
+        description: formData.get('description') || null,
+        instructions: formData.get('instructions') || null,
+        difficulty: formData.get('difficulty'),
+        preparation_time: parseInt(formData.get('preparation_time')) || 0,
+        serves: parseInt(formData.get('serves')) || 1,
+        image_url: formData.get('image_url') || null,
+        is_active: formData.get('is_active') !== null,
+      };
+      const url = isEdit
+        ? API_ROUTES.COCKTAIL_RECIPES.UPDATE(id)
+        : API_ROUTES.COCKTAIL_RECIPES.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = orig;
     }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submit = form.querySelector('button[type="submit"]');
-        const orig = submit.innerHTML;
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
-        try {
-            const formData = new FormData(form);
-            const payload = {
-                name:             formData.get('name'),
-                description:      formData.get('description') || null,
-                instructions:     formData.get('instructions') || null,
-                difficulty:       formData.get('difficulty'),
-                preparation_time: parseInt(formData.get('preparation_time')) || 0,
-                serves:           parseInt(formData.get('serves')) || 1,
-                image_url:        formData.get('image_url') || null,
-                is_active:        formData.get('is_active') !== null
-            };
-            const url = isEdit ? API_ROUTES.COCKTAIL_RECIPES.UPDATE(id) : API_ROUTES.COCKTAIL_RECIPES.CREATE;
-            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = orig;
-        }
-    });
+  });
 }
 
 // ─── Extra Handlers (status toggle) ─────────────────────────────────────────
 
 function extraContainerHandlers(container, reloadFn) {
-    return (e) => {
-        const badge = e.target.closest('.js-toggle-status');
-        if (!badge) return;
-        const id = badge.dataset.id;
-        const current = badge.dataset.active === 'true' || badge.dataset.active === '1';
-        badge.innerHTML = '…'; badge.style.opacity = '0.5';
-        apiRequest(API_ROUTES.COCKTAIL_RECIPES.UPDATE(id), { method: 'PUT', body: { is_active: !current } })
-            .then(() => reloadFn())
-            .catch(() => reloadFn());
-    };
+  return (e) => {
+    const badge = e.target.closest('.js-toggle-status');
+    if (!badge) return;
+    const id = badge.dataset.id;
+    const current = badge.dataset.active === 'true' || badge.dataset.active === '1';
+    badge.innerHTML = '…';
+    badge.style.opacity = '0.5';
+    apiRequest(API_ROUTES.COCKTAIL_RECIPES.UPDATE(id), {
+      method: 'PUT',
+      body: { is_active: !current },
+    })
+      .then(() => reloadFn())
+      .catch(() => reloadFn());
+  };
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 
 const { Render: CocktailRecipes, Init: initCocktailRecipes } = createEntityModule({
-    entityName: 'Cocktail Recipes',
-    entitySubtitle: 'Manage your signature cocktail library',
-    apiRoutes: {
-        list: API_ROUTES.COCKTAIL_RECIPES.LIST,
-        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('cocktail_recipes', id),
-        create: API_ROUTES.COCKTAIL_RECIPES.CREATE,
-        update: (id) => API_ROUTES.COCKTAIL_RECIPES.UPDATE(id),
-        delete: (id) => API_ROUTES.COCKTAIL_RECIPES.DELETE(id)
-    },
-    fetchList: fetchRecipes,
-    fetchSingle: fetchRecipe,
-    tableHeaderHtml: `<tr class="tr">
+  entityName: 'Cocktail Recipes',
+  entitySubtitle: 'Manage your signature cocktail library',
+  apiRoutes: {
+    list: API_ROUTES.COCKTAIL_RECIPES.LIST,
+    detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('cocktail_recipes', id),
+    create: API_ROUTES.COCKTAIL_RECIPES.CREATE,
+    update: (id) => API_ROUTES.COCKTAIL_RECIPES.UPDATE(id),
+    delete: (id) => API_ROUTES.COCKTAIL_RECIPES.DELETE(id),
+  },
+  fetchList: fetchRecipes,
+  fetchSingle: fetchRecipe,
+  tableHeaderHtml: `<tr class="tr">
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Recipe</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Difficulty / Time</th>
@@ -254,13 +299,13 @@ const { Render: CocktailRecipes, Init: initCocktailRecipes } = createEntityModul
         <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Ingredients</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    extraContainerHandlers,
-    searchPlaceholder: 'Search by recipe name…',
-    createBtnText: '➕ Add Recipe'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  extraContainerHandlers,
+  searchPlaceholder: 'Search by recipe name…',
+  createBtnText: '➕ Add Recipe',
 });
 
 export { CocktailRecipes, initCocktailRecipes };

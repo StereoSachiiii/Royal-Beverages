@@ -1,24 +1,24 @@
 import { isInWishlist } from './wishlist-storage.js';
 
 export const fixImagePath = (url) => {
-    if (!url) return window.ROYAL_CONFIG.ASSET_URL + 'images/placeholder-product.webp';
-    if (url.includes('products/')) {
-        const filename = url.split('/').pop();
-        return window.ROYAL_CONFIG.ASSET_URL + 'images/' + filename;
-    }
-    return window.ROYAL_CONFIG.ASSET_URL + 'images/' + url.split('/').pop();
+  if (!url) return window.ROYAL_CONFIG.ASSET_URL + 'images/placeholder-product.webp';
+  if (url.includes('products/')) {
+    const filename = url.split('/').pop();
+    return window.ROYAL_CONFIG.ASSET_URL + 'images/' + filename;
+  }
+  return window.ROYAL_CONFIG.ASSET_URL + 'images/' + url.split('/').pop();
 };
 
 export const renderProductCard = (p) => {
-    const price = (p.price_cents / 100).toFixed(2);
-    const inStock = p.available_stock > 0;
-    const isPremium = p.price_cents >= 10000;
-    
-    let badgeHtml = '';
-    if (isPremium) badgeHtml = 'Vintage';
-    else if (p.available_stock < 20 && inStock) badgeHtml = `Low Stock: ${p.available_stock}`;
+  const price = (p.price_cents / 100).toFixed(2);
+  const inStock = p.available_stock > 0;
+  const isPremium = p.price_cents >= 10000;
 
-    return `
+  let badgeHtml = '';
+  if (isPremium) badgeHtml = 'Vintage';
+  else if (p.available_stock < 20 && inStock) badgeHtml = `Low Stock: ${p.available_stock}`;
+
+  return `
         <div class="group w-full bg-white border border-gray-100 p-8 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black ${!inStock ? 'opacity-40 grayscale' : ''}" data-id="${p.id}">
             <!-- Badges -->
             <div class="absolute top-6 left-6 z-10 flex flex-col gap-2">
@@ -61,111 +61,120 @@ export const renderProductCard = (p) => {
 };
 
 export const initCustomDropdowns = () => {
-    // Find all native selects that are not inside an admin container and haven't been initialized
-    const selects = document.querySelectorAll('select:not([data-custom-dropdown="initialized"])');
-    
-    selects.forEach(select => {
-        // Skip admin selects
-        if (select.closest('.admin-container') || select.closest('.admin-dashboard') || select.classList.contains('select')) return;
+  // Find all native selects that are not inside an admin container and haven't been initialized
+  const selects = document.querySelectorAll('select:not([data-custom-dropdown="initialized"])');
 
-        select.setAttribute('data-custom-dropdown', 'initialized');
-        select.style.display = 'none'; // Hide native select
+  selects.forEach((select) => {
+    // Skip admin selects
+    if (
+      select.closest('.admin-container') ||
+      select.closest('.admin-dashboard') ||
+      select.classList.contains('select')
+    )
+      return;
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'relative inline-block w-full text-left custom-dropdown-wrapper z-40';
+    select.setAttribute('data-custom-dropdown', 'initialized');
+    select.style.display = 'none'; // Hide native select
 
-        const button = document.createElement('button');
-        button.type = 'button';
-        // Match the theme: Light mode, uppercase, bold tracking, border
-        button.className = 'w-full h-12 bg-white border border-black flex items-center justify-between px-4 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-gray-50 transition-colors focus:outline-none';
-        
-        const textSpan = document.createElement('span');
-        textSpan.className = 'truncate pointer-events-none';
-        textSpan.textContent = select.options[select.selectedIndex]?.text || 'Select Option';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'relative inline-block w-full text-left custom-dropdown-wrapper z-40';
 
-        const iconSvg = document.createElement('div');
-        iconSvg.innerHTML = '<svg class="w-4 h-4 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
-        
-        button.appendChild(textSpan);
-        button.appendChild(iconSvg.firstChild);
-        
-        const dropdownList = document.createElement('ul');
-        dropdownList.className = 'absolute left-0 w-full mt-1 bg-white border border-black shadow-xl hidden flex-col max-h-60 overflow-y-auto z-50';
-        
-        Array.from(select.options).forEach(option => {
-            const li = document.createElement('li');
-            li.className = 'px-4 py-3 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0';
-            li.textContent = option.text;
-            li.dataset.value = option.value;
-            
-            if (option.selected) {
-                li.classList.add('bg-gray-50', 'text-black');
-            } else {
-                li.classList.add('text-gray-600');
-            }
+    const button = document.createElement('button');
+    button.type = 'button';
+    // Match the theme: Light mode, uppercase, bold tracking, border
+    button.className =
+      'w-full h-12 bg-white border border-black flex items-center justify-between px-4 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-gray-50 transition-colors focus:outline-none';
 
-            li.addEventListener('click', () => {
-                select.value = option.value;
-                textSpan.textContent = option.text;
-                
-                // Update active state in list
-                Array.from(dropdownList.children).forEach(child => {
-                    child.classList.remove('bg-gray-50', 'text-black');
-                    child.classList.add('text-gray-600');
-                });
-                li.classList.add('bg-gray-50', 'text-black');
-                li.classList.remove('text-gray-600');
-                
-                // Close dropdown
-                dropdownList.classList.add('hidden');
-                button.querySelector('svg').classList.remove('rotate-180');
-                
-                // Trigger change event for original logic
-                select.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-            dropdownList.appendChild(li);
+    const textSpan = document.createElement('span');
+    textSpan.className = 'truncate pointer-events-none';
+    textSpan.textContent = select.options[select.selectedIndex]?.text || 'Select Option';
+
+    const iconSvg = document.createElement('div');
+    iconSvg.innerHTML =
+      '<svg class="w-4 h-4 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
+
+    button.appendChild(textSpan);
+    button.appendChild(iconSvg.firstChild);
+
+    const dropdownList = document.createElement('ul');
+    dropdownList.className =
+      'absolute left-0 w-full mt-1 bg-white border border-black shadow-xl hidden flex-col max-h-60 overflow-y-auto z-50';
+
+    Array.from(select.options).forEach((option) => {
+      const li = document.createElement('li');
+      li.className =
+        'px-4 py-3 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0';
+      li.textContent = option.text;
+      li.dataset.value = option.value;
+
+      if (option.selected) {
+        li.classList.add('bg-gray-50', 'text-black');
+      } else {
+        li.classList.add('text-gray-600');
+      }
+
+      li.addEventListener('click', () => {
+        select.value = option.value;
+        textSpan.textContent = option.text;
+
+        // Update active state in list
+        Array.from(dropdownList.children).forEach((child) => {
+          child.classList.remove('bg-gray-50', 'text-black');
+          child.classList.add('text-gray-600');
         });
+        li.classList.add('bg-gray-50', 'text-black');
+        li.classList.remove('text-gray-600');
 
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isHidden = dropdownList.classList.contains('hidden');
-            
-            // Close all other dropdowns
-            document.querySelectorAll('.custom-dropdown-wrapper ul').forEach(ul => {
-                ul.classList.add('hidden');
-                ul.previousElementSibling?.querySelector('svg')?.classList.remove('rotate-180');
-            });
+        // Close dropdown
+        dropdownList.classList.add('hidden');
+        button.querySelector('svg').classList.remove('rotate-180');
 
-            if (isHidden) {
-                dropdownList.classList.remove('hidden');
-                button.querySelector('svg').classList.add('rotate-180');
-            }
-        });
-
-        wrapper.appendChild(button);
-        wrapper.appendChild(dropdownList);
-        
-        select.parentNode.insertBefore(wrapper, select);
-        wrapper.appendChild(select); // move original select inside wrapper
+        // Trigger change event for original logic
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      dropdownList.appendChild(li);
     });
 
-    // Close dropdowns when clicking outside
-    // Only attach listener once
-    if (!window.__customDropdownListenerAttached) {
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.custom-dropdown-wrapper')) {
-                document.querySelectorAll('.custom-dropdown-wrapper ul').forEach(ul => {
-                    ul.classList.add('hidden');
-                    ul.previousElementSibling?.querySelector('svg')?.classList.remove('rotate-180');
-                });
-            }
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = dropdownList.classList.contains('hidden');
+
+      // Close all other dropdowns
+      document.querySelectorAll('.custom-dropdown-wrapper ul').forEach((ul) => {
+        ul.classList.add('hidden');
+        ul.previousElementSibling?.querySelector('svg')?.classList.remove('rotate-180');
+      });
+
+      if (isHidden) {
+        dropdownList.classList.remove('hidden');
+        button.querySelector('svg').classList.add('rotate-180');
+      }
+    });
+
+    wrapper.appendChild(button);
+    wrapper.appendChild(dropdownList);
+
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select); // move original select inside wrapper
+  });
+
+  // Close dropdowns when clicking outside
+  // Only attach listener once
+  if (!window.__customDropdownListenerAttached) {
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.custom-dropdown-wrapper')) {
+        document.querySelectorAll('.custom-dropdown-wrapper ul').forEach((ul) => {
+          ul.classList.add('hidden');
+          ul.previousElementSibling?.querySelector('svg')?.classList.remove('rotate-180');
         });
-        window.__customDropdownListenerAttached = true;
-    }
+      }
+    });
+    window.__customDropdownListenerAttached = true;
+  }
 };
 
-export const showErrorBoundary = (message = "An unexpected error occurred.") => {
-    const errorHtml = `
+export const showErrorBoundary = (message = 'An unexpected error occurred.') => {
+  const errorHtml = `
         <div style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; text-align: center; padding: 2rem; font-family: 'Inter', sans-serif;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">⚠</div>
             <h1 style="font-size: 1.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">System Exception</h1>
@@ -173,26 +182,28 @@ export const showErrorBoundary = (message = "An unexpected error occurred.") => 
             <a href="${window.ROYAL_CONFIG?.BASE_URL || '/'}" style="display: inline-flex; align-items: center; justify-content: center; height: 3.5rem; padding: 0 3rem; background: black; color: white; text-decoration: none; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; border: 1px solid black; cursor: pointer;">Return to Home</a>
         </div>
     `;
-    
-    // Replace the main tag or body content
-    const main = document.querySelector('main');
-    if (main) {
-        main.innerHTML = errorHtml;
-    } else {
-        document.body.innerHTML = errorHtml;
-    }
+
+  // Replace the main tag or body content
+  const main = document.querySelector('main');
+  if (main) {
+    main.innerHTML = errorHtml;
+  } else {
+    document.body.innerHTML = errorHtml;
+  }
 };
 
 window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled Promise Rejection:', event.reason);
-    if (!window.location.pathname.endsWith('index.php') && !window.location.pathname.endsWith('/')) {
-        showErrorBoundary(event.reason?.message || "Failed to communicate with the Royal Beverages server.");
-    }
+  console.error('Unhandled Promise Rejection:', event.reason);
+  if (!window.location.pathname.endsWith('index.php') && !window.location.pathname.endsWith('/')) {
+    showErrorBoundary(
+      event.reason?.message || 'Failed to communicate with the Royal Beverages server.'
+    );
+  }
 });
 
 window.addEventListener('error', (event) => {
-    console.error('Global Error:', event.error);
-    if (!window.location.pathname.endsWith('index.php') && !window.location.pathname.endsWith('/')) {
-        showErrorBoundary("A fatal application error occurred.");
-    }
+  console.error('Global Error:', event.error);
+  if (!window.location.pathname.endsWith('index.php') && !window.location.pathname.endsWith('/')) {
+    showErrorBoundary('A fatal application error occurred.');
+  }
 });

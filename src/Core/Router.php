@@ -5,7 +5,7 @@ namespace App\Core;
 
 class Router
 {
-    /** @var array<string, array<int, array{pattern:string, paramNames:array, handler:callable|array}>> */
+    /** @var array<string, array<int, array{pattern:string, paramNames:array, handler:callable|array, middleware:array}>> */
     private array $routes = [];
 
     /** @var string */
@@ -80,9 +80,9 @@ class Router
                 }
 
                 $handler = $route['handler'];
-                $routeMiddleware = $route['middleware'] ?? null;
+                $routeMiddleware = $route['middleware'];
 
-                if (!!isset($routeMiddleware)) {
+                if (!empty($routeMiddleware)) {
                     $stack = new MiddlewareStack();
                     foreach ($routeMiddleware as $mw) {
                         $stack->add($mw);
@@ -139,10 +139,10 @@ class Router
                 } else {
                     // Check request query parameters or request body (if it exists)
                     $queryVal = $request->getQuery($name);
-                    if ($queryVal === null && method_exists($request, 'getBody')) {
+                    if ($queryVal === null) {
                         $queryVal = $request->getBody($name);
                     }
-                    if ($queryVal === null && method_exists($request, 'getAllBody')) {
+                    if ($queryVal === null) {
                         $body = $request->getAllBody();
                         if (isset($body[$name])) {
                             $queryVal = $body[$name];
@@ -168,9 +168,15 @@ class Router
                     }
                 }
             }
+            if (!is_callable($handler)) {
+                throw new \RuntimeException("Route handler is not callable.");
+            }
             return call_user_func_array($handler, $args);
         } else {
             // Fallback: call with (Request, params)
+            if (!is_callable($handler)) {
+                throw new \RuntimeException("Route handler is not callable.");
+            }
             return $handler($request, $params);
         }
     }
@@ -190,6 +196,7 @@ class Router
 
         $regex = '#^' . $pattern . '$#';
 
+        /** @var array{pattern:string, paramNames:array, handler:callable|array, middleware:array} $routeData */
         $routeData = [
             'pattern'    => $regex,
             'paramNames' => $paramNames,
@@ -197,7 +204,10 @@ class Router
             'middleware' => [],
         ];
 
-        $this->routes[$method][] = &$routeData;
+        if (!isset($this->routes[$method])) {
+            $this->routes[$method] = [];
+        }
+        $this->routes[$method][] = $routeData;
         $lastIdx = count($this->routes[$method]) - 1;
         return new Route($this->routes[$method][$lastIdx]);
     }

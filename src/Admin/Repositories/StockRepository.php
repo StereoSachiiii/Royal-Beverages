@@ -291,7 +291,7 @@ public function refundOrder(int $orderId): void
     public function count(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM stock");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function create(array $data): StockModel
@@ -383,7 +383,7 @@ public function refundOrder(int $orderId): void
              WHERE product_id = :product_id"
         );
         $stmt->execute([':product_id' => $productId]);
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     /**

@@ -131,6 +131,6 @@ class RecipeIngredientModel
      */
     public function toJson(): string
     {
-        return json_encode($this->toArray());
+        return (string)json_encode($this->toArray());
     }
 }

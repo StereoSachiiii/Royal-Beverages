@@ -8,49 +8,68 @@ import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchCartItems(limit = 20, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.CART_ITEMS.LIST + buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch cart items');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) { console.error('[CartItems] Fetch failed', err); return []; }
+  try {
+    const url =
+      API_ROUTES.CART_ITEMS.LIST +
+      buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch cart items');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error('[CartItems] Fetch failed', err);
+    return [];
+  }
 }
 
 async function fetchCartItem(id) {
-    try {
-        const res = await apiRequest(API_ROUTES.CART_ITEMS.GET(id));
-        if (!res.success) throw new Error(res.message || 'Failed to fetch cart item');
-        return res.data;
-    } catch (err) { throw err; }
+  try {
+    const res = await apiRequest(API_ROUTES.CART_ITEMS.GET(id));
+    if (!res.success) throw new Error(res.message || 'Failed to fetch cart item');
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function fetchDependencies() {
-    try {
-        const [cRes, pRes] = await Promise.all([
-            apiRequest(API_ROUTES.CARTS.LIST + '?limit=200'),
-            apiRequest(API_ROUTES.PRODUCTS.LIST + '?limit=200')
-        ]);
-        return { carts: cRes.data?.items || cRes.data || [], products: pRes.data?.items || pRes.data || [] };
-    } catch (err) { return { carts: [], products: [] }; }
+  try {
+    const [cRes, pRes] = await Promise.all([
+      apiRequest(API_ROUTES.CARTS.LIST + '?limit=200'),
+      apiRequest(API_ROUTES.PRODUCTS.LIST + '?limit=200'),
+    ]);
+    return {
+      carts: cRes.data?.items || cRes.data || [],
+      products: pRes.data?.items || pRes.data || [],
+    };
+  } catch (err) {
+    return { carts: [], products: [] };
+  }
 }
 
 function getStatusClass(status) {
-    switch ((status || 'active').toLowerCase()) {
-        case 'active':    return 'badge-active';
-        case 'converted': return 'badge-info';
-        case 'abandoned': return 'badge-warning';
-        case 'expired':   return 'badge-inactive';
-        default:         return 'badge-secondary';
-    }
+  switch ((status || 'active').toLowerCase()) {
+    case 'active':
+      return 'badge-active';
+    case 'converted':
+      return 'badge-info';
+    case 'abandoned':
+      return 'badge-warning';
+    case 'expired':
+      return 'badge-inactive';
+    default:
+      return 'badge-secondary';
+  }
 }
 
-function formatCurrency(cents) { return (cents / 100).toFixed(2); }
+function formatCurrency(cents) {
+  return (cents / 100).toFixed(2);
+}
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderRow(it) {
-    const subtotal = (it.price_at_add_cents || 0) * (it.quantity || 0);
-    return `<tr class="group hover:bg-gray-50/50 transition-colors">
+  const subtotal = (it.price_at_add_cents || 0) * (it.quantity || 0);
+  return `<tr class="group hover:bg-gray-50/50 transition-colors">
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(it.id))}</td>
         <td class="px-6 py-4">
             <div class="font-bold text-black" style="font-size:13px;">${escapeHtml(it.product_name || 'Unknown')}</div>
@@ -76,8 +95,8 @@ function renderRow(it) {
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(it) {
-    const priceDiff = (it.current_price_cents || 0) - (it.price_at_add_cents || 0);
-    return `
+  const priceDiff = (it.current_price_cents || 0) - (it.price_at_add_cents || 0);
+  return `
         <div class="flex flex-col" style="gap:20px; padding:8px;">
             <div class="flex items-center justify-between" style="padding-bottom:16px;border-bottom:1px solid var(--slate-100);">
                 <div>
@@ -113,7 +132,7 @@ function renderViewModal(it) {
                         <div class="flex justify-between" style="font-size:12px;margin-bottom:10px;"><span class="text-slate-400">Current Price</span><span class="font-mono">Rs ${formatCurrency(it.current_price_cents)}</span></div>
                         <div class="flex justify-between" style="font-size:12px;border-top:1px solid #334155;padding-top:10px;margin-bottom:16px;">
                             <span class="text-slate-400 font-black uppercase" style="font-size:10px;">Price Delta</span>
-                            <span class="font-mono font-bold ${priceDiff > 0 ? 'text-green-400' : (priceDiff < 0 ? 'text-red-400' : 'text-slate-500')}">
+                            <span class="font-mono font-bold ${priceDiff > 0 ? 'text-green-400' : priceDiff < 0 ? 'text-red-400' : 'text-slate-500'}">
                                 ${priceDiff > 0 ? '+' : ''}Rs ${formatCurrency(priceDiff)}
                             </span>
                         </div>
@@ -134,105 +153,143 @@ function renderViewModal(it) {
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
 async function renderFormModal(id = null) {
-    const isEdit = id !== null;
-    const [deps, it] = await Promise.all([
-        isEdit ? Promise.resolve({ carts: [], products: [] }) : fetchDependencies(),
-        isEdit ? fetchCartItem(id) : Promise.resolve({})
-    ]);
+  const isEdit = id !== null;
+  const [deps, it] = await Promise.all([
+    isEdit ? Promise.resolve({ carts: [], products: [] }) : fetchDependencies(),
+    isEdit ? fetchCartItem(id) : Promise.resolve({}),
+  ]);
 
-    const frag = getTemplate('tpl-cart-item-form', {
-        id:              isEdit ? id : '',
-        cart_id:         it.cart_id || '',
-        product_name:    escapeHtml(it.product_name || ''),
-        quantity:        it.quantity || 1,
-        unit_price:      it.price_at_add_cents ? formatCurrency(it.price_at_add_cents) : '0.00',
-        subtotal:        it.price_at_add_cents ? formatCurrency(it.price_at_add_cents * it.quantity) : '0.00',
-        create_only:     isEdit ? 'hidden' : '',
-        edit_only:       isEdit ? '' : 'hidden',
-        create_required: isEdit ? '' : 'required'
-    });
+  const frag = getTemplate('tpl-cart-item-form', {
+    id: isEdit ? id : '',
+    cart_id: it.cart_id || '',
+    product_name: escapeHtml(it.product_name || ''),
+    quantity: it.quantity || 1,
+    unit_price: it.price_at_add_cents ? formatCurrency(it.price_at_add_cents) : '0.00',
+    subtotal: it.price_at_add_cents ? formatCurrency(it.price_at_add_cents * it.quantity) : '0.00',
+    create_only: isEdit ? 'hidden' : '',
+    edit_only: isEdit ? '' : 'hidden',
+    create_required: isEdit ? '' : 'required',
+  });
 
-    if (!isEdit) {
-        const cSel = frag.querySelector('#cit-cart-select');
-        const pSel = frag.querySelector('#cit-product-select');
-        if (cSel) cSel.innerHTML = '<option value="">Select Cart...</option>' + deps.carts.map(c => `<option value="${c.id}">Cart #${c.id} (${escapeHtml(c.user_name || 'Guest')})</option>`).join('');
-        if (pSel) pSel.innerHTML = '<option value="">Select Product...</option>' + deps.products.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (Rs ${formatCurrency(p.price_cents)})</option>`).join('');
+  if (!isEdit) {
+    const cSel = frag.querySelector('#cit-cart-select');
+    const pSel = frag.querySelector('#cit-product-select');
+    if (cSel)
+      cSel.innerHTML =
+        '<option value="">Select Cart...</option>' +
+        deps.carts
+          .map(
+            (c) =>
+              `<option value="${c.id}">Cart #${c.id} (${escapeHtml(c.user_name || 'Guest')})</option>`
+          )
+          .join('');
+    if (pSel)
+      pSel.innerHTML =
+        '<option value="">Select Product...</option>' +
+        deps.products
+          .map(
+            (p) =>
+              `<option value="${p.id}">${escapeHtml(p.name)} (Rs ${formatCurrency(p.price_cents)})</option>`
+          )
+          .join('');
+  }
+
+  if (isEdit) {
+    const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Remove Item';
+      footer.prepend(del);
     }
-
-    if (isEdit) {
-        const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button'; del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Remove Item';
-            footer.prepend(del);
-        }
-    }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#cit-form');
-    const submit = form?.querySelector('button[type="submit"]');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#cit-form');
+  const submit = form?.querySelector('button[type="submit"]');
+  if (!form) return;
 
-    const cancel = modalRoot.querySelector('#cit-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
+  const cancel = modalRoot.querySelector('#cit-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
 
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Confirm?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Remove Item'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Removing…';
-            try {
-                await apiRequest(API_ROUTES.CART_ITEMS.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) { showFormErrorFn(form, err.message); delBtn.disabled = false; delBtn.innerHTML = '🗑️ Remove Item'; }
-        });
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Adding…';
-        try {
-            const formData = new FormData(form);
-            const payload = {
-                quantity: parseInt(formData.get('quantity')),
-                ...(isEdit ? {} : { cart_id: parseInt(formData.get('cart_id')), product_id: parseInt(formData.get('product_id')) })
-            };
-            const url = isEdit ? API_ROUTES.CART_ITEMS.UPDATE(id) : API_ROUTES.CART_ITEMS.CREATE;
-            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = isEdit ? 'Save Changes' : 'Add Item';
-        }
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Remove Item';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Removing…';
+      try {
+        await apiRequest(API_ROUTES.CART_ITEMS.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Remove Item';
+      }
     });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Saving…' : 'Adding…';
+    try {
+      const formData = new FormData(form);
+      const payload = {
+        quantity: parseInt(formData.get('quantity')),
+        ...(isEdit
+          ? {}
+          : {
+              cart_id: parseInt(formData.get('cart_id')),
+              product_id: parseInt(formData.get('product_id')),
+            }),
+      };
+      const url = isEdit ? API_ROUTES.CART_ITEMS.UPDATE(id) : API_ROUTES.CART_ITEMS.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = isEdit ? 'Save Changes' : 'Add Item';
+    }
+  });
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 
 const { Render: CartItems, Init: initCartItems } = createEntityModule({
-    entityName: 'Cart Items',
-    entitySubtitle: 'View individual products inside customer carts',
-    apiRoutes: {
-        list: API_ROUTES.CART_ITEMS.LIST,
-        detail: (id) => API_ROUTES.CART_ITEMS.GET(id),
-        create: API_ROUTES.CART_ITEMS.CREATE,
-        update: (id) => API_ROUTES.CART_ITEMS.UPDATE(id),
-        delete: (id) => API_ROUTES.CART_ITEMS.DELETE(id)
-    },
-    fetchList: fetchCartItems,
-    fetchSingle: fetchCartItem,
-    tableHeaderHtml: `<tr class="tr">
+  entityName: 'Cart Items',
+  entitySubtitle: 'View individual products inside customer carts',
+  apiRoutes: {
+    list: API_ROUTES.CART_ITEMS.LIST,
+    detail: (id) => API_ROUTES.CART_ITEMS.GET(id),
+    create: API_ROUTES.CART_ITEMS.CREATE,
+    update: (id) => API_ROUTES.CART_ITEMS.UPDATE(id),
+    delete: (id) => API_ROUTES.CART_ITEMS.DELETE(id),
+  },
+  fetchList: fetchCartItems,
+  fetchSingle: fetchCartItem,
+  tableHeaderHtml: `<tr class="tr">
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Product / Cart</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Customer</th>
@@ -242,12 +299,12 @@ const { Render: CartItems, Init: initCartItems } = createEntityModule({
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Added</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    searchPlaceholder: 'Search by product or cart ID…',
-    createBtnText: '➕ Add Item'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  searchPlaceholder: 'Search by product or cart ID…',
+  createBtnText: '➕ Add Item',
 });
 
 export { CartItems, initCartItems };

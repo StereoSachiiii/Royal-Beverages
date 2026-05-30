@@ -9,34 +9,38 @@ import { createEntityModule } from '../../components/EntityBuilder.js';
 import { uploadImage } from '../../FormHelpers.js';
 
 async function fetchCategories(limit = 20, offset = 0, query = '') {
-    const url = API_ROUTES.CATEGORIES.LIST + buildQueryString({
-        limit, offset, enriched: 'true',
-        ...(query ? { search: query } : {})
+  const url =
+    API_ROUTES.CATEGORIES.LIST +
+    buildQueryString({
+      limit,
+      offset,
+      enriched: 'true',
+      ...(query ? { search: query } : {}),
     });
-    const res = await apiRequest(url);
-    if (!res.success) throw new Error(res.message || 'Failed to fetch categories');
-    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  const res = await apiRequest(url);
+  if (!res.success) throw new Error(res.message || 'Failed to fetch categories');
+  return res.data?.items || (Array.isArray(res.data) ? res.data : []);
 }
 
 async function fetchCategory(id) {
-    const url = API_ROUTES.CATEGORIES.GET(id) + buildQueryString({ enriched: 'true' });
-    const res = await apiRequest(url);
-    if (!res.success) throw new Error(res.message || 'Failed to fetch category');
-    return res.data;
+  const url = API_ROUTES.CATEGORIES.GET(id) + buildQueryString({ enriched: 'true' });
+  const res = await apiRequest(url);
+  if (!res.success) throw new Error(res.message || 'Failed to fetch category');
+  return res.data;
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 function renderRow(cat) {
-    const isActive = cat.is_active !== false && cat.is_active !== 'f';
-    const statusBadge = isActive
-        ? `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-none">Active</span>`
-        : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 rounded-none">Inactive</span>`;
+  const isActive = cat.is_active !== false && cat.is_active !== 'f';
+  const statusBadge = isActive
+    ? `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-none">Active</span>`
+    : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 rounded-none">Inactive</span>`;
 
-    const imgHtml = cat.image_url
-        ? `<img src="${escapeHtml(cat.image_url)}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(cat.name)}">`
-        : `<div class="w-10 h-10 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs">🏷️</div>`;
+  const imgHtml = cat.image_url
+    ? `<img src="${escapeHtml(cat.image_url)}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(cat.name)}">`
+    : `<div class="w-10 h-10 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs">🏷️</div>`;
 
-    return `
+  return `
         <tr class="group hover:bg-gray-50/50 transition-colors">
             <td class="px-8 py-5 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(cat.id))}</td>
             <td class="px-8 py-5">
@@ -70,29 +74,35 @@ function renderRow(cat) {
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
 function renderViewModal(cat) {
-    const avgPrice = cat.avg_price_cents ? (cat.avg_price_cents / 100).toFixed(2) : '—';
-    const minPrice = cat.min_price_cents ? (cat.min_price_cents / 100).toFixed(2) : '—';
-    const maxPrice = cat.max_price_cents ? (cat.max_price_cents / 100).toFixed(2) : '—';
-    const isActive = cat.is_active !== false && cat.is_active !== 'f';
+  const avgPrice = cat.avg_price_cents ? (cat.avg_price_cents / 100).toFixed(2) : '—';
+  const minPrice = cat.min_price_cents ? (cat.min_price_cents / 100).toFixed(2) : '—';
+  const maxPrice = cat.max_price_cents ? (cat.max_price_cents / 100).toFixed(2) : '—';
+  const isActive = cat.is_active !== false && cat.is_active !== 'f';
 
-    const topProducts = Array.isArray(cat.top_products) && cat.top_products.length
-        ? cat.top_products.map(p => `
+  const topProducts =
+    Array.isArray(cat.top_products) && cat.top_products.length
+      ? cat.top_products
+          .map(
+            (p) => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">
                 <span style="font-size:13px;">${escapeHtml(p.name || 'Unknown')}</span>
                 <span style="font-size:13px;font-weight:600;font-family:monospace;">Rs ${((p.price_cents || 0) / 100).toFixed(2)}</span>
-            </div>`).join('')
-        : '<p style="font-size:13px;color:#94a3b8;margin:0;">No products in this category</p>';
+            </div>`
+          )
+          .join('')
+      : '<p style="font-size:13px;color:#94a3b8;margin:0;">No products in this category</p>';
 
-    const metaRow = (label, val) =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8fafc;">
+  const metaRow = (label, val) =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8fafc;">
             <span style="color:#64748b;font-size:13px;">${label}</span>
             <span style="font-weight:600;font-size:13px;color:#0f172a;">${val}</span>
         </div>`;
 
-    return `
+  return `
         <div style="display:flex;flex-direction:column;gap:20px;">
             <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
-                ${cat.image_url
+                ${
+                  cat.image_url
                     ? `<img src="${escapeHtml(cat.image_url)}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;" alt="${escapeHtml(cat.name)}">`
                     : `<div style="width:80px;height:80px;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:32px;">🏷️</div>`
                 }
@@ -148,151 +158,171 @@ function renderViewModal(cat) {
 
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 async function renderFormModal(categoryId) {
-    const isEdit = categoryId !== null;
-    let cat = {};
-    if (isEdit) cat = await fetchCategory(categoryId);
+  const isEdit = categoryId !== null;
+  let cat = {};
+  if (isEdit) cat = await fetchCategory(categoryId);
 
-    const frag = getTemplate('tpl-category-form', {
-        name:              escapeHtml(cat.name || ''),
-        slug:              escapeHtml(cat.slug || ''),
-        description:       escapeHtml(cat.description || ''),
-        image_url:         escapeHtml(cat.image_url || ''),
-        image_display:     cat.image_url ? 'block' : 'none',
-        is_active_checked: cat.is_active !== false ? 'checked' : '',
-        submit_text:       isEdit ? 'Save Changes' : 'Create Category',
-    });
+  const frag = getTemplate('tpl-category-form', {
+    name: escapeHtml(cat.name || ''),
+    slug: escapeHtml(cat.slug || ''),
+    description: escapeHtml(cat.description || ''),
+    image_url: escapeHtml(cat.image_url || ''),
+    image_display: cat.image_url ? 'block' : 'none',
+    is_active_checked: cat.is_active !== false ? 'checked' : '',
+    submit_text: isEdit ? 'Save Changes' : 'Create Category',
+  });
 
-    if (isEdit) {
-        const footer = frag.querySelector('.cat-form-footer');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button';
-            del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Delete';
-            footer.prepend(del);
-        }
+  if (isEdit) {
+    const footer = frag.querySelector('.cat-form-footer');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Delete';
+      footer.prepend(del);
     }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#cat-form');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#cat-form');
+  if (!form) return;
 
-    const nameInp = form.querySelector('[name="name"]');
-    const slugInp = form.querySelector('[name="slug"]');
-    
-    // Auto-slug
-    if (!isEdit && nameInp && slugInp) {
-        nameInp.addEventListener('input', () => {
-            if (!slugInp.dataset.manual) {
-                slugInp.value = nameInp.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            }
-        });
-        slugInp.addEventListener('input', () => { slugInp.dataset.manual = '1'; });
-    }
+  const nameInp = form.querySelector('[name="name"]');
+  const slugInp = form.querySelector('[name="slug"]');
 
-    // Cancel
-    const cancel = modalRoot.querySelector('.js-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
-
-    // Image Upload
-    const imgFile = form.querySelector('input[type="file"]');
-    if (imgFile) {
-        const imgPrev = modalRoot.querySelector(`#${imgFile.id.replace('-file', '-preview')}`);
-        const imgHid  = modalRoot.querySelector(`#${imgFile.id.replace('-file', '-hidden')}`);
-        imgFile.addEventListener('change', async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const label = modalRoot.querySelector(`label[for="${imgFile.id}"]`);
-            if (label) label.textContent = 'Uploading…';
-            try {
-                const url = await uploadImage(file, 'categories');
-                if (imgHid) imgHid.value = url;
-                if (imgPrev) { imgPrev.src = url; imgPrev.style.display = 'block'; }
-                if (label) label.textContent = '✅ Change Image';
-            } catch (err) {
-                if (label) label.textContent = '✗ Upload Failed';
-            }
-        });
-    }
-
-    // Delete
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1';
-                delBtn.innerHTML = '⚠️ Confirm Delete?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if(delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
-            try {
-                await apiRequest(API_ROUTES.CATEGORIES.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) {
-                showFormErrorFn(form, err.message);
-                delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete';
-                delete delBtn.dataset.confirmed;
-            }
-        });
-    }
-
-    // Custom Submit handling to bypass standard getFormData due to ID mismatches
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submit = form.querySelector('[type="submit"]');
-        const orig   = submit.innerHTML;
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
-        try {
-            const formData = new FormData(form);
-            const imgHid = modalRoot.querySelector('#cat-image-hidden');
-            const payload = {
-                name:        formData.get('name'),
-                slug:        formData.get('slug') || undefined,
-                description: formData.get('description') || '',
-                image_url:   (imgHid ? imgHid.value : null) || formData.get('image_url') || null,
-                is_active:   formData.get('is_active') !== null,
-            };
-            const url    = isEdit ? API_ROUTES.CATEGORIES.UPDATE(id) : API_ROUTES.CATEGORIES.CREATE;
-            const res    = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            if (!res.success) throw new Error(res.message || 'Request failed');
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = orig;
-        }
+  // Auto-slug
+  if (!isEdit && nameInp && slugInp) {
+    nameInp.addEventListener('input', () => {
+      if (!slugInp.dataset.manual) {
+        slugInp.value = nameInp.value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+      }
     });
+    slugInp.addEventListener('input', () => {
+      slugInp.dataset.manual = '1';
+    });
+  }
+
+  // Cancel
+  const cancel = modalRoot.querySelector('.js-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
+
+  // Image Upload
+  const imgFile = form.querySelector('input[type="file"]');
+  if (imgFile) {
+    const imgPrev = modalRoot.querySelector(`#${imgFile.id.replace('-file', '-preview')}`);
+    const imgHid = modalRoot.querySelector(`#${imgFile.id.replace('-file', '-hidden')}`);
+    imgFile.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const label = modalRoot.querySelector(`label[for="${imgFile.id}"]`);
+      if (label) label.textContent = 'Uploading…';
+      try {
+        const url = await uploadImage(file, 'categories');
+        if (imgHid) imgHid.value = url;
+        if (imgPrev) {
+          imgPrev.src = url;
+          imgPrev.style.display = 'block';
+        }
+        if (label) label.textContent = '✅ Change Image';
+      } catch (err) {
+        if (label) label.textContent = '✗ Upload Failed';
+      }
+    });
+  }
+
+  // Delete
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm Delete?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Delete';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Deleting…';
+      try {
+        await apiRequest(API_ROUTES.CATEGORIES.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Delete';
+        delete delBtn.dataset.confirmed;
+      }
+    });
+  }
+
+  // Custom Submit handling to bypass standard getFormData due to ID mismatches
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    const orig = submit.innerHTML;
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
+    try {
+      const formData = new FormData(form);
+      const imgHid = modalRoot.querySelector('#cat-image-hidden');
+      const payload = {
+        name: formData.get('name'),
+        slug: formData.get('slug') || undefined,
+        description: formData.get('description') || '',
+        image_url: (imgHid ? imgHid.value : null) || formData.get('image_url') || null,
+        is_active: formData.get('is_active') !== null,
+      };
+      const url = isEdit ? API_ROUTES.CATEGORIES.UPDATE(id) : API_ROUTES.CATEGORIES.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      if (!res.success) throw new Error(res.message || 'Request failed');
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = orig;
+    }
+  });
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 const { Render: Categories, Init: initCategories } = createEntityModule({
-    entityName: 'Categories',
-    apiRoutes: {
-        list: API_ROUTES.CATEGORIES.LIST,
-        detail: (id) => API_ROUTES.CATEGORIES.GET(id),
-        create: API_ROUTES.CATEGORIES.CREATE,
-        update: (id) => API_ROUTES.CATEGORIES.UPDATE(id),
-        delete: (id) => API_ROUTES.CATEGORIES.DELETE(id)
-    },
-    fetchList: fetchCategories,
-    fetchSingle: fetchCategory,
-    tableHeaderHtml: `<tr>
+  entityName: 'Categories',
+  apiRoutes: {
+    list: API_ROUTES.CATEGORIES.LIST,
+    detail: (id) => API_ROUTES.CATEGORIES.GET(id),
+    create: API_ROUTES.CATEGORIES.CREATE,
+    update: (id) => API_ROUTES.CATEGORIES.UPDATE(id),
+    delete: (id) => API_ROUTES.CATEGORIES.DELETE(id),
+  },
+  fetchList: fetchCategories,
+  fetchSingle: fetchCategory,
+  tableHeaderHtml: `<tr>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Category</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Products</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    searchPlaceholder: 'Search by name or description…'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  searchPlaceholder: 'Search by name or description…',
 });
 
 export { Categories, initCategories };

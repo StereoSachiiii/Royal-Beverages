@@ -9,45 +9,53 @@ import { escapeHtml, formatCurrency, formatNumber, formatDate, getTemplate } fro
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchProducts(limit = 20, offset = 0, query = '') {
-    const res = await AdminAPI.products.enrichedAll({ limit, offset, ...(query ? { search: query } : {}) });
-    if (!res.success) throw new Error(res.message || 'Failed to fetch products');
-    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  const res = await AdminAPI.products.enrichedAll({
+    limit,
+    offset,
+    ...(query ? { search: query } : {}),
+  });
+  if (!res.success) throw new Error(res.message || 'Failed to fetch products');
+  return res.data?.items || (Array.isArray(res.data) ? res.data : []);
 }
 
 async function fetchProduct(id) {
-    const res = await AdminAPI.adminViews.detail('products', id);
-    if (!res.success) throw new Error(res.message || 'Failed to fetch product');
-    return res.data;
+  const res = await AdminAPI.adminViews.detail('products', id);
+  if (!res.success) throw new Error(res.message || 'Failed to fetch product');
+  return res.data;
 }
 
 async function fetchCategories() {
-    try {
-        const res = await AdminAPI.categories.list({ limit: 100 });
-        return res.success ? (res.data || []) : [];
-    } catch { return []; }
+  try {
+    const res = await AdminAPI.categories.list({ limit: 100 });
+    return res.success ? res.data || [] : [];
+  } catch {
+    return [];
+  }
 }
 
 async function fetchSuppliers() {
-    try {
-        const res = await AdminAPI.suppliers.list({ limit: 100 });
-        return res.success ? (res.data || []) : [];
-    } catch { return []; }
+  try {
+    const res = await AdminAPI.suppliers.list({ limit: 100 });
+    return res.success ? res.data || [] : [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 function renderRow(p) {
-    const price = formatCurrency(p.price_cents || 0);
-    const inStock = (p.available_stock ?? p.stock_quantity ?? 0) > 0;
-    const stockQty = p.available_stock ?? p.stock_quantity ?? 0;
-    const statusBadge = inStock
-        ? `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-none">In Stock</span>`
-        : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 rounded-none">Out of Stock</span>`;
+  const price = formatCurrency(p.price_cents || 0);
+  const inStock = (p.available_stock ?? p.stock_quantity ?? 0) > 0;
+  const stockQty = p.available_stock ?? p.stock_quantity ?? 0;
+  const statusBadge = inStock
+    ? `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-none">In Stock</span>`
+    : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 rounded-none">Out of Stock</span>`;
 
-    const imgHtml = p.image_url
-        ? `<img src="${escapeHtml(p.image_url)}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(p.name)}">`
-        : `<div class="w-10 h-10 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs">🍾</div>`;
+  const imgHtml = p.image_url
+    ? `<img src="${escapeHtml(p.image_url)}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(p.name)}">`
+    : `<div class="w-10 h-10 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs">🍾</div>`;
 
-    return `
+  return `
         <tr class="group hover:bg-gray-50/50 transition-colors">
             <td class="px-8 py-5 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(p.id))}</td>
             <td class="px-8 py-5">
@@ -84,19 +92,19 @@ function renderRow(p) {
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
 function renderViewModal(p) {
-    const price = formatCurrency(p.price_cents || 0);
-    const inStock = (p.available_stock ?? p.stock_quantity ?? 0) > 0;
-    const stockQty = p.available_stock ?? p.stock_quantity ?? 0;
-    
-    const statusBadge = inStock
-        ? `<span class="inline-flex items-center px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-full">In Stock</span>`
-        : `<span class="inline-flex items-center px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 rounded-full">Out of Stock</span>`;
+  const price = formatCurrency(p.price_cents || 0);
+  const inStock = (p.available_stock ?? p.stock_quantity ?? 0) > 0;
+  const stockQty = p.available_stock ?? p.stock_quantity ?? 0;
 
-    const imgHtml = p.image_url
-        ? `<img src="${escapeHtml(p.image_url)}" class="w-32 h-32 object-cover border border-gray-100 shadow-sm" alt="${escapeHtml(p.name)}">`
-        : `<div class="w-32 h-32 bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl shadow-sm">🍾</div>`;
+  const statusBadge = inStock
+    ? `<span class="inline-flex items-center px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-full">In Stock</span>`
+    : `<span class="inline-flex items-center px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 rounded-full">Out of Stock</span>`;
 
-    return `
+  const imgHtml = p.image_url
+    ? `<img src="${escapeHtml(p.image_url)}" class="w-32 h-32 object-cover border border-gray-100 shadow-sm" alt="${escapeHtml(p.name)}">`
+    : `<div class="w-32 h-32 bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl shadow-sm">🍾</div>`;
+
+  return `
         <div class="flex flex-col gap-6 p-2">
             <div class="flex items-start gap-6 pb-6 border-b border-gray-100">
                 ${imgHtml}
@@ -143,59 +151,66 @@ function renderViewModal(p) {
 
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 async function renderFormModal(productId) {
-    const isEdit = productId !== null;
-    let p = {};
-    if (isEdit) p = await fetchProduct(productId);
-    
-    const [cats, sups] = await Promise.all([fetchCategories(), fetchSuppliers()]);
+  const isEdit = productId !== null;
+  let p = {};
+  if (isEdit) p = await fetchProduct(productId);
 
-    const catOpts = cats.map(c => 
+  const [cats, sups] = await Promise.all([fetchCategories(), fetchSuppliers()]);
+
+  const catOpts = cats
+    .map(
+      (c) =>
         `<option value="${c.id}" ${p.category_id == c.id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
-    ).join('');
-    
-    const supOpts = sups.map(s => 
+    )
+    .join('');
+
+  const supOpts = sups
+    .map(
+      (s) =>
         `<option value="${s.id}" ${p.supplier_id == s.id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`
-    ).join('');
+    )
+    .join('');
 
-    const frag = getTemplate('tpl-product-form', {
-        name:        escapeHtml(p.name || ''),
-        slug:        escapeHtml(p.slug || ''),
-        price:       p.price_cents ? (p.price_cents / 100).toFixed(2) : '',
-        description: escapeHtml(p.description || ''),
-        image_url:   escapeHtml(p.image_url || ''),
-        image_display: p.image_url ? 'block' : 'none',
-        active_checked: p.is_active !== false ? 'checked' : '',
-        categories:  catOpts,
-        suppliers:   `<option value="">None (In-House)</option>` + supOpts,
-        submit_text: isEdit ? 'Save Changes' : 'Create Product',
-    });
+  const frag = getTemplate('tpl-product-form', {
+    name: escapeHtml(p.name || ''),
+    slug: escapeHtml(p.slug || ''),
+    price: p.price_cents ? (p.price_cents / 100).toFixed(2) : '',
+    description: escapeHtml(p.description || ''),
+    image_url: escapeHtml(p.image_url || ''),
+    image_display: p.image_url ? 'block' : 'none',
+    active_checked: p.is_active !== false ? 'checked' : '',
+    categories: catOpts,
+    suppliers: `<option value="">None (In-House)</option>` + supOpts,
+    submit_text: isEdit ? 'Save Changes' : 'Create Product',
+  });
 
-    if (isEdit) {
-        const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button';
-            del.className = 'px-6 py-2.5 bg-white border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200 text-xs font-bold uppercase tracking-wider transition-colors mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Delete Product';
-            footer.prepend(del);
-        }
+  if (isEdit) {
+    const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className =
+        'px-6 py-2.5 bg-white border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200 text-xs font-bold uppercase tracking-wider transition-colors mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Delete Product';
+      footer.prepend(del);
     }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 const { Render: Products, Init: initProducts } = createEntityModule({
-    entityName: 'Products',
-    apiRoutes: {
-        list: API_ROUTES.PRODUCTS.LIST,
-        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('products', id),
-        create: API_ROUTES.PRODUCTS.CREATE,
-        update: (id) => API_ROUTES.PRODUCTS.UPDATE(id),
-        delete: (id) => API_ROUTES.PRODUCTS.DELETE(id)
-    },
-    fetchList: fetchProducts,
-    fetchSingle: fetchProduct,
-    tableHeaderHtml: `<tr>
+  entityName: 'Products',
+  apiRoutes: {
+    list: API_ROUTES.PRODUCTS.LIST,
+    detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('products', id),
+    create: API_ROUTES.PRODUCTS.CREATE,
+    update: (id) => API_ROUTES.PRODUCTS.UPDATE(id),
+    delete: (id) => API_ROUTES.PRODUCTS.DELETE(id),
+  },
+  fetchList: fetchProducts,
+  fetchSingle: fetchProduct,
+  tableHeaderHtml: `<tr>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Product</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Price</th>
@@ -203,20 +218,20 @@ const { Render: Products, Init: initProducts } = createEntityModule({
         <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    searchPlaceholder: 'Search by name, category, or SKU…',
-    transformPayload: (payload) => {
-        if (payload.price_cents !== undefined) payload.price_cents = parseInt(payload.price_cents);
-        if (payload.category_id) payload.category_id = parseInt(payload.category_id);
-        if (payload.supplier_id) payload.supplier_id = parseInt(payload.supplier_id);
-        if (payload.prod_image_hidden) {
-            payload.image_url = payload.prod_image_hidden;
-            delete payload.prod_image_hidden;
-        }
-        return payload;
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  searchPlaceholder: 'Search by name, category, or SKU…',
+  transformPayload: (payload) => {
+    if (payload.price_cents !== undefined) payload.price_cents = parseInt(payload.price_cents);
+    if (payload.category_id) payload.category_id = parseInt(payload.category_id);
+    if (payload.supplier_id) payload.supplier_id = parseInt(payload.supplier_id);
+    if (payload.prod_image_hidden) {
+      payload.image_url = payload.prod_image_hidden;
+      delete payload.prod_image_hidden;
     }
+    return payload;
+  },
 });
 
 export { Products, initProducts };

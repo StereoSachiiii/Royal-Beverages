@@ -57,7 +57,7 @@ class OrderRepository extends BaseRepository
     public function count(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM orders");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     /**

@@ -25,7 +25,48 @@ $csrfToken = $session->getCsrfInstance()->getToken();
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..1000;1,14..32,100..1000&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/main.css">
+    <!-- Embedded Tailwind CDN to guarantee styling without build dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { DEFAULT: '#000000', glow: 'rgba(0, 0, 0, 0.05)' },
+                        gray: {
+                            950: '#0a0a0a',
+                            900: '#121212',
+                            800: '#1d1d1f',
+                            700: '#333333',
+                            600: '#444444',
+                            400: '#86868b',
+                            200: '#e5e5e7',
+                            100: '#ededf0',
+                            50: '#f5f5f7',
+                        }
+                    },
+                    spacing: {
+                        'royal-1': '0.25rem',
+                        'royal-2': '0.5rem',
+                        'royal-3': '0.75rem',
+                        'royal-4': '1rem',
+                        'royal-5': '1.25rem',
+                        'royal-6': '1.5rem',
+                        'royal-8': '2rem',
+                        'royal-10': '2.5rem',
+                        'royal-12': '3rem',
+                        'royal-16': '4rem',
+                        'royal-20': '5rem',
+                        'gap-premium': '4.5rem',
+                    },
+                    fontFamily: {
+                        heading: ['"DM Sans"', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         :root {
             --gold: #D4AF37;
@@ -93,7 +134,7 @@ $csrfToken = $session->getCsrfInstance()->getToken();
                 <a href="index.php" class="text-[10px] font-black uppercase tracking-widest text-black">Royal Beverages</a>
             </div>
 
-            <div class="w-full max-w-md">
+            <div class="w-full max-w-md mx-auto">
                 
                 <!-- Login Module -->
                 <div id="loginContainer" class="auth-module auth-transition opacity-100 block">

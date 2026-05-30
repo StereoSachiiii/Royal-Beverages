@@ -29,7 +29,7 @@ class Container
     private array $resolving = [];
 
     /**
-     * @var array<string, ReflectionClass> Cache of ReflectionClass instances
+     * @var array<string, ReflectionClass<object>> Cache of ReflectionClass instances
      */
     private static array $reflectionCache = [];
 
@@ -41,7 +41,7 @@ class Container
     /**
      * Bind an abstract type to a concrete implementation
      */
-    public function bind(string $abstract, $concrete = null, bool $singleton = false): void
+    public function bind(string $abstract, mixed $concrete = null, bool $singleton = false): void
     {
         if ($concrete === null) {
             $concrete = $abstract;
@@ -56,7 +56,7 @@ class Container
     /**
      * Bind an abstract type as a singleton
      */
-    public function singleton(string $abstract, $concrete = null): void
+    public function singleton(string $abstract, mixed $concrete = null): void
     {
         $this->bind($abstract, $concrete, true);
     }
@@ -83,7 +83,7 @@ class Container
      * @throws NotFoundException
      * @throws ContainerException
      */
-    public function get(string $id)
+    public function get(string $id): mixed
     {
         // 1. Return instance if it's already a singleton
         if (isset($this->instances[$id])) {

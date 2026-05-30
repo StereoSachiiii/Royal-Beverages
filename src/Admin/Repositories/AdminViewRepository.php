@@ -50,7 +50,7 @@ class AdminViewRepository
         }
         
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
     
     /**
@@ -97,7 +97,7 @@ class AdminViewRepository
         }
         $stmt->execute();
         
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
 public function getDashboardStats(): array
@@ -109,7 +109,8 @@ public function getDashboardStats(): array
     }
 
     // Helper scalar query (keeps using existing pattern)
-    $g = fn(string $sql) => (int)$this->pdo->query($sql)->fetchColumn();
+    $g = fn(string $sql) => ($stmt = $this->pdo->query($sql)) ? (int)$stmt->fetchColumn() : 0;
+    $gFloat = fn(string $sql) => ($stmt = $this->pdo->query($sql)) ? (float)$stmt->fetchColumn() : 0.0;
 
     // Users
     $totalUsers = $g("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL AND is_anonymized = FALSE");
@@ -141,26 +142,14 @@ public function getDashboardStats(): array
 
     // Fulfillment / Logistics
     // average time from paid_at (or created_at) to delivered_at in hours
-    $avg_time_to_deliver_hours = (int)round(
-        (float)$this->pdo->query(
-            "SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (delivered_at - COALESCE(paid_at, created_at))))/3600,0) FROM orders WHERE delivered_at IS NOT NULL"
-        )->fetchColumn()
-    );
+    $avg_time_to_deliver_hours = (int)round($gFloat("SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (delivered_at - COALESCE(paid_at, created_at))))/3600,0) FROM orders WHERE delivered_at IS NOT NULL"));
 
     // Items per order (avg quantity)
-    $avg_items_per_order = (int)round(
-        (float)$this->pdo->query(
-            "SELECT COALESCE(AVG(items),0) FROM (SELECT order_id, SUM(quantity) as items FROM order_items GROUP BY order_id) t"
-        )->fetchColumn()
-    );
+    $avg_items_per_order = (int)round($gFloat("SELECT COALESCE(AVG(items),0) FROM (SELECT order_id, SUM(quantity) as items FROM order_items GROUP BY order_id) t"));
 
     // Repeat customers
-    $repeat_customers = (int)$this->pdo->query(
-        "SELECT COALESCE(SUM(CASE WHEN cnt>1 THEN 1 ELSE 0 END),0) FROM (SELECT user_id, COUNT(*) as cnt FROM orders WHERE user_id IS NOT NULL GROUP BY user_id) t"
-    )->fetchColumn();
-    $customers_with_orders = (int)$this->pdo->query(
-        "SELECT COUNT(*) FROM (SELECT user_id FROM orders WHERE user_id IS NOT NULL GROUP BY user_id) t"
-    )->fetchColumn();
+    $repeat_customers = $g("SELECT COALESCE(SUM(CASE WHEN cnt>1 THEN 1 ELSE 0 END),0) FROM (SELECT user_id, COUNT(*) as cnt FROM orders WHERE user_id IS NOT NULL GROUP BY user_id) t");
+    $customers_with_orders = $g("SELECT COUNT(*) FROM (SELECT user_id FROM orders WHERE user_id IS NOT NULL GROUP BY user_id) t");
     $repeat_customer_rate_pct = $customers_with_orders === 0 ? 0 : (int)round(100.0 * $repeat_customers / $customers_with_orders);
 
     // Products & Inventory health
@@ -171,17 +160,11 @@ public function getDashboardStats(): array
     $inventory_reserved = $g("SELECT COALESCE(SUM(reserved),0) FROM stock");
     $inventory_available = $g("SELECT COALESCE(SUM(quantity - reserved),0) FROM stock");
 
-    $low_stock_products = (int)$this->pdo->query(
-        "SELECT COUNT(*) FROM (SELECT product_id, COALESCE(SUM(quantity - reserved),0) as available FROM stock GROUP BY product_id) t WHERE available < 10"
-    )->fetchColumn();
-    $out_of_stock_products = (int)$this->pdo->query(
-        "SELECT COUNT(*) FROM (SELECT product_id, COALESCE(SUM(quantity - reserved),0) as available FROM stock GROUP BY product_id) t WHERE available = 0"
-    )->fetchColumn();
+    $low_stock_products = $g("SELECT COUNT(*) FROM (SELECT product_id, COALESCE(SUM(quantity - reserved),0) as available FROM stock GROUP BY product_id) t WHERE available < 10");
+    $out_of_stock_products = $g("SELECT COUNT(*) FROM (SELECT product_id, COALESCE(SUM(quantity - reserved),0) as available FROM stock GROUP BY product_id) t WHERE available = 0");
 
     // Inventory value (in cents) based on product price * available stock
-    $inventory_value_cents = (int)$this->pdo->query(
-        "SELECT COALESCE(SUM(p.price_cents * (s.quantity - s.reserved)),0) FROM stock s JOIN products p ON s.product_id = p.id WHERE p.deleted_at IS NULL"
-    )->fetchColumn();
+    $inventory_value_cents = $g("SELECT COALESCE(SUM(p.price_cents * (s.quantity - s.reserved)),0) FROM stock s JOIN products p ON s.product_id = p.id WHERE p.deleted_at IS NULL");
 
     // Top products (by revenue) - small list for quick action
     $topProductsStmt = $this->pdo->query(

@@ -5,8 +5,9 @@ namespace App\Core;
 
 class CSRF{
 
-    public $session;
-    private $csrfTokenLength = 32; // bytes
+    public Session $session;
+    /** @var int<1, max> */
+    private int $csrfTokenLength = 32; // bytes
     public function __construct(Session $session){
         $this->session = $session; 
     }

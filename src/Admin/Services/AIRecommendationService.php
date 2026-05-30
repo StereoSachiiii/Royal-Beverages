@@ -31,7 +31,7 @@ class AIRecommendationService
         }
 
         try {
-            $context = $this->buildUserContext($userId);
+            $context = $this->buildUserContext((int)$userId);
             // If they have literally no footprint, return generics
             if (empty($context['wishlist_names']) && empty($context['purchased_names'])) {
                 return $this->getGenericRecommendations($limit);
@@ -107,7 +107,7 @@ class AIRecommendationService
         $pdo = $this->pdo;
         $stmt = $pdo->prepare("SELECT id, name, category_id, price_cents FROM products WHERE is_active = TRUE AND deleted_at IS NULL");
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     private function constructPrompt(array $context, array $catalog, int $limit): string
@@ -153,7 +153,7 @@ Instructions:
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, (string)json_encode($data));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         
         // Optional timeout bounds
@@ -167,7 +167,7 @@ Instructions:
             throw new Exception("Gemini API Error: HTTP " . $httpCode);
         }
 
-        return $response;
+        return (string)$response;
     }
 
     private function extractProductIdsFromResponse(string $json): array
@@ -276,6 +276,6 @@ Instructions:
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 }

@@ -31,7 +31,7 @@ class CartRepository extends BaseRepository
         $stmt->execute();
         
         // Map to array (not models) so we keep joined fields
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**
@@ -59,7 +59,7 @@ class CartRepository extends BaseRepository
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**
@@ -144,7 +144,7 @@ class CartRepository extends BaseRepository
     public function count(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM carts");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function create(array $data): CartModel

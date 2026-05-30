@@ -19,7 +19,7 @@ $GLOBALS['app_config'] = $config;
 // 3. Initialize Autoloader
 require_once __DIR__ . "/Autoloader.php";
 $autoloader = new \App\Core\Autoloader();
-$autoloader->addNamespace('App', realpath(__DIR__ . '/..'));
+$autoloader->addNamespace('App', (string)realpath(__DIR__ . '/..'));
 $autoloader->register();
 
 // 4. Initialize Session
@@ -34,7 +34,7 @@ if (!defined('BASE_URL')) {
     $docRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? '');
     $publicPath = str_replace('\\', '/', realpath(__DIR__ . '/../../public') ?: '');
     
-    if ($docRoot && $publicPath && str_starts_with($publicPath, $docRoot)) {
+    if ($docRoot && $publicPath && str_starts_with((string)$publicPath, $docRoot)) {
         $base = '/' . trim(substr($publicPath, strlen($docRoot)), '/') . '/';
     } else {
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';

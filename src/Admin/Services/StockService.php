@@ -55,7 +55,7 @@ class StockService
             throw new ValidationException('Cannot reduce quantity below reserved amount');
         }
 
-        $updated = $this->repo->update($stock->getId(), ['quantity' => $newQuantity]);
+        $updated = $this->repo->update((int)$stock->getId(), ['quantity' => $newQuantity]);
         if (!$updated) {
             throw new DatabaseException('Failed to adjust stock');
         }
@@ -80,14 +80,14 @@ class StockService
         }
 
         // Reduce from source
-        $this->repo->update($fromStock->getId(), [
+        $this->repo->update((int)$fromStock->getId(), [
             'quantity' => $fromStock->getQuantity() - $quantity,
         ]);
 
         // Add to destination (create if doesn't exist)
         $toStock = $this->repo->getByProductAndWarehouse($productId, $toWarehouseId);
         if ($toStock) {
-            $this->repo->update($toStock->getId(), [
+            $this->repo->update((int)$toStock->getId(), [
                 'quantity' => $toStock->getQuantity() + $quantity,
             ]);
         } else {

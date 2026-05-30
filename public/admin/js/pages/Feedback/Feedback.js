@@ -8,43 +8,62 @@ import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchFeedbackList(limit = 20, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.FEEDBACK.LIST + buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch feedback');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) { console.error('[Feedback] Fetch failed', err); return []; }
+  try {
+    const url =
+      API_ROUTES.FEEDBACK.LIST +
+      buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch feedback');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error('[Feedback] Fetch failed', err);
+    return [];
+  }
 }
 
 async function fetchFeedbackItem(id) {
-    try {
-        const res = await apiRequest(API_ROUTES.FEEDBACK.GET(id));
-        if (!res.success) throw new Error(res.message || 'Failed to fetch feedback item');
-        return res.data;
-    } catch (err) { throw err; }
+  try {
+    const res = await apiRequest(API_ROUTES.FEEDBACK.GET(id));
+    if (!res.success) throw new Error(res.message || 'Failed to fetch feedback item');
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function fetchUsersForDropdown() {
-    try { const res = await apiRequest('/api/v1/users?limit=200'); return res.success ? (res.data.items || res.data || []) : []; }
-    catch (err) { return []; }
+  try {
+    const res = await apiRequest('/api/v1/users?limit=200');
+    return res.success ? res.data.items || res.data || [] : [];
+  } catch (err) {
+    return [];
+  }
 }
 
 async function fetchProductsForDropdown() {
-    try { const res = await apiRequest(API_ROUTES.PRODUCTS.LIST + '?limit=200'); return res.success ? (res.data || []) : []; }
-    catch (err) { return []; }
+  try {
+    const res = await apiRequest(API_ROUTES.PRODUCTS.LIST + '?limit=200');
+    return res.success ? res.data || [] : [];
+  } catch (err) {
+    return [];
+  }
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderRow(f) {
-    const rating = f.rating ?? 0;
-    const stars = '⭐'.repeat(rating);
-    const comment = f.comment ? (f.comment.length > 40 ? f.comment.substring(0, 37) + '...' : f.comment) : '—';
-    const verifiedBadge = f.is_verified_purchase
-        ? `<span class="badge badge-active" style="font-size:10px;">Verified</span>`
-        : `<span class="badge badge-inactive" style="font-size:10px;">Public</span>`;
-    
-    return `<tr class="group hover:bg-gray-50/50 transition-colors">
+  const rating = f.rating ?? 0;
+  const stars = '⭐'.repeat(rating);
+  const comment = f.comment
+    ? f.comment.length > 40
+      ? f.comment.substring(0, 37) + '...'
+      : f.comment
+    : '—';
+  const verifiedBadge = f.is_verified_purchase
+    ? `<span class="badge badge-active" style="font-size:10px;">Verified</span>`
+    : `<span class="badge badge-inactive" style="font-size:10px;">Public</span>`;
+
+  return `<tr class="group hover:bg-gray-50/50 transition-colors">
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(f.id))}</td>
         <td class="px-6 py-4">
             <div class="text-amber-500 font-bold" style="font-size:13px;letter-spacing:-1px;">${stars}</div>
@@ -71,8 +90,8 @@ function renderRow(f) {
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(f) {
-    const isActive = f.is_active !== false && f.is_active !== 'f';
-    return `
+  const isActive = f.is_active !== false && f.is_active !== 'f';
+  return `
         <div class="flex flex-col" style="gap:24px; padding:8px;">
             <div class="flex items-center justify-between" style="padding-bottom:16px;border-bottom:1px solid var(--slate-100);">
                 <div class="flex items-center" style="gap:16px;">
@@ -129,111 +148,147 @@ function renderViewModal(f) {
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
 async function renderFormModal(feedbackId = null) {
-    const isEdit = feedbackId !== null;
-    let f = {}, users = [], products = [];
-    if (isEdit) {
-        [f, users, products] = await Promise.all([fetchFeedbackItem(feedbackId), fetchUsersForDropdown(), fetchProductsForDropdown()]);
-    } else {
-        [users, products] = await Promise.all([fetchUsersForDropdown(), fetchProductsForDropdown()]);
+  const isEdit = feedbackId !== null;
+  let f = {},
+    users = [],
+    products = [];
+  if (isEdit) {
+    [f, users, products] = await Promise.all([
+      fetchFeedbackItem(feedbackId),
+      fetchUsersForDropdown(),
+      fetchProductsForDropdown(),
+    ]);
+  } else {
+    [users, products] = await Promise.all([fetchUsersForDropdown(), fetchProductsForDropdown()]);
+  }
+
+  const frag = getTemplate('tpl-feedback-form', {
+    id: f.id || '',
+    comment: escapeHtml(f.comment || ''),
+    verified_checked: f.is_verified_purchase ? 'checked' : '',
+    active_checked: f.is_active !== false ? 'checked' : '',
+    submit_text: isEdit ? 'Save Changes' : 'Create Feedback',
+  });
+
+  const uSelect = frag.querySelector('#fdb-user-select');
+  const pSelect = frag.querySelector('#fdb-product-select');
+  if (uSelect)
+    uSelect.innerHTML =
+      '<option value="">-- Select User --</option>' +
+      users
+        .map(
+          (u) =>
+            `<option value="${u.id}" ${parseInt(f.user_id) === u.id ? 'selected' : ''}>${escapeHtml(u.name || u.username)} (${escapeHtml(u.email || 'N/A')})</option>`
+        )
+        .join('');
+  if (pSelect)
+    pSelect.innerHTML =
+      '<option value="">-- Select Product --</option>' +
+      products
+        .map(
+          (p) =>
+            `<option value="${p.id}" ${parseInt(f.product_id) === p.id ? 'selected' : ''}>${escapeHtml(p.name)} (${p.sku || 'N/A'})</option>`
+        )
+        .join('');
+
+  if (isEdit) {
+    const rSelect = frag.querySelector('select[name="rating"]');
+    if (rSelect) rSelect.value = f.rating || 5;
+    const footer = frag.querySelector('.fdb-form-footer');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Delete Feedback';
+      footer.prepend(del);
     }
-
-    const frag = getTemplate('tpl-feedback-form', {
-        id:               f.id || '',
-        comment:          escapeHtml(f.comment || ''),
-        verified_checked: f.is_verified_purchase ? 'checked' : '',
-        active_checked:   f.is_active !== false ? 'checked' : '',
-        submit_text:      isEdit ? 'Save Changes' : 'Create Feedback'
-    });
-
-    const uSelect = frag.querySelector('#fdb-user-select');
-    const pSelect = frag.querySelector('#fdb-product-select');
-    if (uSelect) uSelect.innerHTML = '<option value="">-- Select User --</option>' + users.map(u => `<option value="${u.id}" ${parseInt(f.user_id) === u.id ? 'selected' : ''}>${escapeHtml(u.name || u.username)} (${escapeHtml(u.email || 'N/A')})</option>`).join('');
-    if (pSelect) pSelect.innerHTML = '<option value="">-- Select Product --</option>' + products.map(p => `<option value="${p.id}" ${parseInt(f.product_id) === p.id ? 'selected' : ''}>${escapeHtml(p.name)} (${p.sku || 'N/A'})</option>`).join('');
-
-    if (isEdit) {
-        const rSelect = frag.querySelector('select[name="rating"]');
-        if (rSelect) rSelect.value = f.rating || 5;
-        const footer = frag.querySelector('.fdb-form-footer');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button'; del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Delete Feedback';
-            footer.prepend(del);
-        }
-    }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#fdb-form');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#fdb-form');
+  if (!form) return;
 
-    const cancel = modalRoot.querySelector('#fdb-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
+  const cancel = modalRoot.querySelector('#fdb-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
 
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Confirm?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete Feedback'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
-            try {
-                await apiRequest(API_ROUTES.FEEDBACK.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) {
-                showFormErrorFn(form, err.message);
-                delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete Feedback';
-            }
-        });
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submit = form.querySelector('[type="submit"]');
-        const orig = submit.innerHTML;
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Adding…';
-        try {
-            const formData = new FormData(form);
-            const payload = {
-                user_id: parseInt(formData.get('user_id')),
-                product_id: parseInt(formData.get('product_id')),
-                rating: parseInt(formData.get('rating')),
-                comment: formData.get('comment') || null,
-                is_verified_purchase: formData.get('is_verified_purchase') !== null,
-                is_active: formData.get('is_active') !== null
-            };
-            const url = isEdit ? API_ROUTES.FEEDBACK.UPDATE(id) : API_ROUTES.FEEDBACK.CREATE;
-            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = orig;
-        }
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Delete Feedback';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Deleting…';
+      try {
+        await apiRequest(API_ROUTES.FEEDBACK.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Delete Feedback';
+      }
     });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    const orig = submit.innerHTML;
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Saving…' : 'Adding…';
+    try {
+      const formData = new FormData(form);
+      const payload = {
+        user_id: parseInt(formData.get('user_id')),
+        product_id: parseInt(formData.get('product_id')),
+        rating: parseInt(formData.get('rating')),
+        comment: formData.get('comment') || null,
+        is_verified_purchase: formData.get('is_verified_purchase') !== null,
+        is_active: formData.get('is_active') !== null,
+      };
+      const url = isEdit ? API_ROUTES.FEEDBACK.UPDATE(id) : API_ROUTES.FEEDBACK.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = orig;
+    }
+  });
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 
 const { Render: Feedback, Init: initFeedback } = createEntityModule({
-    entityName: 'Customer Feedback',
-    entitySubtitle: 'View and manage customer reviews and ratings',
-    apiRoutes: {
-        list: API_ROUTES.FEEDBACK.LIST,
-        detail: (id) => API_ROUTES.FEEDBACK.GET(id),
-        create: API_ROUTES.FEEDBACK.CREATE,
-        update: (id) => API_ROUTES.FEEDBACK.UPDATE(id),
-        delete: (id) => API_ROUTES.FEEDBACK.DELETE(id)
-    },
-    fetchList: fetchFeedbackList,
-    fetchSingle: fetchFeedbackItem,
-    tableHeaderHtml: `<tr class="tr">
+  entityName: 'Customer Feedback',
+  entitySubtitle: 'View and manage customer reviews and ratings',
+  apiRoutes: {
+    list: API_ROUTES.FEEDBACK.LIST,
+    detail: (id) => API_ROUTES.FEEDBACK.GET(id),
+    create: API_ROUTES.FEEDBACK.CREATE,
+    update: (id) => API_ROUTES.FEEDBACK.UPDATE(id),
+    delete: (id) => API_ROUTES.FEEDBACK.DELETE(id),
+  },
+  fetchList: fetchFeedbackList,
+  fetchSingle: fetchFeedbackItem,
+  tableHeaderHtml: `<tr class="tr">
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Score</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Comment</th>
@@ -243,12 +298,12 @@ const { Render: Feedback, Init: initFeedback } = createEntityModule({
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Date</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    searchPlaceholder: 'Search by comment, user, or product…',
-    createBtnText: '➕ New Feedback'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  searchPlaceholder: 'Search by comment, user, or product…',
+  createBtnText: '➕ New Feedback',
 });
 
 export { Feedback, initFeedback };

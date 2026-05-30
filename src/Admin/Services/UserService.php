@@ -49,7 +49,7 @@ class UserService
         }
 
         $user = $this->repo->findByEmail($dto->email);
-        if (!$user || !password_verify($dto->password, $user->getPasswordHash())) {
+        if (!$user || $user->getPasswordHash() === null || !password_verify($dto->password, $user->getPasswordHash())) {
             throw new ValidationException('Invalid credentials', [], 401);
         }
 
@@ -57,7 +57,7 @@ class UserService
             throw new ValidationException('Account is disabled', [], 403);
         }
 
-        $this->repo->updateLastLogin($user->getId());
+        $this->repo->updateLastLogin((int)$user->getId());
 
         return $user->toArray();
     }
@@ -75,7 +75,7 @@ class UserService
             if (!$user->isActive()) {
                 throw new ValidationException('Account is disabled', [], 403);
             }
-            $this->repo->linkOAuthProvider($user->getId(), 'google', $googleProfile['id']);
+            $this->repo->linkOAuthProvider((int)$user->getId(), 'google', $googleProfile['id']);
         } else {
             $user = $this->repo->createFromOAuth(
                 $googleProfile['name'] ?? 'Google User',
@@ -86,7 +86,7 @@ class UserService
             );
         }
 
-        $this->repo->updateLastLogin($user->getId());
+        $this->repo->updateLastLogin((int)$user->getId());
         return $user->toArray();
     }
 
@@ -122,9 +122,6 @@ class UserService
         }
 
         $user = $this->repo->updateProfile($userId, $updates);
-        if (!$user) {
-            throw new DatabaseException('Failed to update profile');
-        }
 
         return $user->toArray();
     }

@@ -1,21 +1,24 @@
-import { fetchDashboard } from "./Overview.utils.js";
-import { formatCurrency, formatNumber, escapeHtml } from "../../utils.js";
+/* global Chart */
+import { fetchDashboard } from './Overview.utils.js';
+import { formatCurrency, formatNumber, escapeHtml } from '../../utils.js';
 
 export const Overview = async () => {
-    let stats = null;
-    let error = null;
+  let stats = null;
+  let error = null;
 
-    try {
-        const response = await fetchDashboard();
-        if (response.error) throw new Error(response.error);
-        stats = response;
-    } catch (err) {
-        console.error('Dashboard error:', err);
-        error = err.message;
-    }
+  try {
+    const response = await fetchDashboard();
+    if (response.error) throw new Error(response.error);
+    stats = response;
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    error = err.message;
+  }
 
-    const topProductsHtml = stats?.products.top_products_by_revenue
-        .map(p => `
+  const topProductsHtml =
+    stats?.products.top_products_by_revenue
+      .map(
+        (p) => `
             <div class="flex items-center px-8 py-5 border-b border-gray-50 group hover:bg-gray-50 transition-colors">
                 <div class="flex-1">
                     <div class="font-semibold text-black text-sm">${escapeHtml(p.name)}</div>
@@ -25,11 +28,15 @@ export const Overview = async () => {
                     <div class="font-black text-black text-sm">${formatCurrency(p.revenue_cents)}</div>
                 </div>
             </div>
-        `)
-        .join('') || '<div class="px-8 py-12 text-center text-sm text-gray-400">No sales data yet.</div>';
+        `
+      )
+      .join('') ||
+    '<div class="px-8 py-12 text-center text-sm text-gray-400">No sales data yet.</div>';
 
-    const lowPerfHtml = stats?.products.low_performing_products
-        .map(p => `
+  const lowPerfHtml =
+    stats?.products.low_performing_products
+      .map(
+        (p) => `
             <div class="flex items-center px-8 py-5 border-b border-gray-50 hover:bg-red-50/30 transition-colors">
                 <div class="flex-1">
                     <div class="font-semibold text-red-600 text-sm">${escapeHtml(p.name)}</div>
@@ -39,22 +46,25 @@ export const Overview = async () => {
                     <div class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded">${p.available_stock} units left</div>
                 </div>
             </div>
-        `)
-        .join('') || '<div class="px-8 py-12 text-center text-sm text-gray-400">Everything\'s moving well.</div>';
+        `
+      )
+      .join('') ||
+    '<div class="px-8 py-12 text-center text-sm text-gray-400">Everything\'s moving well.</div>';
 
-    // Build warehouse range bars HTML
-    const warehouseHtml = (() => {
-        if (!stats?.warehouses || !stats.warehouses.length) {
-            return '<div class="px-8 py-12 text-center text-sm text-gray-400">No warehouse data available.</div>';
-        }
-        const maxStock = Math.max(...stats.warehouses.map(w => parseInt(w.total_stock) || 0), 1);
-        return stats.warehouses.map(w => {
-            const total     = parseInt(w.total_stock) || 0;
-            const reserved  = parseInt(w.reserved_stock) || 0;
-            const available = parseInt(w.available_stock) || 0;
-            const availPct   = total > 0 ? Math.round((available / total) * 100) : 0;
-            const reservedPct = total > 0 ? Math.round((reserved / total) * 100) : 0;
-            return `
+  // Build warehouse range bars HTML
+  const warehouseHtml = (() => {
+    if (!stats?.warehouses || !stats.warehouses.length) {
+      return '<div class="px-8 py-12 text-center text-sm text-gray-400">No warehouse data available.</div>';
+    }
+
+    return stats.warehouses
+      .map((w) => {
+        const total = parseInt(w.total_stock) || 0;
+        const reserved = parseInt(w.reserved_stock) || 0;
+        const available = parseInt(w.available_stock) || 0;
+        const availPct = total > 0 ? Math.round((available / total) * 100) : 0;
+        const reservedPct = total > 0 ? Math.round((reserved / total) * 100) : 0;
+        return `
             <div class="px-8 py-6 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/40 transition-colors">
                 <div class="flex items-start justify-between mb-3">
                     <div>
@@ -75,65 +85,82 @@ export const Overview = async () => {
                     <div class="flex items-center gap-1.5"><span class="w-2 h-2 bg-gray-300 inline-block"></span><span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Reserved ${reservedPct}%</span></div>
                 </div>
             </div>`;
-        }).join('');
-    })();
+      })
+      .join('');
+  })();
 
-    // Setup Chart logic for execution after render
-    setTimeout(() => {
-        if (!stats) return;
-        
-        const ctxRev = document.getElementById('revenueChart');
-        if (ctxRev) {
-            new Chart(ctxRev, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Revenue',
-                        data: [stats.revenue.total_cents * 0.7, stats.revenue.total_cents * 0.8, stats.revenue.last_30_days_cents * 0.9, stats.revenue.last_30_days_cents, stats.revenue.today_cents * 20, stats.revenue.today_cents * 30],
-                        borderColor: '#111',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        fill: true,
-                        backgroundColor: 'rgba(0,0,0,0.02)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { grid: { display: false }, border: { display: false } }
-                    }
-                }
-            });
-        }
+  // Setup Chart logic for execution after render
+  setTimeout(() => {
+    if (!stats) return;
 
-        const ctxCat = document.getElementById('categoryChart');
-        if (ctxCat) {
-            new Chart(ctxCat, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Whisky', 'Vodka', 'Wine', 'Gin', 'Other'],
-                    datasets: [{
-                        data: [40, 20, 15, 15, 10],
-                        backgroundColor: ['#111', '#333', '#555', '#777', '#999'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '80%',
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10, weight: 'bold' } } } }
-                }
-            });
-        }
-    }, 100);
+    const ctxRev = document.getElementById('revenueChart');
+    if (ctxRev) {
+      new Chart(ctxRev, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [
+            {
+              label: 'Revenue',
+              data: [
+                stats.revenue.total_cents * 0.7,
+                stats.revenue.total_cents * 0.8,
+                stats.revenue.last_30_days_cents * 0.9,
+                stats.revenue.last_30_days_cents,
+                stats.revenue.today_cents * 20,
+                stats.revenue.today_cents * 30,
+              ],
+              borderColor: '#111',
+              borderWidth: 3,
+              tension: 0.4,
+              pointRadius: 0,
+              fill: true,
+              backgroundColor: 'rgba(0,0,0,0.02)',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { display: false },
+            x: { grid: { display: false }, border: { display: false } },
+          },
+        },
+      });
+    }
 
-    return `
+    const ctxCat = document.getElementById('categoryChart');
+    if (ctxCat) {
+      new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: ['Whisky', 'Vodka', 'Wine', 'Gin', 'Other'],
+          datasets: [
+            {
+              data: [40, 20, 15, 15, 10],
+              backgroundColor: ['#111', '#333', '#555', '#777', '#999'],
+              borderWidth: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '80%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 8, font: { size: 10, weight: 'bold' } },
+            },
+          },
+        },
+      });
+    }
+  }, 100);
+
+  return `
         <div class="p-6 lg:p-12 max-w-screen-2xl mx-auto space-y-12 animate-fade overflow-x-hidden">
             <!-- Header -->
             <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-12 border-b border-gray-100">
@@ -148,12 +175,16 @@ export const Overview = async () => {
                 </div>
             </div>
 
-            ${error ? `
+            ${
+              error
+                ? `
                 <div class="p-8 border-2 border-black bg-white flex items-center justify-between">
                     <span class="font-black text-black italic tracking-tight">Error: ${escapeHtml(error)}</span>
                     <span class="text-2xl">⚠️</span>
                 </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <!-- Primary Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-100 border border-gray-100 shadow-xl overflow-hidden">

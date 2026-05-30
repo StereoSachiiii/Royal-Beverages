@@ -8,35 +8,46 @@ import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchAddresses(limit = 20, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.USER_ADDRESSES.LIST + buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch addresses');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) { console.error('[UserAddresses] Fetch failed', err); return []; }
+  try {
+    const url =
+      API_ROUTES.USER_ADDRESSES.LIST +
+      buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch addresses');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error('[UserAddresses] Fetch failed', err);
+    return [];
+  }
 }
 
 async function fetchAddress(id) {
-    try {
-        const res = await apiRequest(API_ROUTES.ADMIN_VIEWS.DETAIL('user_addresses', id));
-        if (!res.success) throw new Error(res.message || 'Failed to fetch address');
-        return res.data;
-    } catch (err) { throw err; }
+  try {
+    const res = await apiRequest(API_ROUTES.ADMIN_VIEWS.DETAIL('user_addresses', id));
+    if (!res.success) throw new Error(res.message || 'Failed to fetch address');
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function fetchUsers() {
-    try { const res = await apiRequest(API_ROUTES.USERS.LIST + '?limit=200'); return res.success ? (res.data || []) : []; }
-    catch (err) { return []; }
+  try {
+    const res = await apiRequest(API_ROUTES.USERS.LIST + '?limit=200');
+    return res.success ? res.data || [] : [];
+  } catch (err) {
+    return [];
+  }
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderRow(a) {
-    const defaultBadge = a.is_default
-        ? `<span class="badge badge-active" style="font-size:10px;">Primary</span>`
-        : `<span class="badge badge-inactive" style="font-size:10px;">Secondary</span>`;
+  const defaultBadge = a.is_default
+    ? `<span class="badge badge-active" style="font-size:10px;">Primary</span>`
+    : `<span class="badge badge-inactive" style="font-size:10px;">Secondary</span>`;
 
-    return `<tr class="group hover:bg-gray-50/50 transition-colors">
+  return `<tr class="group hover:bg-gray-50/50 transition-colors">
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(a.id))}</td>
         <td class="px-6 py-4">
             <div class="font-bold text-black" style="font-size:13px;">${escapeHtml(a.user_name || 'N/A')}</div>
@@ -64,7 +75,7 @@ function renderRow(a) {
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(a) {
-    return `
+  return `
         <div class="flex flex-col" style="gap:24px; padding:8px;">
             <div class="flex items-center justify-between" style="padding-bottom:16px;border-bottom:1px solid var(--slate-100);">
                 <div class="flex items-center" style="gap:16px;">
@@ -138,122 +149,143 @@ function renderViewModal(a) {
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
 async function renderFormModal(id = null) {
-    const isEdit = id !== null;
-    let a = {};
-    if (isEdit) a = await fetchAddress(id);
-    const users = isEdit ? [] : await fetchUsers();
+  const isEdit = id !== null;
+  let a = {};
+  if (isEdit) a = await fetchAddress(id);
+  const users = isEdit ? [] : await fetchUsers();
 
-    const frag = getTemplate('tpl-user-address-form', {
-        recipient_name:  escapeHtml(a.recipient_name || ''),
-        phone:           escapeHtml(a.phone || ''),
-        address_line1:   escapeHtml(a.address_line1 || ''),
-        address_line2:   escapeHtml(a.address_line2 || ''),
-        city:            escapeHtml(a.city || ''),
-        state:           escapeHtml(a.state || ''),
-        postal_code:     escapeHtml(a.postal_code || ''),
-        country:         escapeHtml(a.country || 'Sri Lanka'),
-        default_checked: a.is_default ? 'checked' : '',
-        delete_display:  isEdit ? 'block' : 'none',
-        submit_text:     isEdit ? 'Save Changes' : 'Add Address'
-    });
+  const frag = getTemplate('tpl-user-address-form', {
+    recipient_name: escapeHtml(a.recipient_name || ''),
+    phone: escapeHtml(a.phone || ''),
+    address_line1: escapeHtml(a.address_line1 || ''),
+    address_line2: escapeHtml(a.address_line2 || ''),
+    city: escapeHtml(a.city || ''),
+    state: escapeHtml(a.state || ''),
+    postal_code: escapeHtml(a.postal_code || ''),
+    country: escapeHtml(a.country || 'Sri Lanka'),
+    default_checked: a.is_default ? 'checked' : '',
+    delete_display: isEdit ? 'block' : 'none',
+    submit_text: isEdit ? 'Save Changes' : 'Add Address',
+  });
 
-    const uSel = frag.querySelector('#uadr-user-select');
-    if (uSel) {
-        if (isEdit) {
-            uSel.innerHTML = `<option value="${a.user_id}" selected>${escapeHtml(a.user_name || '')} (${escapeHtml(a.user_email || '')})</option>`;
-            uSel.disabled = true;
-        } else {
-            uSel.innerHTML = '<option value="" disabled selected>Select User...</option>' + users.map(u => `<option value="${u.id}">${escapeHtml(u.name)} (${u.email})</option>`).join('');
-        }
-    }
-
-    const tSel = frag.querySelector('#uadr-type-select');
-    if (tSel && isEdit) tSel.value = a.address_type || 'both';
-
+  const uSel = frag.querySelector('#uadr-user-select');
+  if (uSel) {
     if (isEdit) {
-        const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button'; del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Delete Address';
-            footer.prepend(del);
-        }
+      uSel.innerHTML = `<option value="${a.user_id}" selected>${escapeHtml(a.user_name || '')} (${escapeHtml(a.user_email || '')})</option>`;
+      uSel.disabled = true;
+    } else {
+      uSel.innerHTML =
+        '<option value="" disabled selected>Select User...</option>' +
+        users
+          .map((u) => `<option value="${u.id}">${escapeHtml(u.name)} (${u.email})</option>`)
+          .join('');
     }
-    return frag;
+  }
+
+  const tSel = frag.querySelector('#uadr-type-select');
+  if (tSel && isEdit) tSel.value = a.address_type || 'both';
+
+  if (isEdit) {
+    const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Delete Address';
+      footer.prepend(del);
+    }
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#uadr-form');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#uadr-form');
+  if (!form) return;
 
-    const cancel = modalRoot.querySelector('#uadr-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
+  const cancel = modalRoot.querySelector('#uadr-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
 
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Confirm?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete Address'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
-            try {
-                await apiRequest(API_ROUTES.USER_ADDRESSES.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) { showFormErrorFn(form, err.message); delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete Address'; }
-        });
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submit = form.querySelector('button[type="submit"]');
-        const orig = submit.innerHTML;
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Adding…';
-        try {
-            const formData = new FormData(form);
-            const payload = {
-                user_id:        parseInt(formData.get('user_id')),
-                address_type:   formData.get('address_type'),
-                recipient_name: formData.get('recipient_name') || null,
-                phone:          formData.get('phone') || null,
-                address_line1:  formData.get('address_line1'),
-                address_line2:  formData.get('address_line2') || null,
-                city:           formData.get('city'),
-                state:          formData.get('state') || null,
-                postal_code:    formData.get('postal_code'),
-                country:        formData.get('country'),
-                is_default:     formData.get('is_default') !== null
-            };
-            const url = isEdit ? API_ROUTES.USER_ADDRESSES.UPDATE(id) : API_ROUTES.USER_ADDRESSES.CREATE;
-            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = orig;
-        }
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Delete Address';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Deleting…';
+      try {
+        await apiRequest(API_ROUTES.USER_ADDRESSES.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Delete Address';
+      }
     });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = form.querySelector('button[type="submit"]');
+    const orig = submit.innerHTML;
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Saving…' : 'Adding…';
+    try {
+      const formData = new FormData(form);
+      const payload = {
+        user_id: parseInt(formData.get('user_id')),
+        address_type: formData.get('address_type'),
+        recipient_name: formData.get('recipient_name') || null,
+        phone: formData.get('phone') || null,
+        address_line1: formData.get('address_line1'),
+        address_line2: formData.get('address_line2') || null,
+        city: formData.get('city'),
+        state: formData.get('state') || null,
+        postal_code: formData.get('postal_code'),
+        country: formData.get('country'),
+        is_default: formData.get('is_default') !== null,
+      };
+      const url = isEdit ? API_ROUTES.USER_ADDRESSES.UPDATE(id) : API_ROUTES.USER_ADDRESSES.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = orig;
+    }
+  });
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 
 const { Render: UserAddresses, Init: initUserAddresses } = createEntityModule({
-    entityName: 'Delivery Addresses',
-    entitySubtitle: 'Manage shipping and billing addresses for customers',
-    apiRoutes: {
-        list: API_ROUTES.USER_ADDRESSES.LIST,
-        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('user_addresses', id),
-        create: API_ROUTES.USER_ADDRESSES.CREATE,
-        update: (id) => API_ROUTES.USER_ADDRESSES.UPDATE(id),
-        delete: (id) => API_ROUTES.USER_ADDRESSES.DELETE(id)
-    },
-    fetchList: fetchAddresses,
-    fetchSingle: fetchAddress,
-    tableHeaderHtml: `<tr class="tr">
+  entityName: 'Delivery Addresses',
+  entitySubtitle: 'Manage shipping and billing addresses for customers',
+  apiRoutes: {
+    list: API_ROUTES.USER_ADDRESSES.LIST,
+    detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('user_addresses', id),
+    create: API_ROUTES.USER_ADDRESSES.CREATE,
+    update: (id) => API_ROUTES.USER_ADDRESSES.UPDATE(id),
+    delete: (id) => API_ROUTES.USER_ADDRESSES.DELETE(id),
+  },
+  fetchList: fetchAddresses,
+  fetchSingle: fetchAddress,
+  tableHeaderHtml: `<tr class="tr">
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Account</th>
         <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Type</th>
@@ -262,12 +294,12 @@ const { Render: UserAddresses, Init: initUserAddresses } = createEntityModule({
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Created</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    searchPlaceholder: 'Search by name, city, or email…',
-    createBtnText: '➕ New Address'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  searchPlaceholder: 'Search by name, city, or email…',
+  createBtnText: '➕ New Address',
 });
 
 export { UserAddresses, initUserAddresses };

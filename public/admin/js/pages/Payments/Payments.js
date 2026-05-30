@@ -9,62 +9,77 @@ import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchPayments(limit = 20, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.PAYMENTS.LIST + buildQueryString({
-            limit, offset,
-            ...(query ? { search: query } : {})
-        });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch payments');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-        console.error('[Payments] Fetch failed', err);
-        return [];
-    }
+  try {
+    const url =
+      API_ROUTES.PAYMENTS.LIST +
+      buildQueryString({
+        limit,
+        offset,
+        ...(query ? { search: query } : {}),
+      });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch payments');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error('[Payments] Fetch failed', err);
+    return [];
+  }
 }
 
 async function fetchPayment(id) {
-    try {
-        const url = API_ROUTES.ADMIN_VIEWS.DETAIL('payments', id);
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch payment details');
-        return res.data;
-    } catch (err) { throw err; }
+  try {
+    const url = API_ROUTES.ADMIN_VIEWS.DETAIL('payments', id);
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch payment details');
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function fetchDependencies() {
-    try {
-        const res = await apiRequest(API_ROUTES.ORDERS.LIST + '?limit=100');
-        return { orders: res.data?.items || res.data || [] };
-    } catch (err) { return { orders: [] }; }
+  try {
+    const res = await apiRequest(API_ROUTES.ORDERS.LIST + '?limit=100');
+    return { orders: res.data?.items || res.data || [] };
+  } catch (err) {
+    return { orders: [] };
+  }
 }
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
 
 function getStatusClass(status) {
-    const s = (status || 'pending').toLowerCase();
-    switch (s) {
-        case 'captured': case 'success': case 'paid': return 'badge-active';
-        case 'pending':  return 'badge-warning';
-        case 'failed':   return 'badge-inactive';
-        case 'refunded': return 'badge-info';
-        case 'voided':   return 'badge-secondary';
-        default:        return 'badge-secondary';
-    }
+  const s = (status || 'pending').toLowerCase();
+  switch (s) {
+    case 'captured':
+    case 'success':
+    case 'paid':
+      return 'badge-active';
+    case 'pending':
+      return 'badge-warning';
+    case 'failed':
+      return 'badge-inactive';
+    case 'refunded':
+      return 'badge-info';
+    case 'voided':
+      return 'badge-secondary';
+    default:
+      return 'badge-secondary';
+  }
 }
 
 function formatCurrency(cents) {
-    return (cents / 100).toFixed(2);
+  return (cents / 100).toFixed(2);
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderRow(p) {
-    const statusBadge = `<span class="badge ${getStatusClass(p.status)}">${escapeHtml(p.status || 'pending')}</span>`;
-    const created = p.created_at ? formatDate(p.created_at) : '—';
-    const amount = formatCurrency(p.amount_cents || 0);
+  const statusBadge = `<span class="badge ${getStatusClass(p.status)}">${escapeHtml(p.status || 'pending')}</span>`;
+  const created = p.created_at ? formatDate(p.created_at) : '—';
+  const amount = formatCurrency(p.amount_cents || 0);
 
-    return `<tr class="tr group hover:bg-gray-50/50 transition-colors">
+  return `<tr class="tr group hover:bg-gray-50/50 transition-colors">
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(p.id))}</td>
         <td class="px-6 py-4">
             <div class="font-bold text-black" style="font-size:13px;">Order #${escapeHtml(p.order_number || (p.order_id ? p.order_id.toString() : 'ORPHANED'))}</div>
@@ -96,10 +111,10 @@ function renderRow(p) {
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(p) {
-    const payload = p.payload || {};
-    const amount = formatCurrency(p.amount_cents || 0);
+  const payload = p.payload || {};
+  const amount = formatCurrency(p.amount_cents || 0);
 
-    return `
+  return `
         <div class="flex flex-col" style="gap:20px; padding: 8px;">
             <!-- Header Section -->
             <div class="flex items-center justify-between" style="padding-bottom:16px;border-bottom:1px solid var(--slate-100);">
@@ -169,127 +184,150 @@ function renderViewModal(p) {
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
 async function renderFormModal(id = null) {
-    const isEdit = id !== null;
-    const [deps, p] = await Promise.all([fetchDependencies(), isEdit ? fetchPayment(id) : Promise.resolve({})]);
+  const isEdit = id !== null;
+  const [deps, p] = await Promise.all([
+    fetchDependencies(),
+    isEdit ? fetchPayment(id) : Promise.resolve({}),
+  ]);
 
-    const frag = getTemplate('tpl-payment-form', {
-        id:               isEdit ? id : '',
-        order_key:        p.order_id || '',
-        order_number:     escapeHtml(p.order_number || ''),
-        amount_cents:     p.amount_cents || '',
-        currency:         p.currency || 'LKR',
-        gateway:          escapeHtml(p.gateway || 'manual'),
-        gateway_order_id: escapeHtml(p.gateway_order_id || ''),
-        transaction_id:   escapeHtml(p.transaction_id || ''),
-        payload_json:     p.payload ? JSON.stringify(p.payload, null, 2) : '',
-        create_only:      isEdit ? 'hidden' : '',
-        edit_only:        isEdit ? '' : 'hidden',
-        delete_display:   isEdit ? '' : 'hidden',
-        submit_text:      isEdit ? 'Update Protocol' : 'Authorize Settlement'
-    });
+  const frag = getTemplate('tpl-payment-form', {
+    id: isEdit ? id : '',
+    order_key: p.order_id || '',
+    order_number: escapeHtml(p.order_number || ''),
+    amount_cents: p.amount_cents || '',
+    currency: p.currency || 'LKR',
+    gateway: escapeHtml(p.gateway || 'manual'),
+    gateway_order_id: escapeHtml(p.gateway_order_id || ''),
+    transaction_id: escapeHtml(p.transaction_id || ''),
+    payload_json: p.payload ? JSON.stringify(p.payload, null, 2) : '',
+    create_only: isEdit ? 'hidden' : '',
+    edit_only: isEdit ? '' : 'hidden',
+    delete_display: isEdit ? '' : 'hidden',
+    submit_text: isEdit ? 'Update Protocol' : 'Authorize Settlement',
+  });
 
-    const oSel = frag.querySelector('#pay-order-select');
-    if (oSel && !isEdit) {
-        oSel.innerHTML = '<option value="">Select Target Order Cluster...</option>' + deps.orders.map(o => `<option value="${o.id}">#${o.order_number} (${formatDate(o.created_at)})</option>`).join('');
+  const oSel = frag.querySelector('#pay-order-select');
+  if (oSel && !isEdit) {
+    oSel.innerHTML =
+      '<option value="">Select Target Order Cluster...</option>' +
+      deps.orders
+        .map(
+          (o) => `<option value="${o.id}">#${o.order_number} (${formatDate(o.created_at)})</option>`
+        )
+        .join('');
+  }
+
+  if (isEdit) {
+    const gatewaySel = frag.querySelector('#pay-gateway-select');
+    const statusSel = frag.querySelector('#pay-status-select');
+    if (gatewaySel) gatewaySel.value = p.gateway || 'manual';
+    if (statusSel) statusSel.value = p.status || 'pending';
+
+    const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Purge Protocol';
+      footer.prepend(del);
     }
-
-    if (isEdit) {
-        const gatewaySel = frag.querySelector('#pay-gateway-select');
-        const statusSel = frag.querySelector('#pay-status-select');
-        if (gatewaySel) gatewaySel.value = p.gateway || 'manual';
-        if (statusSel) statusSel.value = p.status || 'pending';
-
-        const footer = frag.querySelector('.flex.justify-end.gap-3.pt-6');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button'; del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Purge Protocol';
-            footer.prepend(del);
-        }
-    }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#pay-form');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#pay-form');
+  if (!form) return;
 
-    const cancel = modalRoot.querySelector('#pay-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
+  const cancel = modalRoot.querySelector('#pay-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
 
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Confirm Purge?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Purge Protocol'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Purging…';
-            try {
-                await apiRequest(API_ROUTES.PAYMENTS.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) {
-                showFormErrorFn(form, err.message);
-                delBtn.disabled = false; delBtn.innerHTML = '🗑️ Purge Protocol';
-            }
-        });
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submit = form.querySelector('button[type="submit"]');
-        const orig = submit.innerHTML;
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Syncing…' : 'Authorizing…';
-        try {
-            const formData = new FormData(form);
-            let payloadObj = {};
-            const payloadStr = formData.get('payload');
-            try {
-                if (payloadStr && payloadStr.trim()) payloadObj = JSON.parse(payloadStr);
-            } catch (je) {
-                throw new Error('Malformed JSON Payload detected.');
-            }
-            const payload = {
-                order_id: parseInt(formData.get('order_id')),
-                amount_cents: parseInt(formData.get('amount_cents')),
-                currency: formData.get('currency'),
-                gateway: formData.get('gateway'),
-                status: formData.get('status'),
-                gateway_order_id: formData.get('gateway_order_id') || null,
-                transaction_id: formData.get('transaction_id') || null,
-                payload: payloadObj
-            };
-            const url = isEdit ? API_ROUTES.PAYMENTS.UPDATE(id) : API_ROUTES.PAYMENTS.CREATE;
-            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            if (!isEdit && !res.success) throw new Error(res.message);
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = orig;
-        }
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm Purge?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Purge Protocol';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Purging…';
+      try {
+        await apiRequest(API_ROUTES.PAYMENTS.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Purge Protocol';
+      }
     });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = form.querySelector('button[type="submit"]');
+    const orig = submit.innerHTML;
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Syncing…' : 'Authorizing…';
+    try {
+      const formData = new FormData(form);
+      let payloadObj = {};
+      const payloadStr = formData.get('payload');
+      try {
+        if (payloadStr && payloadStr.trim()) payloadObj = JSON.parse(payloadStr);
+      } catch (je) {
+        throw new Error('Malformed JSON Payload detected.', { cause: je });
+      }
+      const payload = {
+        order_id: parseInt(formData.get('order_id')),
+        amount_cents: parseInt(formData.get('amount_cents')),
+        currency: formData.get('currency'),
+        gateway: formData.get('gateway'),
+        status: formData.get('status'),
+        gateway_order_id: formData.get('gateway_order_id') || null,
+        transaction_id: formData.get('transaction_id') || null,
+        payload: payloadObj,
+      };
+      const url = isEdit ? API_ROUTES.PAYMENTS.UPDATE(id) : API_ROUTES.PAYMENTS.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      if (!isEdit && !res.success) throw new Error(res.message);
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = orig;
+    }
+  });
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 
 const { Render: Payments, Init: initPayments } = createEntityModule({
-    entityName: 'Payments',
-    entitySubtitle: 'Track and manage customer payment records',
-    apiRoutes: {
-        list: API_ROUTES.PAYMENTS.LIST,
-        detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('payments', id),
-        create: API_ROUTES.PAYMENTS.CREATE,
-        update: (id) => API_ROUTES.PAYMENTS.UPDATE(id),
-        delete: (id) => API_ROUTES.PAYMENTS.DELETE(id)
-    },
-    fetchList: fetchPayments,
-    fetchSingle: fetchPayment,
-    tableHeaderHtml: `<tr class="tr">
+  entityName: 'Payments',
+  entitySubtitle: 'Track and manage customer payment records',
+  apiRoutes: {
+    list: API_ROUTES.PAYMENTS.LIST,
+    detail: (id) => API_ROUTES.ADMIN_VIEWS.DETAIL('payments', id),
+    create: API_ROUTES.PAYMENTS.CREATE,
+    update: (id) => API_ROUTES.PAYMENTS.UPDATE(id),
+    delete: (id) => API_ROUTES.PAYMENTS.DELETE(id),
+  },
+  fetchList: fetchPayments,
+  fetchSingle: fetchPayment,
+  tableHeaderHtml: `<tr class="tr">
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Trace Origin / Order</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Gateway Protocol / Ref</th>
@@ -298,12 +336,12 @@ const { Render: Payments, Init: initPayments } = createEntityModule({
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Established</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    searchPlaceholder: 'Search by Order #, Gateway, or Trace Reference…',
-    createBtnText: '➕ Authorize Settlement'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  searchPlaceholder: 'Search by Order #, Gateway, or Trace Reference…',
+  createBtnText: '➕ Authorize Settlement',
 });
 
 export { Payments, initPayments };

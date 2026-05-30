@@ -54,7 +54,7 @@ jobs:
           \$metrics = \$xml->project->metrics;
           if (\$metrics['elements'] == 0) {
               echo \"No tests found!\\n\";
-              exit(0); // Optional: change to exit(1) to fail if no tests exist
+              exit(1); // Fails the build if no tests exist
           }
           \$coverage = (\$metrics['coveredelements'] / \$metrics['elements']) * 100;
           echo \"Total Code Coverage: \" . number_format(\$coverage, 2) . \"%\\n\";
@@ -63,3 +63,18 @@ jobs:
               exit(1);
           }
         "
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install NPM dependencies
+      run: npm ci
+
+    - name: Run JS Linting (ESLint)
+      run: npm run lint
+
+    - name: Build CSS Assets
+      run: npm run build:css

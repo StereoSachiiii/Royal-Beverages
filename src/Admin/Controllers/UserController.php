@@ -139,7 +139,7 @@ class UserController extends BaseController
             return $this->error('Failed to exchange Google token', 500, ['details' => $tokenResponse]);
         }
 
-        $tokenData = json_decode($tokenResponse, true);
+        $tokenData = json_decode((string)$tokenResponse, true);
         $accessToken = $tokenData['access_token'] ?? null;
 
         if (!$accessToken) {
@@ -157,7 +157,7 @@ class UserController extends BaseController
              return $this->error('Failed to fetch Google profile', 500);
         }
 
-        $googleProfile = json_decode($userResponse, true);
+        $googleProfile = json_decode((string)$userResponse, true);
 
         return $this->handle(function() use ($googleProfile, $frontendUrl) {
              $user = $this->service->handleGoogleOAuth($googleProfile);

@@ -104,6 +104,9 @@ class RateLimitMiddleware implements MiddlewareInterface
 
     private static function checkExecuteRedis(string $key, int $now): bool
     {
+        if (!self::$redis instanceof \Redis) {
+            return false;
+        }
         try {
             $count = self::$redis->get($key);
             if ($count === false) {

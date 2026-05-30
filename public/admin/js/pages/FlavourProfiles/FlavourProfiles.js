@@ -8,40 +8,49 @@ import { apiRequest, escapeHtml, getTemplate, closeModal } from '../../utils.js'
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchFlavorProfiles(limit = 20, offset = 0, query = '') {
-    try {
-        const url = API_ROUTES.FLAVOR_PROFILES.LIST + buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
-        const res = await apiRequest(url);
-        if (!res.success) throw new Error(res.message || 'Failed to fetch profiles');
-        return res.data?.items || (Array.isArray(res.data) ? res.data : []);
-    } catch (err) { console.error('[FlavorProfiles] Fetch failed', err); return []; }
+  try {
+    const url =
+      API_ROUTES.FLAVOR_PROFILES.LIST +
+      buildQueryString({ limit, offset, ...(query ? { search: query } : {}) });
+    const res = await apiRequest(url);
+    if (!res.success) throw new Error(res.message || 'Failed to fetch profiles');
+    return res.data?.items || (Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error('[FlavorProfiles] Fetch failed', err);
+    return [];
+  }
 }
 
 async function fetchFlavorProfile(id) {
-    try {
-        const res = await apiRequest(API_ROUTES.FLAVOR_PROFILES.GET(id));
-        if (!res.success) throw new Error(res.message || 'Failed to fetch profile');
-        return res.data;
-    } catch (err) { throw err; }
+  try {
+    const res = await apiRequest(API_ROUTES.FLAVOR_PROFILES.GET(id));
+    if (!res.success) throw new Error(res.message || 'Failed to fetch profile');
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function fetchProductsForDropdown() {
-    try {
-        const res = await apiRequest(API_ROUTES.PRODUCTS.LIST + '?limit=100');
-        return res.success ? (res.data || []) : [];
-    } catch (err) { return []; }
+  try {
+    const res = await apiRequest(API_ROUTES.PRODUCTS.LIST + '?limit=100');
+    return res.success ? res.data || [] : [];
+  } catch (err) {
+    return [];
+  }
 }
 
 // ─── Row Renderer ─────────────────────────────────────────────────────────────
 
 function renderBarMini(val, color) {
-    const pct = (val / 10) * 100;
-    return `<div style="width:40px;height:4px;background:var(--slate-100);border-radius:2px;overflow:hidden;border:1px solid var(--slate-200);">
+  const pct = (val / 10) * 100;
+  return `<div style="width:40px;height:4px;background:var(--slate-100);border-radius:2px;overflow:hidden;border:1px solid var(--slate-200);">
         <div style="width:${pct}%;height:100%;background:${color};"></div>
     </div>`;
 }
 
 function renderRow(p) {
-    return `<tr class="group hover:bg-gray-50/50 transition-colors">
+  return `<tr class="group hover:bg-gray-50/50 transition-colors">
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(p.product_id))}</td>
         <td class="px-6 py-4">
             <div class="flex items-center" style="gap:10px;">
@@ -70,9 +79,9 @@ function renderRow(p) {
 // ─── View Modal ───────────────────────────────────────────────────────────────
 
 function renderViewModal(p) {
-    const renderBar = (label, value, color) => {
-        const pct = (value / 10) * 100;
-        return `
+  const renderBar = (label, value, color) => {
+    const pct = (value / 10) * 100;
+    return `
             <div style="margin-bottom:16px;">
                 <div class="flex justify-between items-baseline" style="margin-bottom:6px;">
                     <span class="text-slate-500 font-bold uppercase" style="font-size:10px;">${escapeHtml(label)}</span>
@@ -82,12 +91,17 @@ function renderViewModal(p) {
                     <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;"></div>
                 </div>
             </div>`;
-    };
+  };
 
-    const tags = Array.isArray(p.tags) ? p.tags : [];
-    const tagsHtml = tags.map(t => `<span class="badge" style="background:var(--slate-50);border:1px solid var(--slate-200);color:var(--slate-600);font-size:10px;padding:4px 10px;">#${escapeHtml(t)}</span>`).join('');
+  const tags = Array.isArray(p.tags) ? p.tags : [];
+  const tagsHtml = tags
+    .map(
+      (t) =>
+        `<span class="badge" style="background:var(--slate-50);border:1px solid var(--slate-200);color:var(--slate-600);font-size:10px;padding:4px 10px;">#${escapeHtml(t)}</span>`
+    )
+    .join('');
 
-    return `
+  return `
         <div class="flex flex-col" style="gap:24px; padding:8px;">
             <div class="flex items-center" style="gap:20px;padding-bottom:20px;border-bottom:1px solid var(--slate-100);">
                 ${p.product_image_url ? `<img src="${p.product_image_url}" class="thumb-xl rounded-2xl border shadow-sm" style="width:100px;height:100px;object-fit:cover;">` : `<div class="thumb-xl rounded-2xl bg-slate-50 flex items-center justify-center text-4xl border" style="width:100px;height:100px;">🍶</div>`}
@@ -134,7 +148,7 @@ function renderViewModal(p) {
 // ─── Form Builder ─────────────────────────────────────────────────────────────
 
 function renderSlider(label, name, value = 5, color) {
-    return `
+  return `
         <div style="background:var(--slate-50);padding:14px;border-radius:12px;border:1px solid var(--slate-100);margin-bottom:12px;">
             <div class="flex justify-between items-center" style="margin-bottom:10px;">
                 <label class="text-slate-600 font-bold uppercase" style="font-size:10px;">${escapeHtml(label)}</label>
@@ -145,28 +159,29 @@ function renderSlider(label, name, value = 5, color) {
 }
 
 async function renderFormModal(productId = null) {
-    const isEdit = productId !== null;
-    let p = {}, products = [];
-    if (isEdit) p = await fetchFlavorProfile(productId);
-    else products = await fetchProductsForDropdown();
+  const isEdit = productId !== null;
+  let p = {},
+    products = [];
+  if (isEdit) p = await fetchFlavorProfile(productId);
+  else products = await fetchProductsForDropdown();
 
-    const tagsValue = Array.isArray(p.tags) ? p.tags.join(', ') : '';
-    const frag = getTemplate('tpl-flavor-profile-form', {
-        id:                      p.product_id || '',
-        name:                    escapeHtml(p.product_name || ''),
-        slug:                    escapeHtml(p.product_slug || ''),
-        image_url:               escapeHtml(p.product_image_url || ''),
-        image_display:           p.product_image_url ? 'block' : 'none',
-        product_section_display: isEdit ? 'none' : 'block',
-        product_disabled:        isEdit ? 'disabled' : '',
-        edit_header_display:     isEdit ? 'flex' : 'none',
-        tags_value:              escapeHtml(tagsValue),
-        submit_text:             isEdit ? 'Save Changes' : 'Create Profile'
-    });
+  const tagsValue = Array.isArray(p.tags) ? p.tags.join(', ') : '';
+  const frag = getTemplate('tpl-flavor-profile-form', {
+    id: p.product_id || '',
+    name: escapeHtml(p.product_name || ''),
+    slug: escapeHtml(p.product_slug || ''),
+    image_url: escapeHtml(p.product_image_url || ''),
+    image_display: p.product_image_url ? 'block' : 'none',
+    product_section_display: isEdit ? 'none' : 'block',
+    product_disabled: isEdit ? 'disabled' : '',
+    edit_header_display: isEdit ? 'flex' : 'none',
+    tags_value: escapeHtml(tagsValue),
+    submit_text: isEdit ? 'Save Changes' : 'Create Profile',
+  });
 
-    const sliderContainer = frag.querySelector('#flap-sliders-container');
-    if (sliderContainer) {
-        sliderContainer.innerHTML = `
+  const sliderContainer = frag.querySelector('#flap-sliders-container');
+  if (sliderContainer) {
+    sliderContainer.innerHTML = `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
                 ${renderSlider('Strength', 'strength', p.strength ?? 5, '#ef4444')}
                 ${renderSlider('Sweetness', 'sweetness', p.sweetness ?? 5, '#f59e0b')}
@@ -175,108 +190,136 @@ async function renderFormModal(productId = null) {
                 ${renderSlider('Fruitiness', 'fruitiness', p.fruitiness ?? 5, '#10b981')}
                 ${renderSlider('Spiciness', 'spiciness', p.spiciness ?? 5, '#f43f5e')}
             </div>`;
-    }
+  }
 
-    if (!isEdit) {
-        const select = frag.querySelector('#flap-product-select');
-        if (select) select.innerHTML = '<option value="">-- Select Product --</option>' + products.map(pr => `<option value="${pr.id}">${escapeHtml(pr.name)} (${pr.slug || 'no-slug'})</option>`).join('');
-    }
+  if (!isEdit) {
+    const select = frag.querySelector('#flap-product-select');
+    if (select)
+      select.innerHTML =
+        '<option value="">-- Select Product --</option>' +
+        products
+          .map(
+            (pr) =>
+              `<option value="${pr.id}">${escapeHtml(pr.name)} (${pr.slug || 'no-slug'})</option>`
+          )
+          .join('');
+  }
 
-    if (isEdit) {
-        const footer = frag.querySelector('.flap-form-footer') || frag.querySelector('.flex.justify-end.gap-3.pt-6');
-        if (footer) {
-            const del = document.createElement('button');
-            del.type = 'button'; del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
-            del.innerHTML = '🗑️ Delete Profile';
-            footer.prepend(del);
-        }
+  if (isEdit) {
+    const footer =
+      frag.querySelector('.flap-form-footer') || frag.querySelector('.flex.justify-end.gap-3.pt-6');
+    if (footer) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-outline text-danger mr-auto js-delete-btn';
+      del.innerHTML = '🗑️ Delete Profile';
+      footer.prepend(del);
     }
-    return frag;
+  }
+  return frag;
 }
 
 // ─── Custom Form Handlers ─────────────────────────────────────────────────────
 
 function initFormHandlersOverride(modalRoot, id, onSuccess, closeModalFn, showFormErrorFn) {
-    const isEdit = id !== null;
-    const form = modalRoot.querySelector('#flap-form');
-    if (!form) return;
+  const isEdit = id !== null;
+  const form = modalRoot.querySelector('#flap-form');
+  if (!form) return;
 
-    // Live slider value updates
-    form.querySelectorAll('input[type="range"]').forEach(range => {
-        range.addEventListener('input', (e) => {
-            const valSpan = e.target.parentElement.querySelector('.font-black');
-            if (valSpan) valSpan.textContent = e.target.value;
-        });
+  // Live slider value updates
+  form.querySelectorAll('input[type="range"]').forEach((range) => {
+    range.addEventListener('input', (e) => {
+      const valSpan = e.target.parentElement.querySelector('.font-black');
+      if (valSpan) valSpan.textContent = e.target.value;
     });
+  });
 
-    const cancel = modalRoot.querySelector('#flap-cancel');
-    if (cancel) cancel.addEventListener('click', closeModalFn);
+  const cancel = modalRoot.querySelector('#flap-cancel');
+  if (cancel) cancel.addEventListener('click', closeModalFn);
 
-    const delBtn = modalRoot.querySelector('.js-delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-            if (!delBtn.dataset.confirmed) {
-                delBtn.dataset.confirmed = '1'; delBtn.innerHTML = '⚠️ Confirm?';
-                delBtn.classList.add('btn-warning');
-                setTimeout(() => { if (delBtn.isConnected) { delete delBtn.dataset.confirmed; delBtn.innerHTML = '🗑️ Delete Profile'; delBtn.classList.remove('btn-warning'); }}, 3000);
-                return;
-            }
-            delBtn.disabled = true; delBtn.innerHTML = 'Deleting…';
-            try {
-                await apiRequest(API_ROUTES.FLAVOR_PROFILES.DELETE(id), { method: 'DELETE' });
-                closeModalFn(); onSuccess?.(null, 'deleted');
-            } catch (err) {
-                showFormErrorFn(form, err.message);
-                delBtn.disabled = false; delBtn.innerHTML = '🗑️ Delete Profile';
-            }
-        });
+  const delBtn = modalRoot.querySelector('.js-delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!delBtn.dataset.confirmed) {
+        delBtn.dataset.confirmed = '1';
+        delBtn.innerHTML = '⚠️ Confirm?';
+        delBtn.classList.add('btn-warning');
+        setTimeout(() => {
+          if (delBtn.isConnected) {
+            delete delBtn.dataset.confirmed;
+            delBtn.innerHTML = '🗑️ Delete Profile';
+            delBtn.classList.remove('btn-warning');
+          }
+        }, 3000);
+        return;
+      }
+      delBtn.disabled = true;
+      delBtn.innerHTML = 'Deleting…';
+      try {
+        await apiRequest(API_ROUTES.FLAVOR_PROFILES.DELETE(id), { method: 'DELETE' });
+        closeModalFn();
+        onSuccess?.(null, 'deleted');
+      } catch (err) {
+        showFormErrorFn(form, err.message);
+        delBtn.disabled = false;
+        delBtn.innerHTML = '🗑️ Delete Profile';
+      }
+    });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    const orig = submit.innerHTML;
+    submit.disabled = true;
+    submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
+    try {
+      const formData = new FormData(form);
+      const targetId = isEdit ? id : formData.get('product_id');
+      if (!targetId) throw new Error('Select a product.');
+      const tags = (formData.get('tags') || '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const payload = {
+        product_id: parseInt(targetId),
+        sweetness: parseInt(formData.get('sweetness') ?? 5),
+        bitterness: parseInt(formData.get('bitterness') ?? 5),
+        strength: parseInt(formData.get('strength') ?? 5),
+        smokiness: parseInt(formData.get('smokiness') ?? 5),
+        fruitiness: parseInt(formData.get('fruitiness') ?? 5),
+        spiciness: parseInt(formData.get('spiciness') ?? 5),
+        tags,
+      };
+      const url = isEdit
+        ? API_ROUTES.FLAVOR_PROFILES.UPDATE(targetId)
+        : API_ROUTES.FLAVOR_PROFILES.CREATE;
+      const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
+      closeModalFn();
+      onSuccess?.(res.data, isEdit ? 'updated' : 'created');
+    } catch (err) {
+      showFormErrorFn(form, err.message);
+      submit.disabled = false;
+      submit.innerHTML = orig;
     }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submit = form.querySelector('[type="submit"]');
-        const orig = submit.innerHTML;
-        submit.disabled = true; submit.innerHTML = isEdit ? 'Saving…' : 'Creating…';
-        try {
-            const formData = new FormData(form);
-            const targetId = isEdit ? id : formData.get('product_id');
-            if (!targetId) throw new Error('Select a product.');
-            const tags = (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean);
-            const payload = {
-                product_id: parseInt(targetId),
-                sweetness:  parseInt(formData.get('sweetness') ?? 5),
-                bitterness: parseInt(formData.get('bitterness') ?? 5),
-                strength:   parseInt(formData.get('strength') ?? 5),
-                smokiness:  parseInt(formData.get('smokiness') ?? 5),
-                fruitiness: parseInt(formData.get('fruitiness') ?? 5),
-                spiciness:  parseInt(formData.get('spiciness') ?? 5),
-                tags
-            };
-            const url = isEdit ? API_ROUTES.FLAVOR_PROFILES.UPDATE(targetId) : API_ROUTES.FLAVOR_PROFILES.CREATE;
-            const res = await apiRequest(url, { method: isEdit ? 'PUT' : 'POST', body: payload });
-            closeModalFn(); onSuccess?.(res.data, isEdit ? 'updated' : 'created');
-        } catch (err) {
-            showFormErrorFn(form, err.message);
-            submit.disabled = false; submit.innerHTML = orig;
-        }
-    });
+  });
 }
 
 // ─── Entity Builder ───────────────────────────────────────────────────────────
 
 const { Render: FlavourProfiles, Init: initFlavourProfiles } = createEntityModule({
-    entityName: 'Flavour Profiles',
-    entitySubtitle: 'Manage tasting notes and flavour characteristics for products',
-    apiRoutes: {
-        list: API_ROUTES.FLAVOR_PROFILES.LIST,
-        detail: (id) => API_ROUTES.FLAVOR_PROFILES.GET(id),
-        create: API_ROUTES.FLAVOR_PROFILES.CREATE,
-        update: (id) => API_ROUTES.FLAVOR_PROFILES.UPDATE(id),
-        delete: (id) => API_ROUTES.FLAVOR_PROFILES.DELETE(id)
-    },
-    fetchList: fetchFlavorProfiles,
-    fetchSingle: fetchFlavorProfile,
-    tableHeaderHtml: `<tr class="tr">
+  entityName: 'Flavour Profiles',
+  entitySubtitle: 'Manage tasting notes and flavour characteristics for products',
+  apiRoutes: {
+    list: API_ROUTES.FLAVOR_PROFILES.LIST,
+    detail: (id) => API_ROUTES.FLAVOR_PROFILES.GET(id),
+    create: API_ROUTES.FLAVOR_PROFILES.CREATE,
+    update: (id) => API_ROUTES.FLAVOR_PROFILES.UPDATE(id),
+    delete: (id) => API_ROUTES.FLAVOR_PROFILES.DELETE(id),
+  },
+  fetchList: fetchFlavorProfiles,
+  fetchSingle: fetchFlavorProfile,
+  tableHeaderHtml: `<tr class="tr">
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
         <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Product</th>
         <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Sweet</th>
@@ -286,12 +329,12 @@ const { Render: FlavourProfiles, Init: initFlavourProfiles } = createEntityModul
         <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Spicy</th>
         <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Actions</th>
     </tr>`,
-    renderRow,
-    renderViewModal,
-    renderFormModal,
-    initFormHandlersOverride,
-    searchPlaceholder: 'Search by product name or slug…',
-    createBtnText: '➕ Create Profile'
+  renderRow,
+  renderViewModal,
+  renderFormModal,
+  initFormHandlersOverride,
+  searchPlaceholder: 'Search by product name or slug…',
+  createBtnText: '➕ Create Profile',
 });
 
 export { FlavourProfiles, initFlavourProfiles };

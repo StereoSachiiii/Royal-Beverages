@@ -45,7 +45,7 @@ class CartItemRepository extends BaseRepository
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**
@@ -80,7 +80,7 @@ class CartItemRepository extends BaseRepository
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public function getByIdEnriched(int $id): ?array
@@ -141,13 +141,13 @@ class CartItemRepository extends BaseRepository
             WHERE ci.cart_id = :cart_id
         ");
         $stmt->execute([':cart_id' => $cartId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public function count(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM cart_items");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function create(array $data): CartItemModel

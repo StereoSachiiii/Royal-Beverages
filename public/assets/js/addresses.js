@@ -11,60 +11,54 @@ import { API } from './api-helper.js';
  * @returns {Promise<string>} Formatted address string
  */
 export const fetchUserAddresses = async (addressId) => {
-    try {
-        const response = await API.addresses.get(addressId);
+  try {
+    const response = await API.addresses.get(addressId);
 
-        if (response.success && response.data) {
-            return formatAddress(response.data);
-        }
-
-        return "Address unavailable";
-    } catch (error) {
-        console.error('Error fetching address:', error);
-        return "Address unavailable";
+    if (response.success && response.data) {
+      return formatAddress(response.data);
     }
+
+    return 'Address unavailable';
+  } catch (error) {
+    console.error('Error fetching address:', error);
+    return 'Address unavailable';
+  }
 };
 
 /**
  * Format a full address object into a clean display string.
- * 
+ *
  * @param {Object} addr - address object returned by API
  * @returns {String} formatted address
  */
 export const formatAddress = (addr) => {
-    if (!addr || typeof addr !== 'object') return 'Address unavailable';
+  if (!addr || typeof addr !== 'object') return 'Address unavailable';
 
-    const {
-        recipient_name,
-        address_line1,
-        address_line2,
-        city,
-        state,
-        postal_code,
-        country,
-        phone
-    } = addr;
+  const { recipient_name, address_line1, address_line2, city, state, postal_code, country, phone } =
+    addr;
 
-    return [
-        recipient_name ? `${recipient_name}` : '',
-        address_line1 ? `${address_line1}` : '',
-        address_line2 ? `${address_line2}` : '',
-        city || state ? `${city || ''}${state ? ', ' + state : ''}` : '',
-        postal_code ? `${postal_code}` : '',
-        country ? `${country}` : '',
-        phone ? `Phone: ${phone}` : ''
-    ]
-        .filter(Boolean) // remove empty fields
-        .join(', ');
+  return [
+    recipient_name ? `${recipient_name}` : '',
+    address_line1 ? `${address_line1}` : '',
+    address_line2 ? `${address_line2}` : '',
+    city || state ? `${city || ''}${state ? ', ' + state : ''}` : '',
+    postal_code ? `${postal_code}` : '',
+    country ? `${country}` : '',
+    phone ? `Phone: ${phone}` : '',
+  ]
+    .filter(Boolean) // remove empty fields
+    .join(', ');
 };
 
 /**
  * Parse addresses to HTML for display
  */
 export const parseAddresses = (addresses) => {
-    if (!Array.isArray(addresses)) return "<p>No addresses found.</p>";
+  if (!Array.isArray(addresses)) return '<p>No addresses found.</p>';
 
-    return addresses.map(addr => `
+  return addresses
+    .map(
+      (addr) => `
         <div class="address-card">
             <strong>Type:</strong> ${addr.address_type || '-'}<br>
             <strong>Name:</strong> ${addr.recipient_name || '-'}<br>
@@ -76,7 +70,9 @@ export const parseAddresses = (addresses) => {
             <strong>Postal Code:</strong> ${addr.postal_code || '-'}<br>
             <strong>Country:</strong> ${addr.country || '-'}
         </div>
-    `).join('');
+    `
+    )
+    .join('');
 };
 
 /**
@@ -85,18 +81,18 @@ export const parseAddresses = (addresses) => {
  * @returns {Promise<Array|Object>}
  */
 export const getAddresses = async (userId) => {
-    try {
-        const response = await API.addresses.list(userId);
+  try {
+    const response = await API.addresses.list(userId);
 
-        if (response.success && response.data) {
-            return response.data?.items || response.data || [];
-        }
-
-        return [];
-    } catch (error) {
-        console.error('Error fetching addresses:', error);
-        return { error: error.message };
+    if (response.success && response.data) {
+      return response.data?.items || response.data || [];
     }
+
+    return [];
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    return { error: error.message };
+  }
 };
 
 /**
@@ -105,18 +101,18 @@ export const getAddresses = async (userId) => {
  * @returns {Promise<Object|null>}
  */
 export const createAddress = async (addressData) => {
-    try {
-        const response = await API.addresses.create(addressData);
+  try {
+    const response = await API.addresses.create(addressData);
 
-        if (response.success) {
-            return response.data;
-        }
-
-        throw new Error(response.message || 'Failed to create address');
-    } catch (error) {
-        console.error('Error creating address:', error);
-        return null;
+    if (response.success) {
+      return response.data;
     }
+
+    throw new Error(response.message || 'Failed to create address');
+  } catch (error) {
+    console.error('Error creating address:', error);
+    return null;
+  }
 };
 
 /**
@@ -126,18 +122,18 @@ export const createAddress = async (addressData) => {
  * @returns {Promise<Object|null>}
  */
 export const updateAddress = async (addressId, addressData) => {
-    try {
-        const response = await API.addresses.update(addressId, addressData);
+  try {
+    const response = await API.addresses.update(addressId, addressData);
 
-        if (response.success) {
-            return response.data;
-        }
-
-        throw new Error(response.message || 'Failed to update address');
-    } catch (error) {
-        console.error('Error updating address:', error);
-        return null;
+    if (response.success) {
+      return response.data;
     }
+
+    throw new Error(response.message || 'Failed to update address');
+  } catch (error) {
+    console.error('Error updating address:', error);
+    return null;
+  }
 };
 
 /**
@@ -146,13 +142,13 @@ export const updateAddress = async (addressId, addressData) => {
  * @returns {Promise<boolean>}
  */
 export const deleteAddress = async (addressId) => {
-    try {
-        const response = await API.addresses.delete(addressId);
-        return response.success;
-    } catch (error) {
-        console.error('Error deleting address:', error);
-        return false;
-    }
+  try {
+    const response = await API.addresses.delete(addressId);
+    return response.success;
+  } catch (error) {
+    console.error('Error deleting address:', error);
+    return false;
+  }
 };
 
 /**
@@ -161,22 +157,22 @@ export const deleteAddress = async (addressId) => {
  * @returns {Promise<boolean>}
  */
 export const setDefaultAddress = async (addressId) => {
-    try {
-        const response = await API.addresses.setDefault(addressId);
-        return response.success;
-    } catch (error) {
-        console.error('Error setting default address:', error);
-        return false;
-    }
+  try {
+    const response = await API.addresses.setDefault(addressId);
+    return response.success;
+  } catch (error) {
+    console.error('Error setting default address:', error);
+    return false;
+  }
 };
 
 export default {
-    fetchUserAddresses,
-    formatAddress,
-    parseAddresses,
-    getAddresses,
-    createAddress,
-    updateAddress,
-    deleteAddress,
-    setDefaultAddress
+  fetchUserAddresses,
+  formatAddress,
+  parseAddresses,
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
 };

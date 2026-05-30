@@ -95,13 +95,13 @@ class CategoryRepository extends BaseRepository
         $stmt = $this->pdo->query(
             "SELECT COUNT(*) FROM categories WHERE is_active = TRUE AND deleted_at IS NULL"
         );
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function countAll(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM categories");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function create(array $data): CategoryModel
@@ -223,7 +223,7 @@ class CategoryRepository extends BaseRepository
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public function getByIdEnriched(int $id): ?array
@@ -333,7 +333,7 @@ class CategoryRepository extends BaseRepository
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public function getProductsByCategoryIdEnriched(int $categoryId, int $limit = 100, int $offset = 0): array
@@ -386,7 +386,7 @@ class CategoryRepository extends BaseRepository
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     public function countProductsByCategoryId(int $categoryId): int
@@ -402,7 +402,7 @@ class CategoryRepository extends BaseRepository
               AND c.deleted_at IS NULL
         ");
         $stmt->execute([':category_id' => $categoryId]);
-        return (int) $stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     protected function mapToModel(array $row): CategoryModel

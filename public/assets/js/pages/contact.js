@@ -6,103 +6,106 @@
 import { toast } from '../toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const contactForm = document.getElementById('contactForm');
-    const submitBtn = document.getElementById('contactSubmit');
-    const formWrapper = document.getElementById('contactFormWrapper');
+  const contactForm = document.getElementById('contactForm');
+  const submitBtn = document.getElementById('contactSubmit');
+  const formWrapper = document.getElementById('contactFormWrapper');
 
-    if (!contactForm) return;
+  if (!contactForm) return;
 
-    // Helper: Validate email
-    const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // Helper: Validate email
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-    // Helper: Validate phone (standard Sri Lankan or international format)
-    const isValidPhone = (phone) => {
-        if (!phone) return true; // Optional field
-        const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
-        return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 9;
+  // Helper: Validate phone (standard Sri Lankan or international format)
+  const isValidPhone = (phone) => {
+    if (!phone) return true; // Optional field
+    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
+    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 9;
+  };
+
+  // Helper: Clear errors
+  const clearErrors = () => {
+    contactForm
+      .querySelectorAll('.has-error')
+      .forEach((el) => el.classList.remove('border-red-500'));
+    contactForm.querySelectorAll('.error-text').forEach((el) => el.remove());
+  };
+
+  // Helper: Show error on field
+  const showError = (fieldId, message) => {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+
+    field.classList.add('border-red-500');
+    const errorEl = document.createElement('span');
+    errorEl.className =
+      'error-text text-[8px] text-red-500 font-black uppercase tracking-widest mt-1 block';
+    errorEl.textContent = message;
+    field.parentElement.appendChild(errorEl);
+  };
+
+  // Handle form submission
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    let hasErrors = false;
+    const formData = {
+      name: document.getElementById('contactName').value.trim(),
+      email: document.getElementById('contactEmail').value.trim(),
+      phone: document.getElementById('contactPhone').value.trim(),
+      subject: document.getElementById('contactSubject').value,
+      message: document.getElementById('contactMessage').value.trim(),
     };
 
-    // Helper: Clear errors
-    const clearErrors = () => {
-        contactForm.querySelectorAll('.has-error').forEach(el => el.classList.remove('border-red-500'));
-        contactForm.querySelectorAll('.error-text').forEach(el => el.remove());
-    };
+    // Validation Logic
+    if (!formData.name) {
+      showError('contactName', 'Please enter your name');
+      hasErrors = true;
+    }
 
-    // Helper: Show error on field
-    const showError = (fieldId, message) => {
-        const field = document.getElementById(fieldId);
-        if (!field) return;
+    if (!formData.email) {
+      showError('contactEmail', 'Email address is required');
+      hasErrors = true;
+    } else if (!isValidEmail(formData.email)) {
+      showError('contactEmail', 'Please enter a valid email address');
+      hasErrors = true;
+    }
 
-        field.classList.add('border-red-500');
-        const errorEl = document.createElement('span');
-        errorEl.className = 'error-text text-[8px] text-red-500 font-black uppercase tracking-widest mt-1 block';
-        errorEl.textContent = message;
-        field.parentElement.appendChild(errorEl);
-    };
+    if (formData.phone && !isValidPhone(formData.phone)) {
+      showError('contactPhone', 'Please enter a valid phone number');
+      hasErrors = true;
+    }
 
-    // Handle form submission
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearErrors();
+    if (!formData.subject) {
+      showError('contactSubject', 'Please select a inquiry topic');
+      hasErrors = true;
+    }
 
-        let hasErrors = false;
-        const formData = {
-            name: document.getElementById('contactName').value.trim(),
-            email: document.getElementById('contactEmail').value.trim(),
-            phone: document.getElementById('contactPhone').value.trim(),
-            subject: document.getElementById('contactSubject').value,
-            message: document.getElementById('contactMessage').value.trim()
-        };
+    if (!formData.message) {
+      showError('contactMessage', 'Please provide detail for your inquiry');
+      hasErrors = true;
+    } else if (formData.message.length < 10) {
+      showError('contactMessage', 'Message is too short');
+      hasErrors = true;
+    }
 
-        // Validation Logic
-        if (!formData.name) {
-            showError('contactName', 'Please enter your name');
-            hasErrors = true;
-        }
+    if (hasErrors) {
+      toast.error('Please fix the errors above');
+      return;
+    }
 
-        if (!formData.email) {
-            showError('contactEmail', 'Email address is required');
-            hasErrors = true;
-        } else if (!isValidEmail(formData.email)) {
-            showError('contactEmail', 'Please enter a valid email address');
-            hasErrors = true;
-        }
+    // Processing State
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="animate-pulse">Sending...</span>';
 
-        if (formData.phone && !isValidPhone(formData.phone)) {
-            showError('contactPhone', 'Please enter a valid phone number');
-            hasErrors = true;
-        }
+    try {
+      // Simulate network latency
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        if (!formData.subject) {
-            showError('contactSubject', 'Please select a inquiry topic');
-            hasErrors = true;
-        }
+      // Implementation note: In a production environment, this would hit /api/v1/contact
 
-        if (!formData.message) {
-            showError('contactMessage', 'Please provide detail for your inquiry');
-            hasErrors = true;
-        } else if (formData.message.length < 10) {
-            showError('contactMessage', 'Message is too short');
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
-            toast.error('Please fix the errors above');
-            return;
-        }
-
-        // Processing State
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="animate-pulse">Sending...</span>';
-
-        try {
-            // Simulate network latency
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Implementation note: In a production environment, this would hit /api/v1/contact
-            
-            // Success State Transition
-            formWrapper.innerHTML = `
+      // Success State Transition
+      formWrapper.innerHTML = `
                 <div class="py-20 text-center animate-premium-fade">
                     <div class="mb-10 flex justify-center">
                         <div class="w-16 h-16 bg-black flex items-center justify-center">
@@ -121,17 +124,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            document.getElementById('resetContactForm').addEventListener('click', () => {
-                window.location.reload();
-            });
+      document.getElementById('resetContactForm').addEventListener('click', () => {
+        window.location.reload();
+      });
 
-            toast.success('Your message has been securely dispatched');
-
-        } catch (error) {
-            console.error('[Contact] Dispatch failure:', error);
-            toast.error('Secure transmission failed. Please retry.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Send Message';
-        }
-    });
+      toast.success('Your message has been securely dispatched');
+    } catch (error) {
+      console.error('[Contact] Dispatch failure:', error);
+      toast.error('Secure transmission failed. Please retry.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Send Message';
+    }
+  });
 });

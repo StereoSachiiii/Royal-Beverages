@@ -12,7 +12,7 @@ class ValidationException extends BaseException{
     /**
      * Summary of __construct
      * @param string $message response message
-     * @param array{field?:string|null,value?:string|null} $context context/ fields and values
+     * @param array<string, mixed> $context context/ fields and values
      * @param int $code    response code
      * @param Throwable|null $previous previous 
      */

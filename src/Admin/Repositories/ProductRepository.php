@@ -85,13 +85,13 @@ class ProductRepository extends BaseRepository
         $stmt = $this->pdo->query(
             "SELECT COUNT(*) FROM products WHERE is_active = TRUE AND deleted_at IS NULL"
         );
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function countAll(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM products");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function create(array $data): ProductModel
@@ -235,7 +235,7 @@ class ProductRepository extends BaseRepository
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);  // Return assoc arrays for simplicity; extend ProductModel if needed
+    return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];  // Return assoc arrays for simplicity; extend ProductModel if needed
 }
 
 public function getByIdEnriched(int $id): ?array
@@ -314,7 +314,7 @@ public function getTopSellers(int $limit = 10): array
     ");
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
 
 public function searchEnriched(string $query, int $limit = 50, int $offset = 0): array
@@ -358,7 +358,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
     public function shopAllEnriched(
     int $limit = 24,
@@ -401,7 +401,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
     ];
     $order = $sortMap[$sort] ?? $sortMap['newest'];
 
-    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $whereSql = 'WHERE ' . implode(' AND ', $where);
 
     $sql = "
         SELECT 
@@ -448,7 +448,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
     protected function mapToModels(array $rows): array
     {

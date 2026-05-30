@@ -4,32 +4,32 @@
  */
 
 class Toast {
-    constructor() {
-        this.container = null;
-        this.init();
+  constructor() {
+    this.container = null;
+    this.init();
+  }
+
+  init() {
+    // Create container if it doesn't exist
+    if (!document.getElementById('toast-container')) {
+      this.container = document.createElement('div');
+      this.container.id = 'toast-container';
+      this.container.className = 'toast-container';
+      document.body.appendChild(this.container);
+
+      // Add styles
+      this.addStyles();
+    } else {
+      this.container = document.getElementById('toast-container');
     }
+  }
 
-    init() {
-        // Create container if it doesn't exist
-        if (!document.getElementById('toast-container')) {
-            this.container = document.createElement('div');
-            this.container.id = 'toast-container';
-            this.container.className = 'toast-container';
-            document.body.appendChild(this.container);
+  addStyles() {
+    if (document.getElementById('toast-styles')) return;
 
-            // Add styles
-            this.addStyles();
-        } else {
-            this.container = document.getElementById('toast-container');
-        }
-    }
-
-    addStyles() {
-        if (document.getElementById('toast-styles')) return;
-
-        const style = document.createElement('style');
-        style.id = 'toast-styles';
-        style.textContent = `
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.textContent = `
             .toast-container {
                 position: fixed;
                 bottom: 24px;
@@ -157,73 +157,73 @@ class Toast {
                 }
             }
         `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-    show(message, type = 'info', duration = 4000) {
-        this.init(); // Ensure container exists
+  show(message, type = 'info', duration = 4000) {
+    this.init(); // Ensure container exists
 
-        const icons = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ℹ',
-            gold: '★'
-        };
+    const icons = {
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ',
+      gold: '★',
+    };
 
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
             <span class="toast-icon">${icons[type] || icons.info}</span>
             <span class="toast-message">${message}</span>
             <button class="toast-close" aria-label="Close">×</button>
         `;
 
-        // Close button handler
-        toast.querySelector('.toast-close').addEventListener('click', () => {
-            this.dismiss(toast);
-        });
+    // Close button handler
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+      this.dismiss(toast);
+    });
 
-        this.container.appendChild(toast);
+    this.container.appendChild(toast);
 
-        // Auto dismiss
-        if (duration > 0) {
-            setTimeout(() => {
-                this.dismiss(toast);
-            }, duration);
-        }
-
-        return toast;
+    // Auto dismiss
+    if (duration > 0) {
+      setTimeout(() => {
+        this.dismiss(toast);
+      }, duration);
     }
 
-    dismiss(toast) {
-        if (!toast || toast.classList.contains('toast-exiting')) return;
+    return toast;
+  }
 
-        toast.classList.add('toast-exiting');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }
+  dismiss(toast) {
+    if (!toast || toast.classList.contains('toast-exiting')) return;
 
-    success(message, duration = 4000) {
-        return this.show(message, 'success', duration);
-    }
+    toast.classList.add('toast-exiting');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }
 
-    error(message, duration = 5000) {
-        return this.show(message, 'error', duration);
-    }
+  success(message, duration = 4000) {
+    return this.show(message, 'success', duration);
+  }
 
-    warning(message, duration = 4500) {
-        return this.show(message, 'warning', duration);
-    }
+  error(message, duration = 5000) {
+    return this.show(message, 'error', duration);
+  }
 
-    info(message, duration = 4000) {
-        return this.show(message, 'info', duration);
-    }
+  warning(message, duration = 4500) {
+    return this.show(message, 'warning', duration);
+  }
 
-    gold(message, duration = 4000) {
-        return this.show(message, 'gold', duration);
-    }
+  info(message, duration = 4000) {
+    return this.show(message, 'info', duration);
+  }
+
+  gold(message, duration = 4000) {
+    return this.show(message, 'gold', duration);
+  }
 }
 
 // Create singleton instance

@@ -763,6 +763,52 @@ Available stock is always calculated: `quantity - reserved`. Never stored as a s
 
 ---
 
+## Quality Assurance & Testing
+
+Strict CI pipeline enforced via `run_ci.ps1` (local) and GitHub Actions.
+
+### Static Analysis & Linting
+
+| Tool | Purpose | Configuration |
+|---|---|---|
+| **PHPStan** | Strict type analysis | Level 8 (`phpstan.neon`) + tracked baseline |
+| **ESLint** | JavaScript logic checks | Flat config (`eslint.config.mjs`) |
+| **Prettier** | Code formatting | Enforced across all `.js` and `.css` files |
+
+### Automated Tests (PHPUnit)
+
+Comprehensive unit tests (`tests/Unit/`) with strict coverage thresholds.
+
+```xml
+<!-- phpunit.xml -->
+<phpunit bootstrap="tests/bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include><directory>src</directory></include>
+    </source>
+</phpunit>
+```
+
+CI pipeline parses the `coverage-clover` output and hard-fails if total code coverage drops below 80%:
+
+```php
+// Coverage enforcement logic
+$xml = simplexml_load_file('coverage.xml');
+$metrics = $xml->project->metrics;
+$coverage = ((int)$metrics['coveredelements'] / (int)$metrics['elements']) * 100;
+
+if ($coverage < 80) {
+    echo 'Error: Code coverage is below 80%.\n';
+    exit(1);
+}
+```
+
+---
+
 ## Project Structure
 
 ```

@@ -36,7 +36,7 @@ class RecommendationController extends BaseController
     public function previewMatches(): void
     {
         try {
-            $input = json_decode(file_get_contents('php://input'), true);
+            $input = json_decode((string)file_get_contents('php://input'), true);
             if (!$input) {
                 $this->jsonResponse(['success' => false, 'message' => 'Invalid payload'], 400);
                 return;

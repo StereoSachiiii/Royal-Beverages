@@ -51,7 +51,8 @@ class Request
         $pathInfo   = $_SERVER['PATH_INFO'] ?? '';
 
         // Extract path from REQUEST_URI (strip query string)
-        $uri = parse_url($requestUri, PHP_URL_PATH) ?? '/';
+        $parsedUri = parse_url($requestUri, PHP_URL_PATH);
+        $uri = is_string($parsedUri) ? $parsedUri : '/';
 
         // 1. Prioritize PATH_INFO if available (the cleanest way)
         if (!empty($pathInfo)) {
@@ -81,7 +82,7 @@ class Request
         // Parse headers
         $headers = [];
         foreach ($_SERVER as $key => $value) {
-            if (str_starts_with($key, 'HTTP_')) {
+            if (is_string($key) && str_starts_with($key, 'HTTP_')) {
                 $headerKey = str_replace('_', '-', substr($key, 5));
                 $headers[$headerKey] = $value;
             }
@@ -94,12 +95,18 @@ class Request
 
         // Parse body based on content type
         $body = [];
-        $contentType = $headers['Content-Type'] ?? '';
+        $contentType = is_string($headers['Content-Type'] ?? null) ? $headers['Content-Type'] : '';
         
         if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             if (str_contains($contentType, 'application/json')) {
                 $rawBody = file_get_contents('php://input');
-                $body = json_decode($rawBody, true) ?? [];
+                if ($rawBody === false) {
+                    $rawBody = '';
+                }
+                $body = json_decode($rawBody, true);
+                if (!is_array($body)) {
+                    $body = [];
+                }
             } else {
                 $body = $_POST;
             }

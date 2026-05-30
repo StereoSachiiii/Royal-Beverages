@@ -113,37 +113,38 @@ class Validator
     /**
      * Internal helper to add a rule instance
      */
-    private function addRule(string $field, $rule): void
+    private function addRule(string $field, string|RuleInterface $rule): void
     {
         if ($rule instanceof RuleInterface) {
             $this->rules[$field][] = $rule;
             return;
         }
 
-        if (is_string($rule)) {
-            $params = [];
-            if (str_contains($rule, ':')) {
-                // Only split on the FIRST colon to preserve patterns like /^\+?[0-9]{8,15}$/
-                $colonPos = strpos($rule, ':');
-                $ruleName   = substr($rule, 0, $colonPos);
-                $paramString = substr($rule, $colonPos + 1);
+        $params = [];
+        if (str_contains($rule, ':')) {
+            // Only split on the FIRST colon to preserve patterns like /^\+?[0-9]{8,15}$/
+            $colonPos = strpos($rule, ':');
+            if ($colonPos === false) {
+                $colonPos = 0; // Should never happen because of str_contains
+            }
+            $ruleName   = substr($rule, 0, $colonPos);
+            $paramString = substr($rule, $colonPos + 1);
 
-                // For 'regex', the entire paramString is the pattern — don't split by comma
-                if ($ruleName === 'regex') {
-                    $params = [$paramString];
-                } else {
-                    $params = explode(',', $paramString);
-                }
+            // For 'regex', the entire paramString is the pattern — don't split by comma
+            if ($ruleName === 'regex') {
+                $params = [$paramString];
             } else {
-                $ruleName = $rule;
+                $params = explode(',', $paramString);
             }
-
-            if (!isset($this->ruleMap[$ruleName])) {
-                throw new Exception("Validation rule '{$ruleName}' not found.");
-            }
-
-            $className = $this->ruleMap[$ruleName];
-            $this->rules[$field][] = new $className(...$params);
+        } else {
+            $ruleName = $rule;
         }
+
+        if (!isset($this->ruleMap[$ruleName])) {
+            throw new Exception("Validation rule '{$ruleName}' not found.");
+        }
+
+        $className = $this->ruleMap[$ruleName];
+        $this->rules[$field][] = new $className(...$params);
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Admin\Repositories;
 
 use PDO;
-use App\Admin\Models\UserPreferenceModel;
+
 use App\Admin\Exceptions\NotFoundException;
 use App\Admin\Exceptions\DatabaseException;
 
@@ -56,7 +56,7 @@ class UserPreferenceRepository extends BaseRepository
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**

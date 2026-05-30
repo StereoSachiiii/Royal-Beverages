@@ -1,5 +1,7 @@
 // Base URL - all API requests use the dynamically injected API_BASE_URL or fallback
-const BASE_URL = window.ADMIN_CONFIG?.API_BASE_URL ? window.ADMIN_CONFIG.API_BASE_URL.replace(/\/$/, '') : '/api/v1';
+const BASE_URL = window.ADMIN_CONFIG?.API_BASE_URL
+  ? window.ADMIN_CONFIG.API_BASE_URL.replace(/\/$/, '')
+  : '/api/v1';
 
 // These are now legacy - pointing to router routes instead of direct PHP files
 export const API_URL = BASE_URL + '/users'; // Legacy fallback

@@ -97,7 +97,7 @@ class OrderItemService
         $validData = $dto->toArray();
 
         // Auto-assign warehouse if missing
-        if (!isset($validData['warehouse_id']) || $validData['warehouse_id'] !== null) {
+        if (empty($validData['warehouse_id'])) {
             $bestStock = $this->stockRepo->findWarehouseWithHighestStock($validData['product_id']);
             if (!$bestStock || $bestStock['available'] < $validData['quantity']) {
                 throw new DatabaseException("Insufficient stock available for product {$validData['product_name']}");
@@ -154,7 +154,7 @@ class OrderItemService
         
         // Adjust stock reservations
         $this->adjustStockReservation(
-            $current->product_id,
+            (int)$current->product_id,
             $current->warehouse_id,
             $newWarehouseId,
             $current->quantity,
@@ -197,7 +197,7 @@ class OrderItemService
         // Release reserved stock if warehouse is assigned
         if ($item->warehouse_id !== null) {
             $this->releaseReservation(
-                $item->product_id, 
+                (int)$item->product_id, 
                 $item->warehouse_id, 
                 $item->quantity
             );

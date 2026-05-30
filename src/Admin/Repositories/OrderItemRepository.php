@@ -71,7 +71,7 @@ class OrderItemRepository extends BaseRepository
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**
@@ -146,7 +146,7 @@ public function update(int $id, array $data): OrderItemModel
     public function count(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM order_items");
-        return (int)$stmt->fetchColumn();
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
 
     public function create(array $data): OrderItemModel

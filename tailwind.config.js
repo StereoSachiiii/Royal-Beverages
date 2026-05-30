@@ -2,6 +2,7 @@
 module.exports = {
   content: [
     "./public/**/*.php",
+    "./public/frontend/**/*.php",
     "./public/**/*.js",
     "./src/**/*.php",
     "./admin/**/*.php",
@@ -10,7 +11,7 @@ module.exports = {
     extend: {
       colors: {
         gold: {
-          DEFAULT: '#000000', // Monochrome shift: Gold is now Black
+          DEFAULT: '#000000', 
           glow: 'rgba(0, 0, 0, 0.05)',
         },
         gray: {

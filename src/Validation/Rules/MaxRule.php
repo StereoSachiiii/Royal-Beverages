@@ -9,7 +9,7 @@ class MaxRule implements RuleInterface
 {
     private float $max;
 
-    public function __construct($max)
+    public function __construct(float $max)
     {
         $this->max = (float)$max;
     }

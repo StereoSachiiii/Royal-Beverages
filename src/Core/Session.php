@@ -6,10 +6,10 @@ namespace App\Core;
 class Session {
     private static ?Session $instance = null; 
 
-    private $timeout; 
+    private int $timeout; 
     private CSRF $csrf; 
 
-    private function __construct($timeout = 86400) { 
+    private function __construct(int $timeout = 86400) { 
         $this->timeout = $timeout;
 
         if (session_status() === PHP_SESSION_NONE) {
@@ -35,11 +35,11 @@ class Session {
 
         
     // SESSION ACCESSORS
-    public function set(string $key, $value) {
+    public function set(string $key, mixed $value): void {
         $_SESSION[$key] = $value;
     }
 
-    public function get(string $key, $default = null) {
+    public function get(string $key, mixed $default = null): mixed {
         return $_SESSION[$key] ?? $default;
     }
 
@@ -47,7 +47,7 @@ class Session {
         unset($_SESSION[$key]);
     }
 
-    public function has(string $key) {
+    public function has(string $key): bool {
         return isset($_SESSION[$key]);
     }
 
@@ -57,7 +57,7 @@ class Session {
      * @param array{id:int,name:string,email:null|string,is_admin:bool|null} $userData
      * @return void
      */
-    public function login(array $userData) {
+    public function login(array $userData): void {
         session_regenerate_id(true); // prevent fixation
 
         $_SESSION['user_id'] = $userData['id'];
@@ -70,20 +70,18 @@ class Session {
         //not to be saved to db
         $_SESSION['session_id'] = session_id();
      
-        
- 
         // Optional: reset guest info
         unset($_SESSION['guest_id']);
         unset($_SESSION['is_guest']);
     }
 
-    public function logout() {
+    public function logout(): void {
         $this->destroy();
         self::$instance = null;
         $this->initGuest();
     }
 
-    public function isLoggedIn() {
+    public function isLoggedIn(): bool {
         return $this->get('logged_in', false) === true;
     }
 
@@ -94,12 +92,12 @@ class Session {
         return $isAdmin === true || $isAdmin === 1 || $isAdmin === '1';
     }
 
-    public function getUserId() {
+    public function getUserId(): mixed {
         return $this->isLoggedIn() ? $this->get('user_id') : $this->get('guest_id');
     }
 
-    public function getUsername() {
-        return $this->get('name', 'Guest');
+    public function getUsername(): string {
+        return (string)$this->get('name', 'Guest');
     }
 
     public function getEmail(): ?string {
@@ -107,18 +105,19 @@ class Session {
     }
 
     public function getCsrfInstance(): CSRF {
-        if (empty($this->csrf)) {
+        // @phpstan-ignore isset.initializedProperty
+        if (!isset($this->csrf)) {
             throw new \RuntimeException("CSRF instance is undefined in Session.");
         }
         return $this->csrf;
     }
 
-    public function getSessionID(){
-        return $_SESSION['session_id'];
+    public function getSessionID(): string {
+        return (string)($_SESSION['session_id'] ?? '');
     }
 
     // GUEST USER INITIALIZATION
-    private function initGuest() {
+    private function initGuest(): void {
         if (!isset($_SESSION['guest_id'])) {
             $_SESSION['is_guest'] = true;
             $_SESSION['guest_id'] = 'guest_' . bin2hex(random_bytes(16)); // secure random ID
@@ -128,16 +127,16 @@ class Session {
 
     
 
-    public function isGuest() {
-        return $this->get('is_guest', false);
+    public function isGuest(): bool {
+        return $this->get('is_guest', false) === true;
     }
 
     // DESTROY SESSION
-    public function destroy() {
+    public function destroy(): void {
         $_SESSION = [];
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 3600,
+            setcookie((string)session_name(), '', time() - 3600,
                 $params["path"], $params["domain"],
                 $params["secure"], $params["httponly"]
             );
@@ -147,7 +146,7 @@ class Session {
 
 
 
-    public static function getInstance():Session{
+    public static function getInstance(): Session {
 
         if(self::$instance===null)
         {
