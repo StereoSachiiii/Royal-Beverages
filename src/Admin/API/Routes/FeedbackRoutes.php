@@ -139,7 +139,7 @@ $router->group('/api/v1', function (Router $router): void {
                 'code'    => 400,
             ];
         }
-        $hard = $request->getQuery('hard') === 'true' || (!empty($body['hard']) && (bool)$body['hard'] === true);
+        $hard = $request->getQuery('hard') === 'true' || !empty($body['hard']);
         if ($hard) {
             return $controller->hardDelete($id);
         }

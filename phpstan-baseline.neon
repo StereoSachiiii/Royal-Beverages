@@ -1,32 +1,20 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Strict comparison using \=\=\= between true and true will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
-			count: 1
-			path: src/Admin/API/Routes/FeedbackRoutes.php
-
-		-
-			message: '#^PHPDoc tag @param has invalid value \(\?Throwable\|null \$previous\)\: Unexpected token "\|", expected variable at offset 255 on line 6$#'
-			identifier: phpDoc.parseError
-			count: 1
-			path: src/Admin/Exceptions/DuplicateEmailException.php
-
-		-
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
 			count: 1
 			path: src/Admin/Repositories/ProductRepository.php
 
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects bool, int given\.$#'
-			identifier: argument.type
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
 			count: 1
-			path: src/Admin/Services/AIRecommendationService.php
+			path: src/Admin/Services/OrderItemService.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: src/Admin/Services/OrderItemService.php
 
@@ -41,12 +29,6 @@ parameters:
 			identifier: booleanNot.alwaysFalse
 			count: 1
 			path: src/Admin/Services/UserService.php
-
-		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 1
-			path: src/Core/Autoloader.php
 
 		-
 			message: '#^Parameter \#1 \$callback of function spl_autoload_register expects \(callable\(string\)\: void\)\|null, array\{\$this\(App\\Core\\Autoloader\), ''loadClass''\} given\.$#'
@@ -73,14 +55,14 @@ parameters:
 			path: src/Core/Router.php
 
 		-
-			message: '#^Variable \$routeMiddleware in empty\(\) always exists and is always falsy\.$#'
-			identifier: empty.variable
+			message: '#^Variable \$routeMiddleware in isset\(\) always exists and is always null\.$#'
+			identifier: isset.variable
 			count: 1
 			path: src/Core/Router.php
 
 		-
-			message: '#^Property App\\Core\\Session\:\:\$csrf in isset\(\) is not nullable nor uninitialized\.$#'
-			identifier: isset.initializedProperty
+			message: '#^Property App\\Core\\Session\:\:\$csrf in empty\(\) is not falsy nor uninitialized\.$#'
+			identifier: empty.initializedProperty
 			count: 1
 			path: src/Core/Session.php
 
@@ -89,15 +71,3 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/DIContainer/Autoloader.php
-
-		-
-			message: '#^Property App\\Validation\\Rules\\MaxRule\:\:\$max \(float\|int\) is never assigned int so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: src/Validation/Rules/MaxRule.php
-
-		-
-			message: '#^Property App\\Validation\\Rules\\MinRule\:\:\$min \(float\|int\) is never assigned int so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: src/Validation/Rules/MinRule.php

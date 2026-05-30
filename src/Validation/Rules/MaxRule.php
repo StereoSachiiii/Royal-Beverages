@@ -7,7 +7,7 @@ use App\Validation\RuleInterface;
 
 class MaxRule implements RuleInterface
 {
-    private int|float $max;
+    private float $max;
 
     public function __construct($max)
     {

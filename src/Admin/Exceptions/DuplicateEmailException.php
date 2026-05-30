@@ -13,7 +13,7 @@ class DuplicateEmailException extends BaseException {
      * @param string $message the string message
      * @param array{field?:string|null,value?:string|null} $context  field,value assosiative array
      * @param int $code       response code
-     * @param ?Throwable|null $previous
+     * @param \Throwable|null $previous
      */
     public function __construct(
         string $message = 'Email Already Registered',

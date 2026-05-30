@@ -97,7 +97,7 @@ class OrderItemService
         $validData = $dto->toArray();
 
         // Auto-assign warehouse if missing
-        if (!isset($validData['warehouse_id']) || $validData['warehouse_id'] === null) {
+        if (!isset($validData['warehouse_id']) || $validData['warehouse_id'] !== null) {
             $bestStock = $this->stockRepo->findWarehouseWithHighestStock($validData['product_id']);
             if (!$bestStock || $bestStock['available'] < $validData['quantity']) {
                 throw new DatabaseException("Insufficient stock available for product {$validData['product_name']}");

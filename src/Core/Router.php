@@ -80,9 +80,9 @@ class Router
                 }
 
                 $handler = $route['handler'];
-                $routeMiddleware = $route['middleware'] ?? [];
+                $routeMiddleware = $route['middleware'] ?? null;
 
-                if (!empty($routeMiddleware)) {
+                if (!!isset($routeMiddleware)) {
                     $stack = new MiddlewareStack();
                     foreach ($routeMiddleware as $mw) {
                         $stack->add($mw);

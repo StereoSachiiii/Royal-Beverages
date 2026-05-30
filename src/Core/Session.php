@@ -107,7 +107,7 @@ class Session {
     }
 
     public function getCsrfInstance(): CSRF {
-        if (!isset($this->csrf)) {
+        if (empty($this->csrf)) {
             throw new \RuntimeException("CSRF instance is undefined in Session.");
         }
         return $this->csrf;

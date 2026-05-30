@@ -7,7 +7,7 @@ use App\Validation\RuleInterface;
 
 class MinRule implements RuleInterface
 {
-    private int|float $min;
+    private float $min;
 
     public function __construct($min)
     {

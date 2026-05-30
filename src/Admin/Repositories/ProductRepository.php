@@ -190,7 +190,7 @@ class ProductRepository extends BaseRepository
             price_cents: (int)$row['price_cents'],
             image_url: $row['image_url'],
             category_id: (int)$row['category_id'],
-            supplier_id: $row['supplier_id'] ? (int)$row['supplier_id'] : null,
+            supplier_id: $row['supplier_id'] !== null ? (int)$row['supplier_id'] : null,
             is_active: (bool)$row['is_active'],
             created_at: $row['created_at'],
             updated_at: $row['updated_at'],
