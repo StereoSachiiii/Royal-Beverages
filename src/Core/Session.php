@@ -82,11 +82,7 @@ class Session {
         return $this->get('logged_in', false) === true;
     }
 
-    public function initRateLimit():void{
-        $window = 3;
-        $max_requests = 10;
 
-    }
 
     public function isAdmin(): bool {
         $isAdmin = $this->get('is_admin', false);
@@ -105,11 +101,9 @@ class Session {
         return $this->get('email');
     }
 
-//this will return the instance csrf . which is an instanc member of session
-    public function getCsrfInstance():CSRF{
-        if(!$this->csrf){
-            error_log("csrf undefined");
-            
+    public function getCsrfInstance(): CSRF {
+        if (!isset($this->csrf)) {
+            throw new \RuntimeException("CSRF instance is undefined in Session.");
         }
         return $this->csrf;
     }
@@ -158,6 +152,5 @@ class Session {
         return self::$instance;
 
 
-    }
 }
-?>
+}

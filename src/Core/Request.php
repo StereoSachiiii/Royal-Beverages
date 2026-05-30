@@ -271,13 +271,13 @@ class Request
     public function ip(): string
     {
         $headers = [
-            'HTTP_CLIENT_IP',
+            'REMOTE_ADDR',
             'HTTP_X_FORWARDED_FOR',
+            'HTTP_CLIENT_IP',
             'HTTP_X_FORWARDED',
             'HTTP_X_CLUSTER_CLIENT_IP',
             'HTTP_FORWARDED_FOR',
             'HTTP_FORWARDED',
-            'REMOTE_ADDR',
         ];
 
         foreach ($headers as $header) {
