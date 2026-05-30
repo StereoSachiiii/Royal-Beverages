@@ -38,7 +38,7 @@ return [
 
     'database' => [
         'host' => $_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? 'localhost',
-        'port' => (int)($_ENV['DB_PORT'] ?? $_SERVER['DB_PORT'] ?? 5432),
+        'port' => (int)($_ENV['DB_PORT'] ?? $_SERVER['DB_PORT'] ?? 6432),
         'name' => $_ENV['DB_NAME'] ?? $_SERVER['DB_NAME'] ?? 'royal-liquor',
         'user' => $_ENV['DB_USER'] ?? $_SERVER['DB_USER'] ?? 'postgres',
         'pass' => $_ENV['DB_PASS'] ?? $_SERVER['DB_PASS'] ?? $_ENV['DB_PASSWORD'] ?? $_SERVER['DB_PASSWORD'] ?? '',
@@ -69,7 +69,7 @@ return [
             'google_client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? '',
             'google_client_secret' => $_ENV['GOOGLE_CLIENT_SECRET'] ?? '',
             'google_redirect_uri' => $_ENV['GOOGLE_REDIRECT_URI'] ?? '',
-            'frontend_success_url' => $_ENV['FRONTEND_OAUTH_SUCCESS_URL'] ?? '/public/myaccount/dashboard.php',
+            'frontend_success_url' => $_ENV['FRONTEND_OAUTH_SUCCESS_URL'] ?? '/myaccount',
         ],
     ],
 
@@ -83,7 +83,7 @@ return [
     'session' => [
         'lifetime' => 7200, // 2 hours
         'name' => 'ROYAL_SESSION',
-        'secure' => false, // Set to true in production with HTTPS
+        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on', // Set to true in production with HTTPS
         'httponly' => true,
         'samesite' => 'Lax',
     ],
