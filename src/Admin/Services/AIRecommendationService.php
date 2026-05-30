@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Admin\Services;
 
-use App\Core\Database;
 use App\Admin\Repositories\ProductRepository;
 use Exception;
 use PDO;
@@ -11,10 +10,12 @@ use PDO;
 class AIRecommendationService
 {
     private ProductRepository $productRepository;
+    private PDO $pdo;
 
-    public function __construct(ProductRepository $productRepository)
+    public function __construct(ProductRepository $productRepository, PDO $pdo)
     {
         $this->productRepository = $productRepository;
+        $this->pdo = $pdo;
     }
 
     /**
@@ -68,7 +69,7 @@ class AIRecommendationService
 
     private function buildUserContext(int $userId): array
     {
-        $pdo = Database::getPdo();
+        $pdo = $this->pdo;
         $context = [
             'wishlist_names' => [],
             'purchased_names' => [],
@@ -103,7 +104,7 @@ class AIRecommendationService
 
     private function fetchActiveCatalog(): array
     {
-        $pdo = Database::getPdo();
+        $pdo = $this->pdo;
         $stmt = $pdo->prepare("SELECT id, name, category_id, price_cents FROM products WHERE is_active = TRUE AND deleted_at IS NULL");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -196,7 +197,7 @@ Instructions:
         
         if (empty($ids)) return [];
         
-        $pdo = Database::getPdo();
+        $pdo = $this->pdo;
         
         $inQuery = implode(',', array_fill(0, count($ids), '?'));
         
@@ -243,7 +244,7 @@ Instructions:
 
     public function getDynamicTasteMatches(array $prefs, int $limit = 5): array
     {
-        $pdo = Database::getPdo();
+        $pdo = $this->pdo;
         
         $sql = "
             SELECT 

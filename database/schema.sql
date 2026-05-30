@@ -1,32 +1,18 @@
--- ============================================================================
--- ROYAL BEVERAGES - SINGLE SOURCE OF TRUTH SCHEMA
--- Generated from live system state
--- ============================================================================
 
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO public;
 
--- ============================================================================
--- ENUMS
--- ============================================================================
 
 CREATE TYPE address_type   AS ENUM ('billing', 'shipping', 'both');
 CREATE TYPE cart_status    AS ENUM ('active', 'converted', 'abandoned', 'expired');
 CREATE TYPE order_status   AS ENUM ('pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded', 'failed');
 CREATE TYPE payment_status AS ENUM ('pending', 'captured', 'failed', 'refunded', 'voided');
 
--- ============================================================================
--- SEQUENCES
--- ============================================================================
 
 CREATE SEQUENCE order_number_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
--- ============================================================================
--- TABLES
--- ============================================================================
 
--- users
 CREATE TABLE users (
     id                BIGSERIAL PRIMARY KEY,
     name              VARCHAR(100) NOT NULL,
@@ -46,7 +32,6 @@ CREATE TABLE users (
     last_login_at     TIMESTAMPTZ
 );
 
--- categories
 CREATE TABLE categories (
     id          BIGSERIAL PRIMARY KEY,
     name        VARCHAR(100) UNIQUE NOT NULL,
@@ -59,7 +44,6 @@ CREATE TABLE categories (
     deleted_at  TIMESTAMPTZ
 );
 
--- suppliers
 CREATE TABLE suppliers (
     id         BIGSERIAL PRIMARY KEY,
     name       VARCHAR(100) UNIQUE NOT NULL,
@@ -72,7 +56,6 @@ CREATE TABLE suppliers (
     deleted_at TIMESTAMPTZ
 );
 
--- warehouses
 CREATE TABLE warehouses (
     id         BIGSERIAL PRIMARY KEY,
     name       VARCHAR(100) UNIQUE NOT NULL,
@@ -85,7 +68,6 @@ CREATE TABLE warehouses (
     deleted_at TIMESTAMPTZ
 );
 
--- products
 CREATE TABLE products (
     id          BIGSERIAL PRIMARY KEY,
     name        VARCHAR(200) NOT NULL,
@@ -101,7 +83,6 @@ CREATE TABLE products (
     deleted_at  TIMESTAMPTZ
 );
 
--- carts
 CREATE TABLE carts (
     id           BIGSERIAL PRIMARY KEY,
     user_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -115,7 +96,6 @@ CREATE TABLE carts (
     abandoned_at TIMESTAMPTZ
 );
 
--- cart_items
 CREATE TABLE cart_items (
     id                 BIGSERIAL PRIMARY KEY,
     cart_id            BIGINT NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
@@ -127,7 +107,6 @@ CREATE TABLE cart_items (
     UNIQUE(cart_id, product_id)
 );
 
--- orders
 CREATE TABLE orders (
     id                  BIGSERIAL PRIMARY KEY,
     order_number        VARCHAR(20) UNIQUE NOT NULL DEFAULT ('RL-ORD-' || nextval('order_number_seq'::regclass)),
@@ -146,7 +125,6 @@ CREATE TABLE orders (
     cancelled_at        TIMESTAMPTZ
 );
 
--- order_items
 CREATE TABLE order_items (
     id                BIGSERIAL PRIMARY KEY,
     order_id          BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -159,7 +137,6 @@ CREATE TABLE order_items (
     created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
--- stock
 CREATE TABLE stock (
     id           BIGSERIAL PRIMARY KEY,
     product_id   BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -171,7 +148,6 @@ CREATE TABLE stock (
     UNIQUE(product_id, warehouse_id)
 );
 
--- payments
 CREATE TABLE payments (
     id               BIGSERIAL PRIMARY KEY,
     order_id         BIGINT NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
@@ -186,7 +162,6 @@ CREATE TABLE payments (
     updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
--- user_addresses
 CREATE TABLE user_addresses (
     id             BIGSERIAL PRIMARY KEY,
     user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -206,7 +181,6 @@ CREATE TABLE user_addresses (
     UNIQUE(user_id, address_type, is_default)
 );
 
--- flavor_profiles
 CREATE TABLE flavor_profiles (
     product_id BIGINT PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE,
     sweetness  INTEGER DEFAULT 5 CHECK (sweetness BETWEEN 0 AND 10),
@@ -220,7 +194,6 @@ CREATE TABLE flavor_profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- feedback
 CREATE TABLE feedback (
     id                   BIGSERIAL PRIMARY KEY,
     user_id              BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -234,7 +207,6 @@ CREATE TABLE feedback (
     deleted_at           TIMESTAMPTZ
 );
 
--- cocktail_recipes
 CREATE TABLE cocktail_recipes (
     id               BIGSERIAL PRIMARY KEY,
     name             VARCHAR(200) NOT NULL,
@@ -250,7 +222,6 @@ CREATE TABLE cocktail_recipes (
     deleted_at       TIMESTAMPTZ
 );
 
--- recipe_ingredients
 CREATE TABLE recipe_ingredients (
     id          BIGSERIAL PRIMARY KEY,
     recipe_id   BIGINT NOT NULL REFERENCES cocktail_recipes(id) ON DELETE CASCADE,
@@ -263,7 +234,6 @@ CREATE TABLE recipe_ingredients (
     UNIQUE(recipe_id, product_id)
 );
 
--- user_preferences
 CREATE TABLE user_preferences (
     id                   BIGSERIAL PRIMARY KEY,
     user_id              BIGINT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -278,7 +248,6 @@ CREATE TABLE user_preferences (
     updated_at           TIMESTAMPTZ DEFAULT NOW()
 );
 
--- wishlist_items
 CREATE TABLE wishlist_items (
     id         BIGSERIAL PRIMARY KEY,
     user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -287,13 +256,9 @@ CREATE TABLE wishlist_items (
     UNIQUE(user_id, product_id)
 );
 
--- Cross-references for circular tables
 ALTER TABLE orders ADD CONSTRAINT orders_shipping_address_id_fkey FOREIGN KEY (shipping_address_id) REFERENCES user_addresses(id);
 ALTER TABLE orders ADD CONSTRAINT orders_billing_address_id_fkey FOREIGN KEY (billing_address_id) REFERENCES user_addresses(id);
 
--- ============================================================================
--- INDEXES
--- ============================================================================
 
 CREATE INDEX idx_users_email_active            ON users(email) WHERE is_active = TRUE AND deleted_at IS NULL;
 CREATE INDEX idx_products_active               ON products(id) WHERE is_active = TRUE AND deleted_at IS NULL;
@@ -313,11 +278,21 @@ CREATE INDEX idx_flavor_strength               ON flavor_profiles(strength);
 CREATE INDEX idx_feedback_product_active       ON feedback(product_id) WHERE (is_active = true);
 CREATE INDEX idx_wishlist_user                 ON wishlist_items(user_id);
 
--- ============================================================================
--- ADMIN VIEWS
--- ============================================================================
+CREATE INDEX idx_carts_user                 ON carts(user_id);
+CREATE INDEX idx_order_items_order          ON order_items(order_id);
+CREATE INDEX idx_order_items_warehouse      ON order_items(warehouse_id);
+CREATE INDEX idx_products_supplier          ON products(supplier_id);
+CREATE INDEX idx_recipe_ingredients_recipe  ON recipe_ingredients(recipe_id);
+CREATE INDEX idx_payments_order             ON payments(order_id);
 
--- admin_list_users
+CREATE INDEX idx_products_fts ON products USING GIN (to_tsvector('english', name || ' ' || COALESCE(description, '')));
+CREATE INDEX idx_cocktail_recipes_fts ON cocktail_recipes USING GIN (to_tsvector('english', name || ' ' || COALESCE(instructions, '')));
+
+CREATE INDEX idx_orders_user_status         ON orders(user_id, status);
+CREATE INDEX idx_users_oauth                ON users(oauth_provider, oauth_provider_id);
+
+CREATE INDEX idx_payments_payload           ON payments USING GIN (payload);
+
 CREATE VIEW admin_list_users AS
 SELECT
     u.id, u.name, u.email, u.phone, u.is_admin, u.is_active, u.created_at, u.last_login_at,
@@ -326,7 +301,6 @@ SELECT
 FROM users u
 WHERE u.deleted_at IS NULL AND u.is_anonymized = FALSE;
 
--- admin_detail_users
 CREATE VIEW admin_detail_users AS
 SELECT
     u.id, u.name, u.email, u.phone, u.profile_image_url, u.is_admin, u.is_active, u.is_anonymized, u.created_at, u.updated_at, u.last_login_at, u.anonymized_at,
@@ -346,7 +320,6 @@ SELECT
 FROM users u
 WHERE u.deleted_at IS NULL AND u.is_anonymized = FALSE;
 
--- admin_list_categories
 CREATE VIEW admin_list_categories AS
 SELECT
     c.id, c.name, c.slug, c.is_active, c.created_at,
@@ -355,7 +328,6 @@ SELECT
 FROM categories c
 WHERE c.deleted_at IS NULL;
 
--- admin_detail_categories
 CREATE VIEW admin_detail_categories AS
 SELECT
     c.id, c.name, c.slug, c.description, c.image_url, c.is_active, c.created_at, c.updated_at,
@@ -371,7 +343,6 @@ SELECT
 FROM categories c
 WHERE c.deleted_at IS NULL;
 
--- admin_list_products
 CREATE VIEW admin_list_products AS
 SELECT
     p.id, p.name, p.slug, p.price_cents, cat.name as category_name, sup.name as supplier_name, p.is_active, p.created_at,
@@ -382,7 +353,6 @@ LEFT JOIN categories cat ON p.category_id = cat.id
 LEFT JOIN suppliers sup ON p.supplier_id = sup.id
 WHERE p.deleted_at IS NULL;
 
--- admin_detail_products
 CREATE VIEW admin_detail_products AS
 SELECT
     p.id, p.name, p.slug, p.description, p.price_cents, p.image_url, p.category_id, cat.name as category_name, cat.slug as category_slug, p.supplier_id, sup.name as supplier_name, sup.email as supplier_email, sup.phone as supplier_phone, p.is_active, p.created_at, p.updated_at,
@@ -402,13 +372,11 @@ LEFT JOIN categories cat ON p.category_id = cat.id
 LEFT JOIN suppliers sup ON p.supplier_id = sup.id
 WHERE p.deleted_at IS NULL;
 
--- admin_list_carts
 CREATE VIEW admin_list_carts AS
 SELECT c.id, c.session_id, c.status, c.total_cents, c.item_count, c.created_at, c.updated_at, u.name as user_name, u.email as user_email
 FROM carts c
 LEFT JOIN users u ON c.user_id = u.id;
 
--- admin_detail_carts
 CREATE VIEW admin_detail_carts AS
 SELECT
     c.id, c.session_id, c.status, c.total_cents, c.item_count, c.created_at, c.updated_at, c.converted_at, c.abandoned_at, c.user_id, u.name as user_name, u.email as user_email,
@@ -417,14 +385,12 @@ SELECT
 FROM carts c
 LEFT JOIN users u ON c.user_id = u.id;
 
--- admin_list_orders
 CREATE VIEW admin_list_orders AS
 SELECT o.id, o.order_number, o.status, o.total_cents, o.created_at, u.name as user_name, u.email as user_email,
     (SELECT count(*) FROM order_items WHERE order_id = o.id) as item_count
 FROM orders o
 LEFT JOIN users u ON o.user_id = u.id;
 
--- admin_detail_orders
 CREATE VIEW admin_detail_orders AS
 SELECT
     o.id, o.order_number, o.status, o.total_cents, o.notes, o.created_at, o.updated_at, o.paid_at, o.shipped_at, o.delivered_at, o.cancelled_at, o.user_id, u.name as user_name, u.email as user_email, u.phone as user_phone, o.shipping_address_id,
@@ -438,7 +404,6 @@ SELECT
 FROM orders o
 LEFT JOIN users u ON o.user_id = u.id;
 
--- admin_list_stock
 CREATE VIEW admin_list_stock AS
 SELECT s.id, s.product_id, p.name as product_name, s.warehouse_id, w.name as warehouse_name, s.quantity, s.reserved, (s.quantity - s.reserved) as available, s.updated_at
 FROM stock s
@@ -446,7 +411,6 @@ JOIN products p ON s.product_id = p.id
 JOIN warehouses w ON s.warehouse_id = w.id
 WHERE p.deleted_at IS NULL AND w.deleted_at IS NULL;
 
--- admin_detail_stock
 CREATE VIEW admin_detail_stock AS
 SELECT
     s.id, s.product_id, p.name as product_name, p.slug as product_slug, p.price_cents, s.warehouse_id, w.name as warehouse_name, w.address as warehouse_address, s.quantity, s.reserved, (s.quantity - s.reserved) as available, s.created_at, s.updated_at,
@@ -457,14 +421,12 @@ JOIN products p ON s.product_id = p.id
 JOIN warehouses w ON s.warehouse_id = w.id
 WHERE p.deleted_at IS NULL AND w.deleted_at IS NULL;
 
--- admin_list_suppliers
 CREATE VIEW admin_list_suppliers AS
 SELECT s.id, s.name, s.email, s.phone, s.is_active, s.created_at,
     (SELECT count(*) FROM products WHERE supplier_id = s.id AND is_active = TRUE) as product_count
 FROM suppliers s
 WHERE s.deleted_at IS NULL;
 
--- admin_detail_suppliers
 CREATE VIEW admin_detail_suppliers AS
 SELECT
     s.id, s.name, s.email, s.phone, s.address, s.is_active, s.created_at, s.updated_at,
@@ -476,7 +438,6 @@ SELECT
 FROM suppliers s
 WHERE s.deleted_at IS NULL;
 
--- admin_list_warehouses
 CREATE VIEW admin_list_warehouses AS
 SELECT w.id, w.name, w.phone, w.is_active, w.created_at,
     (SELECT COALESCE(sum(quantity - reserved), 0) FROM stock WHERE warehouse_id = w.id) as available_stock,
@@ -484,7 +445,6 @@ SELECT w.id, w.name, w.phone, w.is_active, w.created_at,
 FROM warehouses w
 WHERE w.deleted_at IS NULL;
 
--- admin_detail_warehouses
 CREATE VIEW admin_detail_warehouses AS
 SELECT
     w.id, w.name, w.address, w.phone, w.image_url, w.is_active, w.created_at, w.updated_at,
@@ -498,14 +458,12 @@ SELECT
 FROM warehouses w
 WHERE w.deleted_at IS NULL;
 
--- admin_list_cocktail_recipes
 CREATE VIEW admin_list_cocktail_recipes AS
 SELECT cr.id, cr.name, cr.difficulty, cr.preparation_time, cr.serves, cr.is_active, cr.created_at,
     (SELECT count(*) FROM recipe_ingredients WHERE recipe_id = cr.id) as ingredient_count
 FROM cocktail_recipes cr
 WHERE cr.deleted_at IS NULL;
 
--- admin_detail_cocktail_recipes
 CREATE VIEW admin_detail_cocktail_recipes AS
 SELECT
     cr.id, cr.name, cr.description, cr.instructions, cr.image_url, cr.difficulty, cr.preparation_time, cr.serves, cr.is_active, cr.created_at, cr.updated_at,
@@ -515,7 +473,6 @@ SELECT
 FROM cocktail_recipes cr
 WHERE cr.deleted_at IS NULL;
 
--- admin_list_feedback
 CREATE VIEW admin_list_feedback AS
 SELECT f.id, f.rating, f.is_active, f.created_at, u.name as user_name, p.name as product_name, f.is_verified_purchase
 FROM feedback f
@@ -523,7 +480,6 @@ JOIN users u ON f.user_id = u.id
 JOIN products p ON f.product_id = p.id
 WHERE f.deleted_at IS NULL;
 
--- admin_detail_feedback
 CREATE VIEW admin_detail_feedback AS
 SELECT
     f.id, f.rating, f.comment, f.is_verified_purchase, f.is_active, f.created_at, f.updated_at, f.user_id, u.name as user_name, u.email as user_email, f.product_id, p.name as product_name, p.slug as product_slug,
@@ -533,14 +489,12 @@ JOIN users u ON f.user_id = u.id
 JOIN products p ON f.product_id = p.id
 WHERE f.deleted_at IS NULL;
 
--- admin_list_flavor_profiles
 CREATE VIEW admin_list_flavor_profiles AS
 SELECT fp.product_id, p.name as product_name, p.slug as product_slug, fp.sweetness, fp.bitterness, fp.strength
 FROM flavor_profiles fp
 JOIN products p ON fp.product_id = p.id
 WHERE p.deleted_at IS NULL;
 
--- admin_detail_flavor_profiles
 CREATE VIEW admin_detail_flavor_profiles AS
 SELECT
     fp.product_id, p.name as product_name, p.slug as product_slug, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags,
@@ -550,13 +504,11 @@ FROM flavor_profiles fp
 JOIN products p ON fp.product_id = p.id
 WHERE p.deleted_at IS NULL;
 
--- admin_list_payments
 CREATE VIEW admin_list_payments AS
 SELECT p.id, p.order_id, o.order_number, p.amount_cents, p.gateway, p.status, p.created_at
 FROM payments p
 JOIN orders o ON p.order_id = o.id;
 
--- admin_detail_payments
 CREATE VIEW admin_detail_payments AS
 SELECT
     p.id, p.order_id, o.order_number, o.status as order_status, p.amount_cents, p.currency, p.gateway, p.gateway_order_id, p.transaction_id, p.status, p.payload, p.created_at, o.user_id, u.name as user_name, u.email as user_email, o.total_cents as order_total_cents
@@ -564,14 +516,12 @@ FROM payments p
 JOIN orders o ON p.order_id = o.id
 LEFT JOIN users u ON o.user_id = u.id;
 
--- admin_list_user_addresses
 CREATE VIEW admin_list_user_addresses AS
 SELECT ua.id, ua.user_id, u.name as user_name, u.email as user_email, ua.address_type, ua.city, ua.country, ua.is_default, ua.created_at
 FROM user_addresses ua
 JOIN users u ON ua.user_id = u.id
 WHERE ua.deleted_at IS NULL;
 
--- admin_detail_user_addresses
 CREATE VIEW admin_detail_user_addresses AS
 SELECT
     ua.id, ua.user_id, u.name as user_name, u.email as user_email, ua.address_type, ua.recipient_name, ua.phone, ua.address_line1, ua.address_line2, ua.city, ua.state, ua.postal_code, ua.country, ua.is_default, ua.created_at, ua.updated_at,
@@ -580,3 +530,32 @@ SELECT
 FROM user_addresses ua
 JOIN users u ON ua.user_id = u.id
 WHERE ua.deleted_at IS NULL;
+
+
+CREATE MATERIALIZED VIEW mvw_sales_by_category AS
+SELECT 
+    c.id AS category_id,
+    c.name AS category_name,
+    COUNT(DISTINCT o.id) AS total_orders,
+    SUM(oi.quantity) AS units_sold,
+    SUM(oi.quantity * oi.price_cents) AS total_revenue_cents
+FROM categories c
+JOIN products p ON p.category_id = c.id
+JOIN order_items oi ON oi.product_id = p.id
+JOIN orders o ON o.id = oi.order_id
+WHERE o.status IN ('paid', 'delivered')
+GROUP BY c.id, c.name;
+
+CREATE UNIQUE INDEX idx_mvw_sales_by_category_id ON mvw_sales_by_category(category_id);
+
+CREATE MATERIALIZED VIEW mvw_daily_revenue AS
+SELECT 
+    DATE(created_at) AS order_date,
+    COUNT(id) AS order_count,
+    SUM(total_cents) AS daily_revenue_cents
+FROM orders
+WHERE status IN ('paid', 'delivered')
+GROUP BY DATE(created_at)
+ORDER BY order_date DESC;
+
+CREATE UNIQUE INDEX idx_mvw_daily_revenue_date ON mvw_daily_revenue(order_date);

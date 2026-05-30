@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Admin\Models;
 
+use App\Core\Database;
+
 class UserPreferenceModel {
     private $db;
     

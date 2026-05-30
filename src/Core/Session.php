@@ -75,6 +75,7 @@ class Session {
 
     public function logout() {
         $this->destroy();
+        self::$instance = null;
         $this->initGuest();
     }
 
@@ -97,7 +98,7 @@ class Session {
         return $this->get('name', 'Guest');
     }
 
-    public function getEmail():string{
+    public function getEmail(): ?string {
         return $this->get('email');
     }
 

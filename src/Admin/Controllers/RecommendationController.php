@@ -9,16 +9,18 @@ use App\Core\Session;
 class RecommendationController extends BaseController
 {
     private AIRecommendationService $service;
+    private Session $session;
 
-    public function __construct(AIRecommendationService $service)
+    public function __construct(AIRecommendationService $service, Session $session)
     {
         $this->service = $service;
+        $this->session = $session;
     }
 
     public function getForYou(): void
     {
         try {
-            $userId = Session::getInstance()->getUserId(); // Can be null for guests
+            $userId = $this->session->getUserId(); // Can be null for guests
             
             // Limit to 4 cards for the homepage UI row
             $recommendations = $this->service->getRecommendationsForUser($userId, 4);

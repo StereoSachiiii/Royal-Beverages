@@ -5,16 +5,15 @@ namespace App\Admin\Repositories;
 
 use PDO;
 use PDOStatement;
-use App\Core\Database;
 use App\Admin\Exceptions\DatabaseException;
 
 abstract class BaseRepository
 {
     protected PDO $pdo;
 
-    public function __construct()
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = Database::getPdo();
+        $this->pdo = $pdo;
     }
 
     protected function executeStatement(string $sql, array $params = []): PDOStatement

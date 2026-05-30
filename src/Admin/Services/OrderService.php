@@ -17,6 +17,7 @@ class OrderService
     public function __construct(
         private OrderRepository $repo,
         private OrderItemService $itemService,
+        private StockService $stockService,
         private \App\Core\Database $db,
     ) {}
 
@@ -158,11 +159,28 @@ class OrderService
             throw new ValidationException('Order cannot be cancelled in its current state: ' . $order->getStatus());
         }
 
-        $cancelledOrder = $this->repo->cancelOrder($id);
-        if (!$cancelledOrder) {
-            throw new DatabaseException('Failed to update order status during cancellation');
-        }
+        $pdo = $this->db->getPdo();
 
-        return $cancelledOrder->toArray();
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Release stock reservations
+            $this->stockService->cancelOrder($id);
+
+            // 2. Update order status
+            $cancelledOrder = $this->repo->cancelOrder($id);
+            if (!$cancelledOrder) {
+                throw new DatabaseException('Failed to update order status during cancellation');
+            }
+
+            $pdo->commit();
+            return $cancelledOrder->toArray();
+
+        } catch (\Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 }

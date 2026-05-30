@@ -10,15 +10,17 @@ use App\Core\Session;
 class WishlistController extends BaseController
 {
     private WishlistService $service;
+    private Session $session;
 
-    public function __construct(WishlistService $service)
+    public function __construct(WishlistService $service, Session $session)
     {
         $this->service = $service;
+        $this->session = $session;
     }
 
     public function getMine(): array
     {
-        $userId = Session::getInstance()->getUserId();
+        $userId = $this->session->getUserId();
         if (!$userId) {
             return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
@@ -33,7 +35,7 @@ class WishlistController extends BaseController
 
     public function add(array $data = []): array
     {
-        $userId = Session::getInstance()->getUserId();
+        $userId = $this->session->getUserId();
         if (!$userId) {
             return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
@@ -56,7 +58,7 @@ class WishlistController extends BaseController
 
     public function remove(int $productId): array
     {
-        $userId = Session::getInstance()->getUserId();
+        $userId = $this->session->getUserId();
         if (!$userId) {
             return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }
@@ -70,7 +72,7 @@ class WishlistController extends BaseController
 
     public function syncBulk(array $data = []): array
     {
-        $userId = Session::getInstance()->getUserId();
+        $userId = $this->session->getUserId();
         if (!$userId) {
             return ['success' => false, 'message' => 'Unauthorized', 'code' => 401];
         }

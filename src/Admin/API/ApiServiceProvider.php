@@ -5,6 +5,8 @@ namespace App\Admin\API;
 
 use App\DIContainer\ServiceProvider;
 use App\Core\Session;
+use App\Core\Database;
+use PDO;
 
 // Repositories
 use App\Admin\Repositories\ProductRepository;
@@ -84,6 +86,9 @@ class ApiServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // PDO — single connection managed by container
+        $this->container->instance(PDO::class, Database::getPdo());
+
         // Session — static factory
         $this->container->instance(Session::class, Session::getInstance());
 

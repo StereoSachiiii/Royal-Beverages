@@ -69,6 +69,14 @@ class PaymentRepository extends BaseRepository
                   :gateway_order_id, :transaction_id, :status, :payload) 
                  RETURNING *";
         
+        $payload = null;
+        if (isset($data['payload'])) {
+            $payload = json_encode($data['payload']);
+            if ($payload === false) {
+                throw new DatabaseException('Invalid payment payload: ' . json_last_error_msg());
+            }
+        }
+
         $stmt = $this->executeStatement($sql, [
             ':order_id' => $data['order_id'],
             ':amount_cents' => $data['amount_cents'],
@@ -77,7 +85,7 @@ class PaymentRepository extends BaseRepository
             ':gateway_order_id' => $data['gateway_order_id'] ?? null,
             ':transaction_id' => $data['transaction_id'] ?? null,
             ':status' => $data['status'] ?? 'pending',
-            ':payload' => isset($data['payload']) ? json_encode($data['payload']) : null
+            ':payload' => $payload
         ]);
         
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -95,7 +103,15 @@ class PaymentRepository extends BaseRepository
         foreach (['status', 'transaction_id', 'payload'] as $col) {
             if (isset($data[$col])) {
                 $sets[] = "$col = :$col";
-                $params[":$col"] = $col === 'payload' ? json_encode($data[$col]) : $data[$col];
+                if ($col === 'payload') {
+                    $encoded = json_encode($data[$col]);
+                    if ($encoded === false) {
+                        throw new DatabaseException('Invalid payment payload: ' . json_last_error_msg());
+                    }
+                    $params[":$col"] = $encoded;
+                } else {
+                    $params[":$col"] = $data[$col];
+                }
             }
         }
 

@@ -48,6 +48,9 @@ class StockService
         }
 
         $newQuantity = $stock->getQuantity() + $adjustment;
+        if ($newQuantity < 0) {
+            throw new ValidationException('Quantity cannot be negative');
+        }
         if ($newQuantity < $stock->getReserved()) {
             throw new ValidationException('Cannot reduce quantity below reserved amount');
         }

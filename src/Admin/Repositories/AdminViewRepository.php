@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Admin\Repositories;
 
 use PDO;
-use App\Core\Database;
 use App\Admin\Exceptions\DatabaseException;
 
 class AdminViewRepository
@@ -18,9 +17,9 @@ class AdminViewRepository
         'order_items', 'recipe_ingredients', 'cart_items'
     ];
 
-    public function __construct()
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = Database::getPdo();
+        $this->pdo = $pdo;
     }
 
     /**

@@ -349,7 +349,7 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
         LEFT JOIN feedback f ON p.id = f.product_id AND f.is_active = TRUE
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         WHERE p.deleted_at IS NULL
-        AND (p.name ILIKE :search OR p.description ILIKE :search OR c.name ILIKE :search OR fp.tags @> ARRAY[:search]::text[])
+        AND (p.name ILIKE :search OR p.description ILIKE :search OR c.name ILIKE :search OR array_to_string(fp.tags, ',') ILIKE :search)
         GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
         ORDER BY p.name ASC
         LIMIT :limit OFFSET :offset

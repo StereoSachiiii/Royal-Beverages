@@ -80,10 +80,6 @@ Two resolution strategies:
 Single entry point that wires up the runtime. Every page (public or admin) includes this.
 
 ```php
-
-class_alias(\App\Core\Session::class,  'Session');
-class_alias(\App\Core\Database::class, 'Database');
-class_alias(\App\Core\CSRF::class,     'CSRF');
 // 6. Detect BASE_URL, WEB_ROOT, API_BASE_URL dynamically
 
 ```
