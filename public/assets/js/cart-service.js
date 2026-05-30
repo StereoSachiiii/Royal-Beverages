@@ -212,12 +212,10 @@ class CartService {
                     if (response.success && response.data) cartRecord = response.data;
                 }
             } catch (err) {
-                console.log('[CartService] Cart not found on server, will create new.', err.message);
             }
 
             // Create if still null
             if (!cartRecord) {
-                console.log('[CartService] Creating new cart record...');
                 const response = await API.cart.create({ user_id: userId, session_id: sessionId });
                 cartRecord = response.data;
             }
@@ -297,7 +295,6 @@ class CartService {
             }
 
             if (syncOps.length > 0) {
-                console.log(`[CartService] Dispatching ${syncOps.length} surgical sync operations...`);
                 await Promise.allSettled(syncOps);
             }
 

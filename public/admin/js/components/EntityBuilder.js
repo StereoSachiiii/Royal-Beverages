@@ -5,7 +5,7 @@
  * Eliminates 90% of boilerplate code across the 17 entity pages.
  */
 
-import { apiRequest, debounce, saveState, getState, openStandardModal, closeModal, getTemplate, getFormData, escapeHtml } from '../utils.js';
+import { apiRequest, debounce, saveState, getState, openStandardModal, closeModal, getTemplate, getFormData, escapeHtml, UndoManager } from '../utils.js';
 import { initImageUpload } from '../FormHelpers.js';
 
 export function createEntityModule(config) {
@@ -90,6 +90,9 @@ export function createEntityModule(config) {
         const isEdit = id !== null;
         const form = modalRoot.querySelector('form');
         if (!form) return;
+
+        // Initialize UndoManager for form state
+        new UndoManager(form);
 
         const cancel = modalRoot.querySelector('.js-cancel');
         if (cancel) cancel.addEventListener('click', () => closeModal());

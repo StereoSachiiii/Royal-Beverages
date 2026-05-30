@@ -49,7 +49,6 @@ export const initSearch = async () => {
         }
     });
 
-    console.log('[Search] Initialized with', productsCache?.length || 0, 'products');
 };
 
 /**
@@ -127,7 +126,7 @@ const renderResults = (products, categories, query) => {
         autocompleteProducts.style.display = 'block';
         productResults.innerHTML = products.map((p, i) => `
             <a href="product.php?id=${p.id}" class="autocomplete-item" data-index="${i}">
-                <img src="${p.image_url ? (window.ROYAL_CONFIG.ASSET_URL + 'images/products/' + p.image_url.split('/').pop()) : (window.ROYAL_CONFIG.ASSET_URL + 'images/placeholder-product.png')}" alt="${p.name}" class="autocomplete-img">
+                <img src="${p.image_url ? (window.ROYAL_CONFIG.ASSET_URL + 'images/products/' + p.image_url.split('/').pop()) : (window.ROYAL_CONFIG.ASSET_URL + 'images/placeholder-product.webp')}" alt="${p.name}" class="autocomplete-img">
                 <div class="autocomplete-info">
                     <span class="autocomplete-name">${highlightMatch(p.name, query)}</span>
                     <span class="autocomplete-meta">${p.category_name || 'Spirits'}</span>

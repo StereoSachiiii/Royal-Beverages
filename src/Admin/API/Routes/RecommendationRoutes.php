@@ -20,4 +20,10 @@ $router->group('/api/v1', function (Router $router): void {
         new RateLimitMiddleware('ai_recommendations', 20, 60)
     ]);
 
+    // POST /api/v1/recommendations/preview-matches
+    $router->post('/recommendations/preview-matches', function (Request $request): void {
+        $controller = $GLOBALS['container']->get(RecommendationController::class);
+        $controller->previewMatches();
+    });
+
 });

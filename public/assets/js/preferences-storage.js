@@ -78,7 +78,6 @@ export async function saveTastePreferences(preferences, userId = null) {
     
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-        console.log('[Preferences] Saved locally:', toSave);
     } catch (e) {
         console.error('[Preferences] Error saving locally:', e);
     }
@@ -100,7 +99,6 @@ export async function saveTastePreferences(preferences, userId = null) {
             } else {
                 await API.preferences.create(payload);
             }
-            console.log('[Preferences] Saved to API');
         } catch (e) {
             console.error('[Preferences] Error saving to API:', e);
             return false;
@@ -131,6 +129,7 @@ export function clearPreferences() {
  * Calculate match score between user preferences and a product's flavor profile
  * @param {Object} product - Product with flavor_profile field
  * @returns {number} Match percentage 0-100
+ */
 export async function calculateMatchScore(product, userId = null) {
     const prefs = await getTastePreferences(userId);
 

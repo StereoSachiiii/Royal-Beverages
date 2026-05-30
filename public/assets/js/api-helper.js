@@ -232,6 +232,11 @@ export const API = {
 
 
 
+    // ==================== RECOMMENDATIONS ====================
+    recommendations: {
+        previewMatches: (data) => apiRequest('/recommendations/preview-matches', { method: 'POST', body: data })
+    },
+
     // ==================== STOCK ====================
     stock: {
         getByProduct: (productId) => apiRequest('/stock' + buildQuery({ product_id: productId })),

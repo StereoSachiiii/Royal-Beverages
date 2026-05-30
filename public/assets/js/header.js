@@ -141,7 +141,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.stopPropagation();
             if (searchWrapper.classList.contains('expanded')) {
                 if (searchInput.value.trim()) {
-                    console.log('Search for:', searchInput.value);
                 } else {
                     collapseSearch();
                 }
@@ -161,7 +160,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && searchInput.value.trim()) {
-                console.log('Search for:', searchInput.value);
             }
         });
     }

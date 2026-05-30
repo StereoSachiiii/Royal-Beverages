@@ -18,7 +18,6 @@ const fetchCategories = async () => {
     //     console.warn("Failed to load categories");
     //     return [];
     // }
-    console.log('[Categories] API calls disabled - showing empty state');
     return [];
 };
 
@@ -27,7 +26,6 @@ const fetchCategories = async () => {
  * DISABLED - No API calls for now
  */
 const fetchCategory = async (id) => {
-    console.log('[Categories] API calls disabled - no category details');
     return null;
 };
 

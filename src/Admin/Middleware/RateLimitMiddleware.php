@@ -11,6 +11,7 @@ use App\Admin\Exceptions\RateLimitException;
 class RateLimitMiddleware implements MiddlewareInterface
 {
     private static ?Session $session = null;
+    private static ?\Redis $redis = null;
 
     // Defaults — can be changed at runtime via configure()
     private static int $maxRequests = 3;
@@ -76,9 +77,54 @@ class RateLimitMiddleware implements MiddlewareInterface
      */
     public static function checkExecute(?string $identifier = null): bool
     {
-        self::$session = Session::getInstance();
         $key = self::makeKey($identifier);
         $now = time();
+
+        if (extension_loaded('redis')) {
+            if (self::$redis === null) {
+                try {
+                    self::$redis = new \Redis();
+                    // Connect using env vars if available, else fallback to 127.0.0.1
+                    $host = getenv('REDIS_HOST') ?: '127.0.0.1';
+                    $port = (int)(getenv('REDIS_PORT') ?: 6379);
+                    self::$redis->connect($host, $port, 1.0); // 1s timeout
+                } catch (\Exception $e) {
+                    // Fallback to session if redis connection fails
+                    self::$redis = false;
+                }
+            }
+            
+            if (self::$redis) {
+                return self::checkExecuteRedis($key, $now);
+            }
+        }
+
+        return self::checkExecuteSession($key, $now);
+    }
+
+    private static function checkExecuteRedis(string $key, int $now): bool
+    {
+        try {
+            $count = self::$redis->get($key);
+            if ($count === false) {
+                self::$redis->set($key, 1, self::$timeWindow);
+                return false;
+            }
+
+            if ((int)$count >= self::$maxRequests) {
+                return true; // Exceeded
+            }
+
+            self::$redis->incr($key);
+            return false;
+        } catch (\Exception $e) {
+            return false; // Fail open to avoid breaking requests
+        }
+    }
+
+    private static function checkExecuteSession(string $key, int $now): bool
+    {
+        self::$session = Session::getInstance();
 
         // Initialize if missing
         if (!self::$session->has($key)) {

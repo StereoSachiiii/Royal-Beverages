@@ -29,6 +29,16 @@ class Container
     private array $resolving = [];
 
     /**
+     * @var array<string, ReflectionClass> Cache of ReflectionClass instances
+     */
+    private static array $reflectionCache = [];
+
+    /**
+     * @var array<string, array|null> Cache of constructor dependencies
+     */
+    private static array $dependenciesCache = [];
+
+    /**
      * Bind an abstract type to a concrete implementation
      */
     public function bind(string $abstract, $concrete = null, bool $singleton = false): void
@@ -128,24 +138,29 @@ class Container
             throw new NotFoundException("Class '{$class}' does not exist and cannot be resolved.");
         }
 
-        $reflection = new ReflectionClass($class);
-
-        if (!$reflection->isInstantiable()) {
-            throw new ContainerException("Class '{$class}' is not instantiable (it might be an interface or abstract class).");
+        // Use cached ReflectionClass if available
+        if (isset(self::$reflectionCache[$class])) {
+            $reflection = self::$reflectionCache[$class];
+        } else {
+            $reflection = new ReflectionClass($class);
+            if (!$reflection->isInstantiable()) {
+                throw new ContainerException("Class '{$class}' is not instantiable (it might be an interface or abstract class).");
+            }
+            self::$reflectionCache[$class] = $reflection;
         }
 
-        $constructor = $reflection->getConstructor();
-
-        // If no constructor, just new it up
-        if ($constructor === null) {
-            return new $class();
+        // Use cached dependencies if available
+        if (array_key_exists($class, self::$dependenciesCache)) {
+            $parameters = self::$dependenciesCache[$class];
+        } else {
+            $constructor = $reflection->getConstructor();
+            $parameters = $constructor ? $constructor->getParameters() : [];
+            self::$dependenciesCache[$class] = $parameters;
         }
-
-        $parameters = $constructor->getParameters();
 
         // If constructor has no parameters, just new it up
         if (empty($parameters)) {
-            return new $class();
+            return $reflection->newInstance();
         }
 
         // Recursively resolve dependencies

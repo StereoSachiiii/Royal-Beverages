@@ -1,5 +1,6 @@
 # Royal Liquor - API Routing and Security
 Options -Indexes
+ErrorDocument 404 /frontend/404.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -10,9 +11,16 @@ Options -Indexes
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^api/v1/(.*)$ api/v1/index.php [QSA,L]
 
-    # Handle standard public pages if needed
+    # Handle root request
+    RewriteRule ^$ frontend/index.php [L]
+
+    # Route requests to frontend if not api, admin, assets, etc.
+    RewriteCond %{REQUEST_URI} !^/api/
+    RewriteCond %{REQUEST_URI} !^/admin/
+    RewriteCond %{REQUEST_URI} !^/assets/
+    RewriteCond %{REQUEST_URI} !^/css/
+    RewriteCond %{REQUEST_URI} !^/frontend/
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} !^/api/
-    RewriteRule . index.php [L]
+    RewriteRule ^(.*)$ frontend/$1 [L]
 </IfModule>

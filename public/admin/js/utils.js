@@ -464,3 +464,68 @@ export function getFormData(form) {
     }
     return data;
 }
+
+export class UndoManager {
+    constructor(form) {
+        this.form = form;
+        this.stack = [];
+        this.currentIndex = -1;
+        this.isReverting = false;
+
+        this.saveState();
+
+        form.addEventListener('input', debounce(() => {
+            if (this.isReverting) return;
+            this.saveState();
+        }, 500));
+
+        form.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                this.undo();
+            }
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                this.redo();
+            }
+        });
+    }
+
+    saveState() {
+        const state = getFormData(this.form);
+        if (this.currentIndex >= 0 && JSON.stringify(this.stack[this.currentIndex]) === JSON.stringify(state)) return;
+
+        if (this.currentIndex < this.stack.length - 1) {
+            this.stack = this.stack.slice(0, this.currentIndex + 1);
+        }
+
+        this.stack.push(state);
+        this.currentIndex++;
+    }
+
+    undo() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            this.applyState(this.stack[this.currentIndex]);
+        }
+    }
+
+    redo() {
+        if (this.currentIndex < this.stack.length - 1) {
+            this.currentIndex++;
+            this.applyState(this.stack[this.currentIndex]);
+        }
+    }
+
+    applyState(state) {
+        this.isReverting = true;
+        Object.keys(state).forEach(key => {
+            const el = this.form.elements[key];
+            if (el) {
+                if (el.type === 'checkbox') el.checked = state[key];
+                else el.value = state[key];
+            }
+        });
+        setTimeout(() => this.isReverting = false, 50);
+    }
+}

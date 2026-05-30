@@ -240,4 +240,41 @@ Instructions:
         
         return $formatted;
     }
+
+    public function getDynamicTasteMatches(array $prefs, int $limit = 5): array
+    {
+        $pdo = Database::getPdo();
+        
+        $sql = "
+            SELECT 
+                p.id, p.name, p.slug, p.price_cents, p.image_url,
+                ROUND(
+                    ((SQRT(600) - SQRT(
+                        POWER(COALESCE(fp.sweetness, 5) - :sw, 2) + 
+                        POWER(COALESCE(fp.bitterness, 5) - :bi, 2) + 
+                        POWER(COALESCE(fp.strength, 5) - :st, 2) + 
+                        POWER(COALESCE(fp.smokiness, 5) - :sm, 2) + 
+                        POWER(COALESCE(fp.fruitiness, 5) - :fr, 2) + 
+                        POWER(COALESCE(fp.spiciness, 5) - :sp, 2)
+                    )) / SQRT(600)) * 100
+                ) as \"matchScore\"
+            FROM flavor_profiles fp
+            JOIN products p ON fp.product_id = p.id
+            WHERE p.is_active = TRUE AND p.deleted_at IS NULL
+            ORDER BY \"matchScore\" DESC
+            LIMIT :limit
+        ";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':sw', $prefs['sweetness'], PDO::PARAM_INT);
+        $stmt->bindValue(':bi', $prefs['bitterness'], PDO::PARAM_INT);
+        $stmt->bindValue(':st', $prefs['strength'], PDO::PARAM_INT);
+        $stmt->bindValue(':sm', $prefs['smokiness'], PDO::PARAM_INT);
+        $stmt->bindValue(':fr', $prefs['fruitiness'], PDO::PARAM_INT);
+        $stmt->bindValue(':sp', $prefs['spiciness'], PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

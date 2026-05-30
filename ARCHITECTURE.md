@@ -575,6 +575,10 @@ export const ROUTE_MAP = {
 4. Before each transition, `cleanupActiveHandler()` runs the previous page's cleanup to remove event listeners and prevent  leaks
 5. Last visited page is persisted to `localStorage`
 
+### EntityBuilder Pattern
+
+To prevent duplicate code across the 18+ CRUD admin pages, we use a central `EntityBuilder` pattern. Instead of hardcoding tables and forms for each entity, the frontend defines a declarative configuration for columns and fields, and the `EntityBuilder` automatically constructs the List Views, Data Tables, and Add/Edit Modals. This architectural shift greatly consolidated the admin pages.
+
 ### State Persistence (`admin/js/utils.js`)
 
 ```javascript
@@ -592,6 +596,13 @@ Used for: cart state, wishlist, user preferences, admin page state.
 ---
 
 ## Database (PostgreSQL)
+
+### Connection Pooling
+
+To handle high traffic and prevent PHP from exhausting PostgreSQL connections (since PHP normally opens a new connection per request without persistent pooling), we use **PgBouncer** as a lightweight middleware. 
+- **Mode:** Transaction pooling
+- **Authentication:** `scram-sha-256` (matching Postgres 15 defaults)
+- The PHP app connects to PgBouncer on port `6432`, which multiplexes queries onto a small pool of persistent database connections.
 
 ### Schema Design
 
@@ -804,7 +815,23 @@ royal-liquor/
 | Frontend | ES Modules (ES6+), Vanilla JavaScript |
 | Styling | Tailwind CSS v3.4 |
 | Server | Apache with mod_rewrite |
-| Containerization | Docker (PHP 8.2-apache + PostgreSQL 15-alpine) |
+| Containerization | Docker (PHP 8.2-apache + PostgreSQL 15-alpine + edoburu/pgbouncer) |
+| Testing | PHPUnit (Unit & Integration tests) |
+
+---
+
+## Testing Architecture
+
+The application ensures stability through automated tests located in the `tests/` directory:
+
+1. **Unit Tests (`tests/Unit/`)**: 
+   - Powered by **PHPUnit**.
+   - Tests controllers in isolation by mocking services and session state (e.g., `CheckoutTest.php`, `ProductControllerTest.php`).
+   - Asserts response payloads, status codes, and exception handling logic without hitting the real database.
+2. **Integration Tests**:
+   - Tests end-to-end flows (e.g., `BackendPipelineIntegrationTest.php`, `FrontendApiIntegrationTest.php`) mapping the middleware, controllers, and services together.
+3. **Performance Benchmarking**:
+   - Standalone scripts (e.g., `performance_benchmark.php`) to test raw database query speeds, particularly for complex enriched searches and stock reservation limits.
 
 ---
 

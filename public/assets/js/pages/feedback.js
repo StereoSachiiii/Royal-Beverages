@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             productResults.innerHTML = items.map(product => `
                 <div class="product-result-item p-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0 flex items-center gap-4" data-id="${product.id}" data-name="${product.name}">
-                    <img src="${product.image_url || '/placeholder.jpg'}" class="w-10 h-10 object-cover border border-gray-100" />
+                    <img src="${product.image_url || '/placeholder.webp'}" class="w-10 h-10 object-cover border border-gray-100" />
                     <div class="flex flex-col">
                         <span class="text-[10px] font-black uppercase tracking-widest text-black">${product.name}</span>
                         <span class="text-[8px] uppercase tracking-widest text-gray-400">${product.category_name || 'Premium Spirits'}</span>

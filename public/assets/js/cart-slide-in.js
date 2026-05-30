@@ -60,7 +60,7 @@ export const showCartSlideIn = (product, quantity, cartTotal, cartCount) => {
     content.innerHTML = `
         <div class="flex gap-6 mb-8">
             <div class="w-24 h-24 bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 overflow-hidden">
-                <img src="${product.image_url ? (window.ROYAL_CONFIG.ASSET_URL + 'images/' + product.image_url.split('/').pop()) : (window.ROYAL_CONFIG.ASSET_URL + 'images/placeholder-product.png')}" alt="${product.name}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='${window.ROYAL_CONFIG.ASSET_URL}images/placeholder-product.png'">
+                <img src="${product.image_url ? (window.ROYAL_CONFIG.ASSET_URL + 'images/' + product.image_url.split('/').pop()) : (window.ROYAL_CONFIG.ASSET_URL + 'images/placeholder-product.webp')}" alt="${product.name}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='${window.ROYAL_CONFIG.ASSET_URL}images/placeholder-product.webp'">
             </div>
             <div class="flex flex-col justify-between py-1">
                 <div>
