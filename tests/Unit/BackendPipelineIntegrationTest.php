@@ -101,7 +101,7 @@ class BackendPipelineIntegrationTest extends TestCase
      * Provides a massive list of all entity routes to ensure every single one
      * is wired up correctly in the Router without fatals or typos.
      */
-    public function entityRoutesProvider(): array
+    public static function entityRoutesProvider(): array
     {
         return [
             // Format: [ HTTP_METHOD, URI, ExpectedControllerClass, ExpectedMethod ]
