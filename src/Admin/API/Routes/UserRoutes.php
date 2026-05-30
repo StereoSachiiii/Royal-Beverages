@@ -8,7 +8,7 @@ use App\Core\Session;
 use App\Admin\Controllers\UserController;
 use App\Admin\Middleware\RateLimitMiddleware;
 use App\Admin\Middleware\AuthMiddleware;
-use App\Admin\Middleware\CsrfMiddleware;
+use App\Admin\Middleware\CSRFMiddleware;
 use App\Core\Router;
 
 $router->group('/api/v1', function (Router $router): void {
@@ -93,7 +93,7 @@ $router->group('/api/v1', function (Router $router): void {
     // POST /api/v1/users/logout
     $router->post('/users/logout', function (Request $request): array {
         AuthMiddleware::requireAuth();
-        CsrfMiddleware::verifyCsrf();
+        CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('user_post', 30, 60);
 
         Session::getInstance()->logout();
@@ -108,7 +108,7 @@ $router->group('/api/v1', function (Router $router): void {
     // PUT /api/v1/users/profile
     $router->put('/users/profile', function (Request $request): array {
         AuthMiddleware::requireAuth();
-        CsrfMiddleware::verifyCsrf();
+        CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('user_post', 30, 60);
 
         $controller = $GLOBALS['container']->get(UserController::class);
@@ -121,7 +121,7 @@ $router->group('/api/v1', function (Router $router): void {
     // POST /api/v1/users/anonymize
     $router->post('/users/anonymize', function (Request $request): array {
         $userId = AuthMiddleware::requireAuth();
-        CsrfMiddleware::verifyCsrf();
+        CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('user_post', 30, 60);
 
         $controller = $GLOBALS['container']->get(UserController::class);
@@ -141,7 +141,7 @@ $router->group('/api/v1', function (Router $router): void {
     // POST /api/v1/users/addresses
     $router->post('/users/addresses', function (Request $request): array {
         $userId = AuthMiddleware::requireAuth();
-        CsrfMiddleware::verifyCsrf();
+        CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('user_post', 30, 60);
 
         $controller = $GLOBALS['container']->get(UserController::class);
@@ -153,7 +153,7 @@ $router->group('/api/v1', function (Router $router): void {
     // PUT /api/v1/users/addresses/{address_id}
     $router->put('/users/addresses/:address_id', function (Request $request, array $params): array {
         $userId = AuthMiddleware::requireAuth();
-        CsrfMiddleware::verifyCsrf();
+        CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('user_post', 30, 60);
 
         $addressId = (int)($params['address_id'] ?? 0);
@@ -174,7 +174,7 @@ $router->group('/api/v1', function (Router $router): void {
     // DELETE /api/v1/users/addresses/{address_id}
     $router->delete('/users/addresses/:address_id', function (Request $request, array $params): array {
         AuthMiddleware::requireAuth();
-        CsrfMiddleware::verifyCsrf();
+        CSRFMiddleware::verifyCsrf();
         RateLimitMiddleware::check('user_delete', 20, 60);
 
         $addressId = (int)($params['address_id'] ?? 0);

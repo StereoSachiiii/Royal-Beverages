@@ -103,4 +103,24 @@ class WishlistRepository extends BaseRepository
         // 2. Return the updated fully merged wishlist
         return $this->getByUserId($userId);
     }
+
+    protected function mapToModel(array $row): WishlistItemModel
+    {
+        return new WishlistItemModel(
+            id: (int)$row['id'],
+            user_id: (int)$row['user_id'],
+            product_id: (int)$row['product_id'],
+            created_at: $row['created_at'],
+            product_name: $row['product_name'] ?? null,
+            product_slug: $row['product_slug'] ?? null,
+            price_cents: isset($row['price_cents']) ? (int)$row['price_cents'] : null,
+            image_url: $row['image_url'] ?? null,
+            is_active: isset($row['is_active']) ? (bool)$row['is_active'] : null
+        );
+    }
+
+    protected function mapToModels(array $rows): array
+    {
+        return array_map(fn($row) => $this->mapToModel($row), $rows);
+    }
 }

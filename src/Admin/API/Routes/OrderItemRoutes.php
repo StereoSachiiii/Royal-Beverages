@@ -8,13 +8,12 @@ use App\Core\Session;
 use App\Admin\Controllers\OrderItemController;
 use App\Admin\Middleware\RateLimitMiddleware;
 use App\Admin\Middleware\AuthMiddleware;
-use App\Admin\Middleware\CsrfMiddleware;
+use App\Admin\Middleware\CSRFMiddleware;
 use App\Core\Router;
 
-/** @var Router $router */
 
 // Guard against direct access - must be loaded via router
-if (!isset($router) || !$router instanceof Router) {
+if (!isset($router)) {
     header('Content-Type: application/json');
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Direct access not allowed.']);

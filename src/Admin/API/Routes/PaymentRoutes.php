@@ -8,10 +8,9 @@ use App\Core\Session;
 use App\Admin\Controllers\PaymentController;
 use App\Admin\Middleware\RateLimitMiddleware;
 use App\Admin\Middleware\AuthMiddleware;
-use App\Admin\Middleware\CsrfMiddleware;
+use App\Admin\Middleware\CSRFMiddleware;
 use App\Core\Router;
 
-/** @var Router $router */
 
 $router->group('/api/v1', function (Router $router): void {
     // Search payments - MUST be before :id routes

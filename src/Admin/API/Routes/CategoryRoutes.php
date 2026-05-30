@@ -11,7 +11,6 @@ use App\Admin\Middleware\AuthMiddleware;
 use App\Admin\Middleware\CSRFMiddleware;
 use App\Core\Router;
 
-/** @var Router $router */
 
 $router->group('/api/v1', function (Router $router): void {
     // Single category by ID (optional enriched)
