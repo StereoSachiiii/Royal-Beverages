@@ -232,7 +232,7 @@ class StockService
             throw new ValidationException($e->getMessage(), $e->getErrors());
         }
 
-        $updated = $this->repo->update($id, $dto->toChangeset());
+        $updated = $this->repo->update($id, $dto->toArray());
         if (!$updated) {
             throw new NotFoundException('Stock not found');
         }
@@ -247,7 +247,7 @@ class StockService
             throw new ValidationException($e->getMessage(), $e->getErrors());
         }
 
-        $updated = $this->repo->updateByProductWarehouse($productId, $warehouseId, $dto->toChangeset());
+        $updated = $this->repo->updateByProductWarehouse($productId, $warehouseId, $dto->toArray());
         if (!$updated) {
             throw new NotFoundException('Stock not found');
         }

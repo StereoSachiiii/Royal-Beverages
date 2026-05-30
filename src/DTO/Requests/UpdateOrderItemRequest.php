@@ -24,7 +24,7 @@ class UpdateOrderItemRequest extends BaseDTO
             $validator->field('quantity', 'integer|min:1|max:10000');
         }
         // warehouse_id is nullable for unassign, we only validate > 0 if it is not null
-        if (isset($data['warehouse_id']) && $data['warehouse_id'] !== null) {
+        if (isset($data['warehouse_id']) && $data['warehouse_id'] !== '') {
             $validator->field('warehouse_id', 'integer|min:1');
         }
 

@@ -11,7 +11,7 @@ use App\Admin\Exceptions\RateLimitException;
 class RateLimitMiddleware implements MiddlewareInterface
 {
     private static ?Session $session = null;
-    private static ?\Redis $redis = null;
+    private static \Redis|false|null $redis = null;
 
     // Defaults — can be changed at runtime via configure()
     private static int $maxRequests = 3;

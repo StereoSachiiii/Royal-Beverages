@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Admin\Controllers;
 
 use App\Admin\Services\ImageService;
+use App\Admin\Exceptions\ValidationException;
 
 class ImageController extends BaseController
 {

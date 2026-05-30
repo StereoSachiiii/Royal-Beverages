@@ -145,7 +145,7 @@ class UserService
     public function createAddress(int $userId, array $data): int
     {
         $id = $this->repo->createAddress($userId, $data);
-        if (!$id) {
+        if ($id <= 0) {
             throw new DatabaseException('Failed to create address');
         }
         return $id;

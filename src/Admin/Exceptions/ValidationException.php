@@ -11,9 +11,9 @@ class ValidationException extends BaseException{
 
     /**
      * Summary of __construct
-     * @param ?string $message response message
-     * @param ?array{field?:string|null,value?:string|null} $context context/ fields and values
-     * @param ?int $code    response code
+     * @param string $message response message
+     * @param array{field?:string|null,value?:string|null} $context context/ fields and values
+     * @param int $code    response code
      * @param Throwable|null $previous previous 
      */
     public function __construct(
@@ -23,9 +23,9 @@ class ValidationException extends BaseException{
         Throwable|null $previous = null
         ){
         parent::__construct(
-            $message ?? null,
-            $context ?? null,
-            $code ?? 0,
+            $message,
+            $context,
+            $code,
             $previous ?? null
         );
     }

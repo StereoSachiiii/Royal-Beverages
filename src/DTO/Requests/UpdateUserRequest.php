@@ -35,7 +35,7 @@ class UpdateUserRequest extends BaseDTO
         if (isset($data['email'])) {
             $validator->field('email', 'email');
         }
-        if (isset($data['phone']) && $data['phone'] !== null) {
+        if (isset($data['phone']) && $data['phone'] !== '') {
             $validator->field('phone', 'regex:/^\+?[0-9]{8,15}$/');
         }
         if (isset($data['password'])) {
@@ -63,6 +63,6 @@ class UpdateUserRequest extends BaseDTO
 
     public function toChangeset(): array
     {
-        return array_filter($this->toArray(), fn($v) => $v !== null);
+        return array_filter($this->toArray(), fn($v) => $v !== '');
     }
 }

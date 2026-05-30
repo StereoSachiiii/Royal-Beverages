@@ -43,6 +43,10 @@ class Session {
         return $_SESSION[$key] ?? $default;
     }
 
+    public function remove(string $key): void {
+        unset($_SESSION[$key]);
+    }
+
     public function has(string $key) {
         return isset($_SESSION[$key]);
     }
@@ -56,7 +60,7 @@ class Session {
     public function login(array $userData) {
         session_regenerate_id(true); // prevent fixation
 
-        $_SESSION['user_id'] = $userData['user_id'];
+        $_SESSION['user_id'] = $userData['id'];
         $_SESSION['name'] = $userData['name'];
         $_SESSION['email'] = $userData['email'] ?? null;
         $_SESSION['logged_in'] = true;

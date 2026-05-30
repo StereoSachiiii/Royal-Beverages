@@ -278,10 +278,7 @@ public function getDashboardStats(): array
 
     return $cache;
 }
-    private function getStat(string $sql): int
-    {
-        return (int)$this->pdo->query($sql)->fetchColumn();
-    }
+
 
     private function validateEntity(string $entity): void
     {

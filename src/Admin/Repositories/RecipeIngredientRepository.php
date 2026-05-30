@@ -7,6 +7,7 @@ use PDO;
 use App\Admin\Models\RecipeIngredientModel;
 use App\Admin\Exceptions\NotFoundException;
 use App\Admin\Exceptions\DatabaseException;
+use Exception;
 
 class RecipeIngredientRepository extends BaseRepository
 {

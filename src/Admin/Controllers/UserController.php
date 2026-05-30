@@ -34,7 +34,7 @@ class UserController extends BaseController
             $user = $this->service->register($data);
 
             $this->session->login([
-                'user_id'  => $user['id'],
+                'id'       => $user['id'],
                 'name'     => $user['name'],
                 'email'    => $user['email'],
                 'is_admin' => $user['is_admin'] ?? false,
@@ -50,7 +50,7 @@ class UserController extends BaseController
             $user = $this->service->login($data);
 
             $this->session->login([
-                'user_id'  => $user['id'],
+                'id'       => $user['id'],
                 'name'     => $user['name'],
                 'email'    => $user['email'],
                 'is_admin' => $user['is_admin'] ?? false,
@@ -163,7 +163,7 @@ class UserController extends BaseController
              $user = $this->service->handleGoogleOAuth($googleProfile);
              
              $this->session->login([
-                 'user_id'  => $user['id'],
+                 'id'       => $user['id'],
                  'name'     => $user['name'],
                  'email'    => $user['email'],
                  'is_admin' => $user['is_admin'] ?? false,

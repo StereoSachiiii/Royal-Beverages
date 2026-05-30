@@ -11,14 +11,18 @@ use App\Admin\Middleware\AuthMiddleware;
 use App\Admin\Middleware\CSRFMiddleware;
 use App\Core\Router;
 
-
-// Guard against direct access - must be loaded via router
-if (!isset($router)) {
-    header('Content-Type: application/json');
+if (!defined('ROOT_PATH')) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Direct access not allowed.']);
     exit;
 }
+
+/** @var \App\Core\Router $router */
+
+
+/** @var Router $router */
+
+
+
 
 $router->group('/api/v1', function (Router $router): void {
     // GET /api/v1/order-items (with optional filters)

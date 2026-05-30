@@ -1,250 +1,16 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Class App\\Admin\\Middleware\\CSRFMiddleware referenced with incorrect case\: App\\Admin\\Middleware\\CsrfMiddleware\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: src/Admin/API/Routes/AddressRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/CartItemRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/CartRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/CategoryRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/CocktailRecipeRoutes.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between true and true will always evaluate to true\.$#'
 			identifier: identical.alwaysTrue
 			count: 1
 			path: src/Admin/API/Routes/FeedbackRoutes.php
 
 		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/FlavorProfileRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/ImageRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/OrderRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/PaymentRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/ProductRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/RecipeIngredientRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/RecommendationRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/StockRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/UserRoutes.php
-
-		-
-			message: '#^Variable \$router might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Admin/API/Routes/WishlistRoutes.php
-
-		-
-			message: '#^Instantiated class App\\Admin\\Controllers\\ValidationException not found\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Admin/Controllers/ImageController.php
-
-		-
-			message: '#^Throwing object of an unknown class App\\Admin\\Controllers\\ValidationException\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Admin/Controllers/ImageController.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Controllers\\UserController\:\:error\(\)\.$#'
-			identifier: method.notFound
-			count: 6
-			path: src/Admin/Controllers/UserController.php
-
-		-
-			message: '#^Parameter \#1 \$userData of method App\\Core\\Session\:\:login\(\) expects array\{id\: int, name\: string, email\: string\|null, is_admin\: bool\|null\}, array\{user_id\: mixed, name\: mixed, email\: mixed, is_admin\: mixed\} given\.$#'
-			identifier: argument.type
-			count: 3
-			path: src/Admin/Controllers/UserController.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$code with type int\|null is not subtype of native type int\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/DuplicateEmailException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$context with type array\<string, string\|null\>\|null is not subtype of native type array\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/DuplicateEmailException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$message with type string\|null is not subtype of native type string\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/DuplicateEmailException.php
-
-		-
-			message: '#^PHPDoc tag @param has invalid value \(\?Throwable\|null \$previous\)\: Unexpected token "\|", expected variable at offset 258 on line 6$#'
+			message: '#^PHPDoc tag @param has invalid value \(\?Throwable\|null \$previous\)\: Unexpected token "\|", expected variable at offset 255 on line 6$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: src/Admin/Exceptions/DuplicateEmailException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$code with type int\|null is not subtype of native type int\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/NotFoundException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$context with type array\<string, string\|null\>\|null is not subtype of native type array\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/NotFoundException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$message with type string\|null is not subtype of native type string\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/NotFoundException.php
-
-		-
-			message: '#^Variable \$code on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Admin/Exceptions/NotFoundException.php
-
-		-
-			message: '#^Variable \$context on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Admin/Exceptions/NotFoundException.php
-
-		-
-			message: '#^Variable \$message on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Admin/Exceptions/NotFoundException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$code with type int\|null is not subtype of native type int\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/ValidationException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$context with type array\<string, string\|null\>\|null is not subtype of native type array\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/ValidationException.php
-
-		-
-			message: '#^PHPDoc tag @param for parameter \$message with type string\|null is not subtype of native type string\.$#'
-			identifier: parameter.phpDocType
-			count: 1
-			path: src/Admin/Exceptions/ValidationException.php
-
-		-
-			message: '#^Variable \$code on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Admin/Exceptions/ValidationException.php
-
-		-
-			message: '#^Variable \$context on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Admin/Exceptions/ValidationException.php
-
-		-
-			message: '#^Variable \$message on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Admin/Exceptions/ValidationException.php
-
-		-
-			message: '#^Call to an undefined method App\\Core\\Session\:\:remove\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Middleware/RateLimitMiddleware.php
-
-		-
-			message: '#^If condition is always true\.$#'
-			identifier: if.alwaysTrue
-			count: 1
-			path: src/Admin/Middleware/RateLimitMiddleware.php
-
-		-
-			message: '#^Static property App\\Admin\\Middleware\\RateLimitMiddleware\:\:\$redis \(Redis\|null\) does not accept false\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Admin/Middleware/RateLimitMiddleware.php
-
-		-
-			message: '#^Call to an undefined static method App\\Core\\Database\:\:getInstance\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: src/Admin/Models/UserPreferenceModel.php
-
-		-
-			message: '#^Method App\\Admin\\Repositories\\AdminViewRepository\:\:getStat\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: src/Admin/Repositories/AdminViewRepository.php
 
 		-
 			message: '#^Ternary operator condition is always true\.$#'
@@ -253,94 +19,10 @@ parameters:
 			path: src/Admin/Repositories/ProductRepository.php
 
 		-
-			message: '#^Call to method getMessage\(\) on an unknown class App\\Admin\\Repositories\\Exception\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Admin/Repositories/RecipeIngredientRepository.php
-
-		-
-			message: '#^Caught class App\\Admin\\Repositories\\Exception not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Admin/Repositories/RecipeIngredientRepository.php
-
-		-
 			message: '#^Parameter \#3 \$value of function curl_setopt expects bool, int given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Admin/Services/AIRecommendationService.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Repositories\\AdminViewRepository\:\:getInventoryReport\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Services/AdminViewService.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Repositories\\AdminViewRepository\:\:getOrderStats\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Services/AdminViewService.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Repositories\\AdminViewRepository\:\:getRecentOrders\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Services/AdminViewService.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Repositories\\AdminViewRepository\:\:getSalesReport\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Services/AdminViewService.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Repositories\\AdminViewRepository\:\:getTopProducts\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Services/AdminViewService.php
-
-		-
-			message: '#^Call to an undefined method App\\Admin\\Repositories\\AdminViewRepository\:\:getUserReport\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Admin/Services/AdminViewService.php
-
-		-
-			message: '#^Call to method file\(\) on an unknown class App\\Admin\\Services\\finfo\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Admin/Services/ImageService.php
-
-		-
-			message: '#^Instantiated class App\\Admin\\Services\\InvalidArgumentException not found\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Admin/Services/ImageService.php
-
-		-
-			message: '#^Instantiated class App\\Admin\\Services\\RuntimeException not found\.$#'
-			identifier: class.notFound
-			count: 6
-			path: src/Admin/Services/ImageService.php
-
-		-
-			message: '#^Instantiated class App\\Admin\\Services\\finfo not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Admin/Services/ImageService.php
-
-		-
-			message: '#^Throwing object of an unknown class App\\Admin\\Services\\InvalidArgumentException\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Admin/Services/ImageService.php
-
-		-
-			message: '#^Throwing object of an unknown class App\\Admin\\Services\\RuntimeException\.$#'
-			identifier: class.notFound
-			count: 6
-			path: src/Admin/Services/ImageService.php
 
 		-
 			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
@@ -355,16 +37,16 @@ parameters:
 			path: src/Admin/Services/RecipeIngredientService.php
 
 		-
-			message: '#^Call to an undefined method App\\DTO\\Requests\\UpdateStockRequest\:\:toChangeset\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: src/Admin/Services/StockService.php
-
-		-
 			message: '#^Negated boolean expression is always false\.$#'
 			identifier: booleanNot.alwaysFalse
 			count: 1
 			path: src/Admin/Services/UserService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: src/Core/Autoloader.php
 
 		-
 			message: '#^Parameter \#1 \$callback of function spl_autoload_register expects \(callable\(string\)\: void\)\|null, array\{\$this\(App\\Core\\Autoloader\), ''loadClass''\} given\.$#'
@@ -397,12 +79,6 @@ parameters:
 			path: src/Core/Router.php
 
 		-
-			message: '#^Offset ''user_id'' does not exist on array\{id\: int, name\: string, email\: string\|null, is_admin\: bool\|null\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Core/Session.php
-
-		-
 			message: '#^Property App\\Core\\Session\:\:\$csrf in isset\(\) is not nullable nor uninitialized\.$#'
 			identifier: isset.initializedProperty
 			count: 1
@@ -413,18 +89,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/DIContainer/Autoloader.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: src/DTO/Requests/UpdateOrderItemRequest.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: src/DTO/Requests/UpdateUserRequest.php
 
 		-
 			message: '#^Property App\\Validation\\Rules\\MaxRule\:\:\$max \(float\|int\) is never assigned int so it can be removed from the property type\.$#'

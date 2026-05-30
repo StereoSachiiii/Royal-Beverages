@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace App\Admin\Services;
 
+use finfo;
+use RuntimeException;
+use InvalidArgumentException;
+
 class ImageService
 {
     private string $baseDir;

@@ -10,9 +10,9 @@ class DuplicateEmailException extends BaseException {
 
     /**
      * Summary of __construct
-     * @param ?string $message the string message
-     * @param ?array{field?:string|null,value?:string|null} $context  field,value assosiative array
-     * @param ?int $code       response code
+     * @param string $message the string message
+     * @param array{field?:string|null,value?:string|null} $context  field,value assosiative array
+     * @param int $code       response code
      * @param ?Throwable|null $previous
      */
     public function __construct(

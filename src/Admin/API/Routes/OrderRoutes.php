@@ -11,6 +11,16 @@ use App\Admin\Middleware\AuthMiddleware;
 use App\Admin\Middleware\CSRFMiddleware;
 use App\Core\Router;
 
+if (!defined('ROOT_PATH')) {
+    http_response_code(400);
+    exit;
+}
+
+/** @var \App\Core\Router $router */
+
+
+/** @var Router $router */
+
 
 $router->group('/api/v1', function (Router $router): void {
     // Admin list of all orders (with optional search)

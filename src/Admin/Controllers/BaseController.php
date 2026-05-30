@@ -50,6 +50,20 @@ abstract class BaseController
     }
 
     /**
+     * Helper to build a standard error response array.
+     */
+    protected function error(string $message, int $code = 400, ?array $details = null): array
+    {
+        return [
+            'success' => false,
+            'message' => $message,
+            'data'    => null,
+            'errors'  => $details ? [$details] : [],
+            'code'    => $code,
+        ];
+    }
+
+    /**
      * Helper for paginated responses.
      */
     protected function paginated(

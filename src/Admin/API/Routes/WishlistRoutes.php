@@ -5,6 +5,16 @@ namespace App\Admin\API\Routes;
 
 use App\Core\Request;
 use App\Core\Router;
+
+if (!defined('ROOT_PATH')) {
+    http_response_code(400);
+    exit;
+}
+
+/** @var \App\Core\Router $router */
+
+
+/** @var Router $router */
 use App\Admin\Controllers\WishlistController;
 use App\Admin\Middleware\AuthMiddleware;
 use App\Admin\Middleware\RateLimitMiddleware;

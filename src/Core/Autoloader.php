@@ -22,7 +22,7 @@ class Autoloader
      */
     public function register(): void
     {
-        spl_autoload_register([$this, 'loadClass']);
+        spl_autoload_register([$this, 'loadClass'] ?? null);
     }
 
     /**

@@ -9,7 +9,7 @@ class UserPreferenceModel {
     private $db;
     
     public function __construct() {
-        $this->db = Database::getInstance();
+        $this->db = $GLOBALS['container']->get(\App\Core\Database::class);
     }
     
     public function findById($id) {

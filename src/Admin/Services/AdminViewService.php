@@ -17,35 +17,7 @@ class AdminViewService
         return $this->repo->getDashboardStats();
     }
 
-    public function getSalesReport(array $filters = []): array
-    {
-        return $this->repo->getSalesReport($filters);
-    }
 
-    public function getInventoryReport(array $filters = []): array
-    {
-        return $this->repo->getInventoryReport($filters);
-    }
-
-    public function getUserReport(array $filters = []): array
-    {
-        return $this->repo->getUserReport($filters);
-    }
-
-    public function getOrderStats(array $filters = []): array
-    {
-        return $this->repo->getOrderStats($filters);
-    }
-
-    public function getTopProducts(int $limit = 10): array
-    {
-        return $this->repo->getTopProducts($limit);
-    }
-
-    public function getRecentOrders(int $limit = 10): array
-    {
-        return $this->repo->getRecentOrders($limit);
-    }
 
     /**
      * Generic detail view for an entity (used by admin modals)
