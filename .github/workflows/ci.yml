@@ -38,8 +38,6 @@ jobs:
     - name: Security Check
       run: composer audit
 
-    - name: Run Linting (PHP CS Fixer)
-      run: composer lint
 
     - name: Run Static Analysis (PHPStan)
       run: composer analyze

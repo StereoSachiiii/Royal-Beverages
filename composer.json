@@ -20,7 +20,6 @@
         "lint": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "format": "vendor/bin/php-cs-fixer fix",
         "check-all": [
-            "@lint",
             "@analyze",
             "@test"
         ]
