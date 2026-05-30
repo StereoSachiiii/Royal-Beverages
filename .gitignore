@@ -40,3 +40,4 @@ config/constants.php
 ideas
 .phpunit.cache/
 scratch/
+.php-cs-fixer.cache
