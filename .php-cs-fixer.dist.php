@@ -12,7 +12,7 @@ return (new PhpCsFixer\Config())
         'array_syntax' => ['syntax' => 'short'],
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'no_unused_imports' => true,
-        'declare_strict_types' => true,
+        'declare_strict_types' => false,
     ])
     ->setRiskyAllowed(true)
     ->setFinder($finder);
