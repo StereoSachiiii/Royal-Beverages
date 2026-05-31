@@ -1,7 +1,7 @@
 # Royal Beverages — E-Commerce Platform
 
 An e-commerce platform built with Vanilla PHP 8.2 and JavaScript. No frameworks.
-Custom MVC architecture, Reflection-based DI container, regex router, multi-warehouse stock engine.
+Custom MVC, Reflection-based DI container, regex router, multi-warehouse stock.
 
 For the full technical breakdown, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -9,7 +9,7 @@ For the full technical breakdown, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Key Features
 
-- **Custom-Built MVC Engine**: Modern PHP architecture implemented from scratch without external frameworks.
+- **Custom-Built MVC **: Modern PHP architecture implemented from scratch without external frameworks.
 - **Automated Dependency Injection**: Reflection-based DI container for automatic class wiring.
 - **Multi-Warehouse Stock Engine**: Robust FIFO inventory management with row-level locking.
 - **Admin SPA Dashboard**: A high-performance, framework-less Single Page Application for management.
@@ -66,40 +66,10 @@ Routes are automatically discovered and loaded dynamically via `glob()` scanning
 - **Passwords**: BCrypt via `password_hash()`.
 - **SQL**: Prepared statements everywhere.
 
-## Deployment (AWS / Heroku)
-
-### Environment Variables
-The application requires the following environment variables to be set in production:
-- `DB_HOST`: PostgreSQL database host (e.g. RDS endpoint)
-- `DB_PORT`: PostgreSQL port (e.g. 5432)
-- `DB_NAME`: Database name
-- `DB_USER`: Database user
-- `DB_PASS`: Database password
-- `APP_ENV`: Set to `production`
-- `REDIS_HOST` & `REDIS_PORT`: (Optional) For scalable rate limiting
-
-### Database Migration Strategy
-For initial deployment or disaster recovery:
-1. Initialize the schema using `database/schema.sql`.
-2. Populate the initial configuration and roles using `database/seed_data.sql`.
-*(Note: Automated migrations can be configured by executing these scripts via a pre-deploy hook or CD pipeline).*
-
-### Heroku Deployment
-1. Set the buildpack to `heroku/php`.
-2. Provision a `Heroku Postgres` add-on.
-3. Heroku automatically sets the `DATABASE_URL`. The `Database.php` wrapper should parse it to `DB_HOST`, `DB_USER`, etc., or manually set the environment variables via Heroku Config Vars.
-4. Push code via `git push heroku main`.
-
-### AWS Deployment
-1. Use **Elastic Beanstalk** (PHP platform) or **ECS** with Docker.
-2. Provision an **RDS PostgreSQL** instance.
-3. Configure Environment Properties in Elastic Beanstalk for the required `DB_*` variables.
-4. Deploy the source bundle.
 
 ## Screenshots
 
-<details>
-<summary>Click to view screenshots</summary>
+
 
 <img src="docs/images/image.png" width="800" />
 <img src="docs/images/image copy.png" width="800" />
