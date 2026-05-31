@@ -166,7 +166,8 @@ $csrfToken = $session->getCsrfInstance()->getToken();
             const email = formData.get('email');
             const password = formData.get('password');
 
-            loginMessage.style.display = 'none';
+            loginMessage.classList.add('hidden');
+            loginMessage.style.display = '';
 
             try {
                 const apiUrl = '<?= rtrim(API_BASE_URL, "/") ?>/users/login';
@@ -194,7 +195,7 @@ $csrfToken = $session->getCsrfInstance()->getToken();
 
             } catch (err) {
                 loginMessage.textContent = err.message;
-                loginMessage.style.display = 'block';
+                loginMessage.classList.remove('hidden');
             }
         });
 
@@ -218,7 +219,7 @@ $csrfToken = $session->getCsrfInstance()->getToken();
                 }
             } catch (err) {
                 loginMessage.textContent = 'OAuth setup error: ' + err.message;
-                loginMessage.style.display = 'block';
+                loginMessage.classList.remove('hidden');
             }
         });
     </script>

@@ -5,14 +5,12 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import {
-  apiRequest,
+import { getImageUrl, apiRequest,
   escapeHtml,
   formatDate,
   formatNumber,
   getTemplate,
-  closeModal,
-} from '../../utils.js';
+  closeModal, } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 import { uploadImage } from '../../FormHelpers.js';
 
@@ -54,7 +52,7 @@ function renderRow(war) {
     : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 rounded-none">Inactive</span>`;
 
   const image = war.image_url
-    ? `<img src="${escapeHtml(war.image_url)}" class="w-8 h-8 object-cover border border-gray-100 rounded-sm flex-shrink-0" alt="${escapeHtml(war.name)}">`
+    ? `<img src="${escapeHtml(getImageUrl(war.image_url))}" class="w-8 h-8 object-cover border border-gray-100 rounded-sm flex-shrink-0" alt="${escapeHtml(war.name)}">`
     : `<div class="w-8 h-8 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs flex-shrink-0">🏢</div>`;
 
   const stock = war.available_stock ?? 0;
@@ -115,7 +113,7 @@ function renderViewModal(war) {
         <div class="flex flex-col" style="gap:24px;">
             <div class="flex items-center justify-between" style="padding-bottom:16px;border-bottom:1px solid var(--slate-100);">
                 <div class="flex items-center" style="gap:16px;">
-                    ${war.image_url ? `<img src="${escapeHtml(war.image_url)}" class="thumb-xl rounded-2xl border shadow-md" alt="${escapeHtml(war.name)}">` : `<div class="thumb-xl rounded-2xl bg-slate-50 border flex items-center justify-center text-3xl shadow-sm">🏢</div>`}
+                    ${war.image_url ? `<img src="${escapeHtml(getImageUrl(war.image_url))}" class="thumb-xl rounded-2xl border shadow-md" alt="${escapeHtml(war.name)}">` : `<div class="thumb-xl rounded-2xl bg-slate-50 border flex items-center justify-center text-3xl shadow-sm">🏢</div>`}
                     <div>
                          <h3 class="font-bold text-black" style="font-size:22px;letter-spacing:-0.02em;">${escapeHtml(war.name)}</h3>
                          <div style="margin-top:6px;">

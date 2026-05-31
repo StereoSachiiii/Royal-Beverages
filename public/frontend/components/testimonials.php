@@ -1,7 +1,7 @@
 <?php
 use App\Admin\Repositories\FeedbackRepository;
 
-$feedbackRepo = new FeedbackRepository();
+$feedbackRepo = new FeedbackRepository(\App\Core\Database::getPdo());
 $testimonials = $feedbackRepo->getTopTestimonials(3);
 
 if (empty($testimonials)) {

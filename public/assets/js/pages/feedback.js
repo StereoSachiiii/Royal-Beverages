@@ -153,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Check login
-    const userId = document.body.dataset.userId;
+    const mainEl = document.querySelector('main[data-user-id]');
+    const userId = mainEl ? mainEl.dataset.userId : null;
     if (!userId || userId === 'null') {
       showToast('Please log in to submit reviews', 'error');
       return;

@@ -5,7 +5,7 @@
 
 import { API_ROUTES } from '../../dashboard.routes.js';
 import { AdminAPI } from '../../admin-api.js';
-import { escapeHtml, formatCurrency, formatNumber, formatDate, getTemplate } from '../../utils.js';
+import { getImageUrl, escapeHtml, formatCurrency, formatNumber, formatDate, getTemplate } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchProducts(limit = 20, offset = 0, query = '') {
@@ -52,7 +52,7 @@ function renderRow(p) {
     : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 rounded-none">Out of Stock</span>`;
 
   const imgHtml = p.image_url
-    ? `<img src="${escapeHtml(p.image_url)}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(p.name)}">`
+    ? `<img src="${escapeHtml(getImageUrl(p.image_url))}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(p.name)}">`
     : `<div class="w-10 h-10 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs">🍾</div>`;
 
   return `
@@ -101,7 +101,7 @@ function renderViewModal(p) {
     : `<span class="inline-flex items-center px-3 py-1 text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 rounded-full">Out of Stock</span>`;
 
   const imgHtml = p.image_url
-    ? `<img src="${escapeHtml(p.image_url)}" class="w-32 h-32 object-cover border border-gray-100 shadow-sm" alt="${escapeHtml(p.name)}">`
+    ? `<img src="${escapeHtml(getImageUrl(p.image_url))}" class="w-32 h-32 object-cover border border-gray-100 shadow-sm" alt="${escapeHtml(p.name)}">`
     : `<div class="w-32 h-32 bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl shadow-sm">🍾</div>`;
 
   return `

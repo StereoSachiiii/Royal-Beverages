@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES } from '../../dashboard.routes.js';
-import { escapeHtml, formatDate, getTemplate, apiRequest } from '../../utils.js';
+import { getImageUrl, escapeHtml, formatDate, getTemplate, apiRequest } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchUser(id) {
@@ -23,7 +23,7 @@ function renderRow(u) {
     ? `<span class="badge badge-warning">Admin</span>`
     : `<span class="badge badge-info">User</span>`;
   const avatar = u.profile_image_url
-    ? `<img src="${escapeHtml(u.profile_image_url)}" class="thumb-md rounded-full border shadow-sm" alt="${escapeHtml(u.name || '')}" style="flex-shrink:0;">`
+    ? `<img src="${escapeHtml(getImageUrl(u.profile_image_url))}" class="thumb-md rounded-full border shadow-sm" alt="${escapeHtml(u.name || '')}" style="flex-shrink:0;">`
     : `<div class="thumb-md rounded-full bg-slate-100 border flex items-center justify-center font-bold text-slate-400" style="flex-shrink:0;font-size:14px;">${escapeHtml((u.name || 'U')[0].toUpperCase())}</div>`;
 
   return `<tr class="tr group hover:bg-gray-50/50 transition-colors">
@@ -84,7 +84,7 @@ function renderViewModal(u) {
       : `<tr class="tr"><td colspan="3" class="td text-center text-slate-400" style="padding:20px;font-style:italic;">No recent orders</td></tr>`;
 
   const avatar = u.profile_image_url
-    ? `<img src="${escapeHtml(u.profile_image_url)}" class="thumb-xl rounded-full border shadow-md" alt="${escapeHtml(u.name || '')}">`
+    ? `<img src="${escapeHtml(getImageUrl(u.profile_image_url))}" class="thumb-xl rounded-full border shadow-md" alt="${escapeHtml(u.name || '')}">`
     : `<div class="thumb-xl rounded-full bg-slate-100 border flex items-center justify-center font-bold text-slate-400" style="font-size:32px;">${escapeHtml((u.name || 'U')[0].toUpperCase())}</div>`;
 
   return `

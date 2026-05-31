@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import { getImageUrl, apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchCartItems(limit = 20, offset = 0, query = '') {
@@ -111,7 +111,7 @@ function renderViewModal(it) {
                     <div class="google-card" style="padding:20px;background:var(--slate-50);">
                          <div class="text-slate-400 font-bold uppercase" style="font-size:9px;letter-spacing:0.1em;margin-bottom:12px;">Product</div>
                          <div class="flex items-center" style="gap:16px;">
-                             ${it.product_image ? `<img src="${it.product_image}" class="thumb-xl rounded-2xl border shadow-sm bg-white" alt="${escapeHtml(it.product_name)}">` : `<div class="thumb-xl rounded-2xl bg-white border flex items-center justify-center text-3xl shadow-sm">📦</div>`}
+                             ${it.product_image ? `<img src="${escapeHtml(getImageUrl(it.product_image))}" class="thumb-xl rounded-2xl border shadow-sm bg-white" alt="${escapeHtml(it.product_name)}">` : `<div class="thumb-xl rounded-2xl bg-white border flex items-center justify-center text-3xl shadow-sm">📦</div>`}
                              <div>
                                 <div class="font-bold text-black" style="font-size:18px;line-height:1.2;">${escapeHtml(it.product_name)}</div>
                                 <div class="text-xs text-slate-500 font-mono mt-1">ID: #${it.product_id}</div>

@@ -12,7 +12,7 @@ $userId = $session->get('user_id');
 
 // Use repository directly for initial load (following index page pattern)
 use App\Admin\Repositories\FeedbackRepository;
-$feedbackRepo = new FeedbackRepository();
+$feedbackRepo = new FeedbackRepository(\App\Core\Database::getPdo());
 $initialFeedback = $feedbackRepo->getAllPaginated(12, 0, true);
 ?>
 

@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import { getImageUrl, apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 import { uploadImage } from '../../FormHelpers.js';
 
@@ -37,7 +37,7 @@ function renderRow(cat) {
     : `<span class="inline-flex items-center px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-400 rounded-none">Inactive</span>`;
 
   const imgHtml = cat.image_url
-    ? `<img src="${escapeHtml(cat.image_url)}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(cat.name)}">`
+    ? `<img src="${escapeHtml(getImageUrl(cat.image_url))}" class="w-10 h-10 object-cover border border-gray-100" alt="${escapeHtml(cat.name)}">`
     : `<div class="w-10 h-10 bg-gray-50 border border-gray-100 flex items-center justify-center text-xs">🏷️</div>`;
 
   return `
@@ -103,7 +103,7 @@ function renderViewModal(cat) {
             <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
                 ${
                   cat.image_url
-                    ? `<img src="${escapeHtml(cat.image_url)}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;" alt="${escapeHtml(cat.name)}">`
+                    ? `<img src="${escapeHtml(getImageUrl(cat.image_url))}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;" alt="${escapeHtml(cat.name)}">`
                     : `<div style="width:80px;height:80px;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:32px;">🏷️</div>`
                 }
                 <div>

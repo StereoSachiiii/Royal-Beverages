@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, getTemplate, closeModal } from '../../utils.js';
+import { getImageUrl, apiRequest, escapeHtml, getTemplate, closeModal } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchFlavorProfiles(limit = 20, offset = 0, query = '') {
@@ -54,7 +54,7 @@ function renderRow(p) {
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(p.product_id))}</td>
         <td class="px-6 py-4">
             <div class="flex items-center" style="gap:10px;">
-                ${p.product_image_url ? `<img src="${p.product_image_url}" class="w-8 h-8 object-cover border rounded-sm">` : `<div class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-sm border text-sm">🍶</div>`}
+                ${p.product_image_url ? `<img src="${escapeHtml(getImageUrl(p.product_image_url))}" class="w-8 h-8 object-cover border rounded-sm">` : `<div class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-sm border text-sm">🍶</div>`}
                 <div>
                     <div class="font-bold text-black" style="font-size:13px;">${escapeHtml(p.product_name || 'Individual Profile')}</div>
                     <div class="text-slate-400 font-mono" style="font-size:10px;">${escapeHtml(p.product_slug)}</div>
@@ -104,7 +104,7 @@ function renderViewModal(p) {
   return `
         <div class="flex flex-col" style="gap:24px; padding:8px;">
             <div class="flex items-center" style="gap:20px;padding-bottom:20px;border-bottom:1px solid var(--slate-100);">
-                ${p.product_image_url ? `<img src="${p.product_image_url}" class="thumb-xl rounded-2xl border shadow-sm" style="width:100px;height:100px;object-fit:cover;">` : `<div class="thumb-xl rounded-2xl bg-slate-50 flex items-center justify-center text-4xl border" style="width:100px;height:100px;">🍶</div>`}
+                ${p.product_image_url ? `<img src="${escapeHtml(getImageUrl(p.product_image_url))}" class="thumb-xl rounded-2xl border shadow-sm" style="width:100px;height:100px;object-fit:cover;">` : `<div class="thumb-xl rounded-2xl bg-slate-50 flex items-center justify-center text-4xl border" style="width:100px;height:100px;">🍶</div>`}
                 <div style="flex:1;">
                     <h3 class="font-bold text-black" style="font-size:26px;letter-spacing:-0.03em;">${escapeHtml(p.product_name)}</h3>
                     <div class="flex items-center" style="gap:10px;margin-top:4px;">

@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import { getImageUrl, apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 import { initImageUpload } from '../../FormHelpers.js';
 
@@ -47,7 +47,7 @@ function renderRow(r) {
         <td class="px-6 py-4 text-[10px] font-bold text-gray-300 font-mono whitespace-nowrap">#${escapeHtml(String(r.id))}</td>
         <td class="px-6 py-4">
             <div class="flex items-center" style="gap:10px;">
-                ${r.image_url ? `<img src="${r.image_url}" class="w-8 h-8 object-cover border rounded-sm">` : `<div class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-sm border text-sm">🍸</div>`}
+                ${r.image_url ? `<img src="${escapeHtml(getImageUrl(r.image_url))}" class="w-8 h-8 object-cover border rounded-sm">` : `<div class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-sm border text-sm">🍸</div>`}
                 <div class="font-bold text-black" style="font-size:13px;">${escapeHtml(r.name || 'Untitled')}</div>
             </div>
         </td>
@@ -100,7 +100,7 @@ function renderViewModal(r) {
         <div class="flex flex-col" style="gap:24px; padding:8px;">
             <div class="flex items-start justify-between" style="padding-bottom:20px;border-bottom:1px solid var(--slate-100);">
                 <div class="flex" style="gap:20px;">
-                    ${r.image_url ? `<img src="${r.image_url}" class="thumb-xl rounded-2xl border shadow-sm" style="width:120px;height:120px;object-fit:cover;">` : `<div class="thumb-xl rounded-2xl bg-slate-50 flex items-center justify-center text-5xl border border-dashed" style="width:120px;height:120px;">🍸</div>`}
+                    ${r.image_url ? `<img src="${escapeHtml(getImageUrl(r.image_url))}" class="thumb-xl rounded-2xl border shadow-sm" style="width:120px;height:120px;object-fit:cover;">` : `<div class="thumb-xl rounded-2xl bg-slate-50 flex items-center justify-center text-5xl border border-dashed" style="width:120px;height:120px;">🍸</div>`}
                     <div>
                         <h3 class="font-bold text-black" style="font-size:28px;letter-spacing:-0.03em;line-height:1.1;">${escapeHtml(r.name)}</h3>
                         <div class="flex items-center" style="gap:10px;margin-top:8px;">
