@@ -95,3 +95,32 @@ For initial deployment or disaster recovery:
 2. Provision an **RDS PostgreSQL** instance.
 3. Configure Environment Properties in Elastic Beanstalk for the required `DB_*` variables.
 4. Deploy the source bundle.
+
+## Screenshots
+
+<details>
+<summary>Click to view screenshots</summary>
+
+<img src="docs/images/image.png" width="800" />
+<img src="docs/images/image copy.png" width="800" />
+<img src="docs/images/image copy 2.png" width="800" />
+<img src="docs/images/image copy 3.png" width="800" />
+<img src="docs/images/image copy 4.png" width="800" />
+<img src="docs/images/image copy 5.png" width="800" />
+<img src="docs/images/image copy 6.png" width="800" />
+<img src="docs/images/image copy 7.png" width="800" />
+<img src="docs/images/image copy 8.png" width="800" />
+<img src="docs/images/image copy 9.png" width="800" />
+<img src="docs/images/image copy 10.png" width="800" />
+<img src="docs/images/image copy 11.png" width="800" />
+<img src="docs/images/image copy 12.png" width="800" />
+<img src="docs/images/image copy 13.png" width="800" />
+<img src="docs/images/image copy 14.png" width="800" />
+<img src="docs/images/image copy 15.png" width="800" />
+<img src="docs/images/image copy 16.png" width="800" />
+<img src="docs/images/image copy 17.png" width="800" />
+<img src="docs/images/image copy 18.png" width="800" />
+<img src="docs/images/image copy 19.png" width="800" />
+<img src="docs/images/image copy 20.png" width="800" />
+
+</details>

@@ -14,6 +14,7 @@ $pageName = $pageName ?? 'home';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Royal Beverages - Premium spirits and fine wines">
+    <meta name="csrf-token" content="<?= htmlspecialchars($session->getCsrfInstance()->getToken()) ?>">
     <title><?= $pageTitle ?? 'Royal Beverages - Premium Spirits' ?></title>
     <link rel="icon" type="image/png" href="<?= ASSET_URL ?>images/favicon.webp">
     

@@ -11,8 +11,8 @@ module.exports = {
     extend: {
       colors: {
         gold: {
-          DEFAULT: '#000000', 
-          glow: 'rgba(0, 0, 0, 0.05)',
+          DEFAULT: '#d4af37', 
+          glow: 'rgba(212, 175, 55, 0.05)',
         },
         gray: {
           950: '#0a0a0a',

@@ -9,7 +9,7 @@ class MinRule implements RuleInterface
 {
     private float $min;
 
-    public function __construct(float $min)
+    public function __construct(float|string|int $min)
     {
         $this->min = (float)$min;
     }
