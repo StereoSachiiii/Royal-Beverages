@@ -100,7 +100,8 @@ $router->group('/api/v1', function (Router $router): void {
     
     })->middleware([
         new CSRFMiddleware(),
-        new RateLimitMiddleware('order_create', 5, 60)
+        new RateLimitMiddleware('order_create', 5, 60),
+        new \App\Admin\Middleware\IdempotencyMiddleware($GLOBALS['container']->get(\App\Admin\Repositories\IdempotencyRepository::class))
     ]);
 
     // Cancel order (action endpoint)

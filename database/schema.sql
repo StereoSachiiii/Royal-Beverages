@@ -559,3 +559,36 @@ GROUP BY DATE(created_at)
 ORDER BY order_date DESC;
 
 CREATE UNIQUE INDEX idx_mvw_daily_revenue_date ON mvw_daily_revenue(order_date);
+
+CREATE TABLE idempotency_keys (
+    key             VARCHAR(64) PRIMARY KEY,
+    endpoint        VARCHAR(128) NOT NULL,
+    response_body   JSONB NOT NULL,
+    status_code     INT NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_idempotency_created ON idempotency_keys(created_at);
+
+CREATE TABLE jobs (
+    id          BIGSERIAL PRIMARY KEY,
+    job_type    VARCHAR(64) NOT NULL,
+    payload     JSONB NOT NULL,
+    status      VARCHAR(16) DEFAULT 'pending',
+    attempts    INT DEFAULT 0,
+    run_at      TIMESTAMPTZ DEFAULT NOW(),
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_jobs_pending ON jobs(run_at) WHERE status = 'pending';
+
+ALTER TABLE products ADD COLUMN search_vector tsvector
+    GENERATED ALWAYS AS (to_tsvector('english', name || ' ' || COALESCE(description, ''))) STORED;
+DROP INDEX IF EXISTS idx_products_fts;
+CREATE INDEX idx_products_search ON products USING GIN(search_vector);
+
+CREATE TABLE webhook_subscriptions (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    url         TEXT NOT NULL,
+    event_types TEXT[] NOT NULL,
+    secret      VARCHAR(64) NOT NULL,
+    is_active   BOOLEAN DEFAULT TRUE
+);

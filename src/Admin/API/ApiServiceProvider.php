@@ -29,6 +29,8 @@ use App\Admin\Repositories\UserPreferenceRepository;
 use App\Admin\Repositories\WishlistRepository;
 use App\Admin\Repositories\AdminViewRepository;
 use App\Admin\Repositories\UserRepository;
+use App\Admin\Repositories\IdempotencyRepository;
+use App\Admin\Repositories\JobRepository;
 
 // Services
 use App\Admin\Services\ProductService;
@@ -75,6 +77,8 @@ use App\Admin\Controllers\WishlistController;
 use App\Admin\Controllers\RecommendationController;
 use App\Admin\Controllers\AdminViewController;
 use App\Admin\Controllers\UserController;
+use App\Admin\Controllers\OAuthController;
+use App\Admin\Controllers\StripeWebhookController;
 
 /**
  * ApiServiceProvider
@@ -131,6 +135,8 @@ class ApiServiceProvider extends ServiceProvider
             WishlistRepository::class,
             AdminViewRepository::class,
             UserRepository::class,
+            IdempotencyRepository::class,
+            JobRepository::class,
         ];
     }
 
@@ -185,6 +191,8 @@ class ApiServiceProvider extends ServiceProvider
             RecommendationController::class,
             AdminViewController::class,
             UserController::class,
+            OAuthController::class,
+            StripeWebhookController::class,
         ];
     }
 }

@@ -19,6 +19,7 @@ class OrderService
         private OrderItemService $itemService,
         private StockService $stockService,
         private \App\Core\Database $db,
+        private ?\App\Admin\Repositories\JobRepository $jobRepo = null
     ) {}
 
     public function create(array $data): array
@@ -50,6 +51,14 @@ class OrderService
             }
 
             $pdo->commit();
+
+            if ($this->jobRepo) {
+                $this->jobRepo->enqueue('order_confirmation', [
+                    'order_id' => $order->getId(),
+                    'user_id' => $order->getUserId()
+                ]);
+            }
+
             return $order->toArray();
 
         } catch (\Exception $e) {

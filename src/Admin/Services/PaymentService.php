@@ -14,9 +14,14 @@ use App\DTO\DTOException;
 
 class PaymentService
 {
+    private string $stripeSecretKey;
+
     public function __construct(
         private PaymentRepository $repo,
-    ) {}
+        private ?\App\Admin\Repositories\OrderRepository $orderRepo = null
+    ) {
+        $this->stripeSecretKey = getenv('STRIPE_SECRET_KEY') ?: 'sk_test_dummy';
+    }
 
     public function create(array $data): array
     {
@@ -92,5 +97,74 @@ class PaymentService
         if (!$deleted) {
             throw new NotFoundException('Payment not found');
         }
+    }
+
+    public function createStripeCheckoutSession(int $orderId, string $successUrl, string $cancelUrl): array
+    {
+        if (!$this->orderRepo) {
+            throw new \RuntimeException("OrderRepository not injected into PaymentService");
+        }
+
+        $order = $this->orderRepo->getDetailedOrderById($orderId);
+        if (!$order) {
+            throw new NotFoundException('Order not found');
+        }
+
+        $lineItems = [];
+        $items = is_string($order['items']) ? json_decode($order['items'], true) : $order['items'];
+        
+        foreach ($items as $item) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency' => 'lkr',
+                    'product_data' => [
+                        'name' => $item['product_name'] ?? 'Unknown Product',
+                    ],
+                    'unit_amount' => $item['price_cents'],
+                ],
+                'quantity' => $item['quantity'],
+            ];
+        }
+
+        $postFields = http_build_query([
+            'payment_method_types' => ['card'],
+            'mode' => 'payment',
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+            'client_reference_id' => (string)$order['id'],
+            'line_items' => $lineItems
+        ]);
+
+        // Fix http_build_query nested array encoding for Stripe
+        $postFields = preg_replace('/%5B[0-9]+%5D/simU', '%5B%5D', $postFields);
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Authorization: Bearer {$this->stripeSecretKey}\r\n" .
+                            "Content-Type: application/x-www-form-urlencoded\r\n",
+                'content' => $postFields,
+                'ignore_errors' => true
+            ]
+        ]);
+
+        $response = file_get_contents('https://api.stripe.com/v1/checkout/sessions', false, $context);
+        $result = json_decode($response, true);
+
+        if (!isset($result['id'])) {
+            throw new ValidationException('Failed to create Stripe Checkout Session', $result);
+        }
+
+        // Record pending payment
+        $this->repo->create([
+            'order_id' => $orderId,
+            'amount_cents' => $order['total_cents'],
+            'currency' => 'LKR',
+            'gateway' => 'stripe',
+            'gateway_order_id' => $result['id'],
+            'status' => 'pending'
+        ]);
+
+        return $result;
     }
 }

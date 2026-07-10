@@ -67,13 +67,13 @@ class ProductRepository extends BaseRepository
     public function search(string $query, int $limit = 50, int $offset = 0): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT * FROM products 
-             WHERE (name ILIKE :query OR description ILIKE :query) 
+             "SELECT * FROM products 
+             WHERE search_vector @@ websearch_to_tsquery('english', :query) 
              AND is_active = TRUE AND deleted_at IS NULL 
-             ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+             ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', :query)) DESC, created_at DESC LIMIT :limit OFFSET :offset"
         );
         $stmt->execute([
-            ':query' => "%$query%",
+            ':query' => $query,
             ':limit' => $limit,
             ':offset' => $offset
         ]);
@@ -319,7 +319,6 @@ public function getTopSellers(int $limit = 10): array
 
 public function searchEnriched(string $query, int $limit = 50, int $offset = 0): array
 {
-    $searchTerm = '%' . $query . '%';
     $stmt = $this->pdo->prepare("
         SELECT 
             p.id, p.category_id, p.name, p.slug, p.description, p.price_cents, p.image_url,
@@ -349,12 +348,12 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
         LEFT JOIN feedback f ON p.id = f.product_id AND f.is_active = TRUE
         LEFT JOIN flavor_profiles fp ON p.id = fp.product_id
         WHERE p.deleted_at IS NULL
-        AND (p.name ILIKE :search OR p.description ILIKE :search OR c.name ILIKE :search OR array_to_string(fp.tags, ',') ILIKE :search)
+        AND (p.search_vector @@ websearch_to_tsquery('english', :search) OR c.name ILIKE '%' || :search || '%' OR array_to_string(fp.tags, ',') ILIKE '%' || :search || '%')
         GROUP BY p.id, p.category_id, c.name, s.name, fp.sweetness, fp.bitterness, fp.strength, fp.smokiness, fp.fruitiness, fp.spiciness, fp.tags
-        ORDER BY p.name ASC
+        ORDER BY ts_rank(p.search_vector, websearch_to_tsquery('english', :search)) DESC, p.name ASC
         LIMIT :limit OFFSET :offset
     ");
-    $stmt->bindValue(':search', $searchTerm);
+    $stmt->bindValue(':search', $query);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -374,8 +373,8 @@ public function searchEnriched(string $query, int $limit = 50, int $offset = 0):
     $order  = "p.created_at DESC";
 
     if ($search !== '') {
-        $where[] = "(p.name ILIKE :search OR p.description ILIKE :search OR c.name ILIKE :search)";
-        $params[':search'] = "%$search%";
+        $where[] = "(p.search_vector @@ websearch_to_tsquery('english', :search) OR c.name ILIKE '%' || :search || '%')";
+        $params[':search'] = $search;
     }
     if ($categoryId !== null) {
         $where[] = "p.category_id = :category_id";

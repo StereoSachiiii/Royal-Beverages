@@ -44,6 +44,12 @@ class PaymentRepository extends BaseRepository
         return $row ? $this->mapToModel($row) : null;
     }
 
+    public function getByGatewayOrderId(string $gatewayOrderId): ?PaymentModel
+    {
+        $row = $this->fetchOne("SELECT * FROM payments WHERE gateway_order_id = :gateway_order_id", [':gateway_order_id' => $gatewayOrderId]);
+        return $row ? $this->mapToModel($row) : null;
+    }
+
     public function getByOrder(int $orderId): array
     {
         $rows = $this->fetchAll("SELECT * FROM payments WHERE order_id = :order_id", [':order_id' => $orderId]);
