@@ -17,6 +17,6 @@ if (!defined('ROOT_PATH')) {
 $router->group('/api/v1', function (Router $router): void {
     $router->post('/webhooks/stripe', function (Request $request): array {
         $controller = $GLOBALS['container']->get(StripeWebhookController::class);
-        return $controller->handle($request);
+        return $controller->handleWebhook($request);
     });
 });

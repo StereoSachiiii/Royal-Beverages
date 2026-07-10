@@ -10,16 +10,12 @@ use App\Admin\Repositories\OrderRepository;
 
 class StripeWebhookController extends BaseController
 {
-    // Normally loaded from environment, using provided key
-    private string $stripeWebhookSecret = 'whsec_...'; // Assuming standard handling if actual key not provided
-
     public function __construct(
-        private PaymentService $paymentService,
         private PaymentRepository $paymentRepo,
         private OrderRepository $orderRepo
     ) {}
 
-    public function handle(Request $request): array
+    public function handleWebhook(Request $request): array
     {
         return $this->handle(function () use ($request) {
             $payload = file_get_contents('php://input');
@@ -27,11 +23,11 @@ class StripeWebhookController extends BaseController
             
             // For portfolio purpose, if sig header is missing we just process it as a mock
             // In production, we'd verify the signature:
-            // \Stripe\Webhook::constructEvent($payload, $sigHeader, $this->stripeWebhookSecret);
+            // \Stripe\Webhook::constructEvent($payload, $sigHeader, getenv('STRIPE_WEBHOOK_SECRET'));
             
-            $event = json_decode($payload, true);
+            $event = json_decode($payload !== false ? $payload : '', true);
             
-            if (!$event) {
+            if (!is_array($event)) {
                 return $this->error('Invalid payload', 400);
             }
 
@@ -45,7 +41,7 @@ class StripeWebhookController extends BaseController
                     
                     // Update Payment
                     $payment = $this->paymentRepo->getByGatewayOrderId($gatewayOrderId);
-                    if ($payment) {
+                    if ($payment && $payment->getId() !== null) {
                         $this->paymentRepo->update($payment->getId(), [
                             'status' => 'captured',
                             'payload' => json_encode($event)

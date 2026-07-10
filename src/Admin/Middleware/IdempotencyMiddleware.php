@@ -46,7 +46,7 @@ class IdempotencyMiddleware implements MiddlewareInterface
         $this->repository->store(
             $idempotencyKey,
             $request->getUri(),
-            json_encode($normalized),
+            (string)json_encode($normalized),
             $normalized['code']
         );
 

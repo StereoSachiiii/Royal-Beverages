@@ -81,10 +81,10 @@ class OAuthController extends BaseController
             ]);
 
             $tokenResponse = file_get_contents('https://oauth2.googleapis.com/token', false, $context);
-            $tokenData = json_decode($tokenResponse, true);
+            $tokenData = json_decode($tokenResponse !== false ? $tokenResponse : '', true);
 
-            if (!isset($tokenData['access_token'])) {
-                return $this->error('Failed to obtain access token', 400, $tokenData);
+            if (!is_array($tokenData) || !isset($tokenData['access_token'])) {
+                return $this->error('Failed to obtain access token', 400, is_array($tokenData) ? $tokenData : []);
             }
 
             // 2. Fetch user profile from Google
@@ -95,9 +95,9 @@ class OAuthController extends BaseController
             ]);
             
             $userResponse = file_get_contents('https://www.googleapis.com/oauth2/v2/userinfo', false, $userContext);
-            $googleProfile = json_decode($userResponse, true);
+            $googleProfile = json_decode($userResponse !== false ? $userResponse : '', true);
 
-            if (!isset($googleProfile['id'])) {
+            if (!is_array($googleProfile) || !isset($googleProfile['id'])) {
                 return $this->error('Failed to fetch user profile', 400);
             }
 

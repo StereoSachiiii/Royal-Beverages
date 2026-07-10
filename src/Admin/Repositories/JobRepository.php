@@ -40,6 +40,11 @@ class JobRepository extends BaseRepository
                  FOR UPDATE SKIP LOCKED"
             );
 
+            if ($stmt === false) {
+                $this->pdo->rollBack();
+                return null;
+            }
+
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$row) {

@@ -149,7 +149,7 @@ class PaymentService
         ]);
 
         $response = file_get_contents('https://api.stripe.com/v1/checkout/sessions', false, $context);
-        $result = json_decode($response, true);
+        $result = json_decode($response !== false ? $response : '', true);
 
         if (!isset($result['id'])) {
             throw new ValidationException('Failed to create Stripe Checkout Session', $result);
