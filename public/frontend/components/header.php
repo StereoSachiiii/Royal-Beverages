@@ -116,9 +116,13 @@ $pageName = $pageName ?? 'home';
 <!-- Profile Drawer (Right) -->
 <aside id="profileSidebar" class="fixed top-0 right-0 h-full w-[350px] bg-white z-[1000] translate-x-full transition-transform duration-500 shadow-2xl overflow-y-auto">
     <div class="p-12 text-center border-b border-gray-100 bg-gray-50/50">
-        <div class="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
-            <?= strtoupper(substr($username ?? 'G', 0, 1)) ?>
-        </div>
+        <?php if($session->isLoggedIn() && $session->getProfileImageUrl()): ?>
+            <img src="<?= htmlspecialchars($session->getProfileImageUrl()) ?>" alt="Profile" class="w-20 h-20 rounded-full mx-auto mb-6 object-cover border border-gray-200">
+        <?php else: ?>
+            <div class="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                <?= strtoupper(substr($username ?? 'G', 0, 1)) ?>
+            </div>
+        <?php endif; ?>
         <p class="text-xs uppercase tracking-[0.3em] text-muted mb-1">Welcome</p>
         <h3 class="text-xl font-heading tracking-widest uppercase truncate"><?= htmlspecialchars($username ?? 'Guest') ?></h3>
     </div>

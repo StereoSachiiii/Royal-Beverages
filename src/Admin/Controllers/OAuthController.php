@@ -107,8 +107,7 @@ class OAuthController extends BaseController
             $user = $this->userService->handleGoogleOAuth($googleProfile);
 
             // Log user in
-            $this->session->set('user_id', $user['id']);
-            $this->session->set('is_admin', $user['is_admin']);
+            $this->session->login($user);
 
             header('Location: /');
             exit;

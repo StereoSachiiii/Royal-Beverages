@@ -63,6 +63,7 @@ class Session {
         $_SESSION['user_id'] = $userData['id'];
         $_SESSION['name'] = $userData['name'];
         $_SESSION['email'] = $userData['email'] ?? null;
+        $_SESSION['profile_image_url'] = $userData['profile_image_url'] ?? null;
         $_SESSION['logged_in'] = true;
         $_SESSION['login_time'] = time();
         $_SESSION['is_admin'] = $userData['is_admin'] ?? false;
@@ -102,6 +103,10 @@ class Session {
 
     public function getEmail(): ?string {
         return $this->get('email');
+    }
+
+    public function getProfileImageUrl(): ?string {
+        return $this->get('profile_image_url');
     }
 
     public function getCsrfInstance(): CSRF {
