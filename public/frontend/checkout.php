@@ -191,10 +191,10 @@ $userId = $session->getUserId();
 </main>
 
 <script type="module">
-import { cart } from './assets/js/cart-service.js';
-import { API } from './assets/js/api-helper.js';
-import { toast } from './assets/js/toast.js';
-import { fixImagePath, showErrorBoundary } from './assets/js/ui-components.js';
+import { cart } from './assets/js/cart-service.js?v=2';
+import { API } from './assets/js/api-helper.js?v=2';
+import { toast } from './assets/js/toast.js?v=2';
+import { fixImagePath, showErrorBoundary } from './assets/js/ui-components.js?v=2';
 
 // --- State Management ---
 const state = {
