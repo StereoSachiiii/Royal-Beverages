@@ -110,7 +110,8 @@ class OAuthController extends BaseController
             $this->session->set('user_id', $user['id']);
             $this->session->set('is_admin', $user['is_admin']);
 
-            return $this->success('Successfully logged in via Google', $user);
+            header('Location: /');
+            exit;
         });
     }
 }

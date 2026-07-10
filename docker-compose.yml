@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: royal_liquor_app
+    restart: unless-stopped
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.royalbeverages.rule=Host(`royal-beverages.20.244.0.92.nip.io`)"
@@ -33,6 +34,7 @@ services:
   db:
     image: postgres:15-alpine
     container_name: royal_liquor_db
+    restart: unless-stopped
 
     environment:
       - POSTGRES_USER=${DB_USER:-postgres}
@@ -54,6 +56,7 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:latest
     container_name: royal_liquor_pgbouncer
+    restart: unless-stopped
 
     environment:
       - DB_HOST=db
