@@ -15,15 +15,21 @@ export const renderProductCard = (p) => {
   const isPremium = p.price_cents >= 10000;
 
   let badgeHtml = '';
-  if (isPremium) badgeHtml = 'Vintage';
-  else if (p.available_stock < 20 && inStock) badgeHtml = `Low Stock: ${p.available_stock}`;
+  let isUrgent = false;
+
+  if (inStock && p.available_stock < 50) {
+      isUrgent = true;
+      badgeHtml = `Only ${p.available_stock} left`;
+  } else if (isPremium) {
+      badgeHtml = 'Vintage';
+  }
 
   return `
         <div class="group w-full bg-white border border-gray-100 p-8 flex flex-col relative overflow-hidden transition-all duration-500 hover:border-black ${!inStock ? 'opacity-40 grayscale' : ''}" data-id="${p.id}">
             <!-- Badges -->
             <div class="absolute top-6 left-6 z-10 flex flex-col gap-2">
                 ${!inStock ? `<span class="bg-gray-100 text-gray-500 text-[8px] font-black uppercase tracking-widest px-3 py-1">Depleted</span>` : ''}
-                ${badgeHtml ? `<span class="bg-black text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 shadow-sm">${badgeHtml}</span>` : ''}
+                ${badgeHtml ? `<span class="${isUrgent ? 'animate-pulse bg-red-500' : 'bg-black'} text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 shadow-sm">${badgeHtml}</span>` : ''}
             </div>
 
             <!-- Image -->
