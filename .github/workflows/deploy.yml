@@ -19,4 +19,4 @@ jobs:
             cd ~/Royal-Beverages
             git fetch origin main
             git reset --hard origin/main
-            yes | docker-compose up -d --build
+            yes | docker compose up -d --build
