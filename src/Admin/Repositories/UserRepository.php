@@ -56,8 +56,8 @@ class UserRepository extends BaseRepository
     public function createFromOAuth(string $name, string $email, string $provider, string $providerId, ?string $profileImageUrl): UserModel
     {
         $stmt = $this->pdo->prepare("
-            INSERT INTO users (name, email, oauth_provider, oauth_provider_id, profile_image_url)
-            VALUES (:name, :email, :provider, :provider_id, :profile_image_url)
+            INSERT INTO users (name, email, password_hash, oauth_provider, oauth_provider_id, profile_image_url)
+            VALUES (:name, :email, '', :provider, :provider_id, :profile_image_url)
             RETURNING *
         ");
         $stmt->execute([
