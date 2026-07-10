@@ -19,6 +19,31 @@ class PaymentController extends BaseController
         });
     }
 
+    public function createStripeCheckoutSession(array $data): array
+    {
+        return $this->handle(function () use ($data) {
+            $orderId = (int)($data['order_id'] ?? 0);
+            if ($orderId <= 0) {
+                return $this->error('Order ID is required', 400);
+            }
+
+            // Determine base URL dynamically (handles localhost and proxy domains)
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && str_contains($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https')) 
+                ? 'https' : 'http';
+            
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseUrl = "$protocol://$host/";
+            
+            $successUrl = $baseUrl . 'checkout.php?status=success&order_id=' . $orderId;
+            $cancelUrl = $baseUrl . 'checkout.php?status=cancel';
+
+            $result = $this->service->createStripeCheckoutSession($orderId, $successUrl, $cancelUrl);
+            
+            return $this->success('Stripe checkout session created', $result, 200);
+        });
+    }
+
     public function getAll(int $limit = 50, int $offset = 0): array
     {
         return $this->handle(function () use ($limit, $offset) {

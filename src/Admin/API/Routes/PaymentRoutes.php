@@ -83,6 +83,18 @@ $router->group('/api/v1', function (Router $router): void {
         new AuthMiddleware(true)
     ]);
 
+    // Create Stripe Checkout Session
+    $router->post('/payments/stripe/checkout-session', function (Request $request): array {
+        $controller = $GLOBALS['container']->get(PaymentController::class);
+        $body       = $request->getAllBody();
+        return $controller->createStripeCheckoutSession($body);
+    
+    })->middleware([
+        new AuthMiddleware(true),
+        new CSRFMiddleware(),
+        new RateLimitMiddleware('payment_stripe_checkout', 5, 60)
+    ]);
+
     // Create payment
     $router->post('/payments', function (Request $request): array {
         $controller = $GLOBALS['container']->get(PaymentController::class);

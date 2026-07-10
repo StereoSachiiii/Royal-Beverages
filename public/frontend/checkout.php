@@ -220,6 +220,19 @@ const ui = {
 
 // --- Initialization ---
 const init = async () => {
+    // 0. Check for Stripe success callback
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'success') {
+        const orderId = urlParams.get('order_id') || '000000';
+        document.getElementById('success-order-id').textContent = `#${orderId.toString().padStart(6, '0')}`;
+        cart.clear(); // Wipe cart
+        goToStep(4);
+        toast.gold('Payment Processed Successfully');
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+    }
+
     // 1. Force check cart count
     const items = cart.getItems();
     if (!items || items.length === 0) {
@@ -472,6 +485,21 @@ ui.placeOrderBtn.onclick = async () => {
         const orderRes = await API.orders.create(payload);
         if (orderRes.success || orderRes.id) {
             const orderId = orderRes.id || orderRes.data?.id;
+
+            // Handle Stripe Payment Redirect
+            if (state.paymentType === 'card') {
+                try {
+                    const stripeRes = await API.payments.createStripeCheckout(orderId);
+                    const checkoutUrl = stripeRes.data?.url || stripeRes.url;
+                    if (checkoutUrl) {
+                        window.location.href = checkoutUrl;
+                        return; // Stop execution, browser will redirect
+                    }
+                } catch (err) {
+                    throw new Error('Failed to initialize Stripe checkout: ' + (err.message || 'Unknown error'));
+                }
+            }
+
             document.getElementById('success-order-id').textContent = `#${orderId.toString().padStart(6, '0')}`;
             cart.clear(); // Wipe localStorage only on success
             goToStep(4);

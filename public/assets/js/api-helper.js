@@ -174,6 +174,7 @@ export const API = {
     create: (data) => apiRequest('/payments', { method: 'POST', body: data }),
     get: (id) => apiRequest('/payments/' + id),
     getByOrder: (orderId) => apiRequest('/payments' + buildQuery({ order_id: orderId })),
+    createStripeCheckout: (orderId) => apiRequest('/payments/stripe/checkout-session', { method: 'POST', body: { order_id: orderId } }),
   },
 
   // ==================== USERS ====================
