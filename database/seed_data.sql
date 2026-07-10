@@ -26,23 +26,23 @@ INSERT INTO products (name, slug, description, price_cents, image_url, category_
 ('Absolut Vodka', 'absolut-vodka', 'Pure Swedish vodka.', 450000, 'vodka.webp', 2, 1),
 ('Bacardi Superior White Rum', 'bacardi-rum', 'Classic mixing rum.', 380000, 'rum.webp', 3, 1),
 ('Casillero del Diablo Cabernet', 'casillero-cabernet', 'Rich Chilean red wine.', 320000, 'wine.webp', 4, 2),
-('Glenfiddich 12 Year', 'glenfiddich-12', 'Single malt scotch whisky.', 950000, 'placeholder-spirit.webp', 1, 1),
-('Macallan 18 Year', 'macallan-18', 'Premium aged scotch whisky.', 2500000, 'placeholder-spirit.webp', 1, 1),
-('Jameson Irish Whiskey', 'jameson-irish', 'Classic smooth Irish whiskey.', 650000, 'placeholder-spirit.webp', 1, 1),
-('Bulleit Bourbon', 'bulleit-bourbon', 'Kentucky straight bourbon.', 720000, 'placeholder-spirit.webp', 1, 1),
-('Woodford Reserve', 'woodford-reserve', 'Premium Kentucky bourbon.', 880000, 'placeholder-spirit.webp', 1, 1),
-('Maker''s Mark', 'makers-mark', 'Handmade Kentucky bourbon whisky.', 750000, 'placeholder-spirit.webp', 1, 1),
-('Talisker 10 Year', 'talisker-10', 'Peated single malt scotch.', 1100000, 'placeholder-spirit.webp', 1, 1),
-('Lagavulin 16 Year', 'lagavulin-16', 'Rich, peaty single malt scotch.', 1800000, 'placeholder-spirit.webp', 1, 1),
-('Chivas Regal 12', 'chivas-regal-12', 'Blended scotch whisky.', 780000, 'placeholder-spirit.webp', 1, 1),
-('Monkey Shoulder', 'monkey-shoulder', 'Blended malt scotch whisky.', 820000, 'placeholder-spirit.webp', 1, 1),
-('Laphroaig 10', 'laphroaig-10', 'Islay single malt scotch.', 1250000, 'placeholder-spirit.webp', 1, 1),
-('Ardbeg 10', 'ardbeg-10', 'Intense Islay single malt.', 1300000, 'placeholder-spirit.webp', 1, 1),
-('Buffalo Trace', 'buffalo-trace', 'Kentucky straight bourbon.', 680000, 'placeholder-spirit.webp', 1, 1),
-('Elijah Craig', 'elijah-craig', 'Small batch bourbon.', 740000, 'placeholder-spirit.webp', 1, 1),
-('Knob Creek', 'knob-creek', 'Kentucky straight bourbon.', 890000, 'placeholder-spirit.webp', 1, 1),
-('Four Roses Single Barrel', 'four-roses', 'Premium single barrel bourbon.', 920000, 'placeholder-spirit.webp', 1, 1)
-ON CONFLICT (slug) DO NOTHING;
+('Glenfiddich 12 Year', 'glenfiddich-12', 'Single malt scotch whisky.', 950000, 'products_1.webp', 1, 1),
+('Macallan 18 Year', 'macallan-18', 'Premium aged scotch whisky.', 2500000, 'products_2.webp', 1, 1),
+('Jameson Irish Whiskey', 'jameson-irish', 'Classic smooth Irish whiskey.', 650000, 'products_3.webp', 1, 1),
+('Bulleit Bourbon', 'bulleit-bourbon', 'Kentucky straight bourbon.', 720000, 'whiskey_ed_1.webp', 1, 1),
+('Woodford Reserve', 'woodford-reserve', 'Premium Kentucky bourbon.', 880000, 'whiskey_ed_2.webp', 1, 1),
+('Maker''s Mark', 'makers-mark', 'Handmade Kentucky bourbon whisky.', 750000, 'products_1.webp', 1, 1),
+('Talisker 10 Year', 'talisker-10', 'Peated single malt scotch.', 1100000, 'products_2.webp', 1, 1),
+('Lagavulin 16 Year', 'lagavulin-16', 'Rich, peaty single malt scotch.', 1800000, 'products_3.webp', 1, 1),
+('Chivas Regal 12', 'chivas-regal-12', 'Blended scotch whisky.', 780000, 'whiskey_ed_1.webp', 1, 1),
+('Monkey Shoulder', 'monkey-shoulder', 'Blended malt scotch whisky.', 820000, 'whiskey_ed_2.webp', 1, 1),
+('Laphroaig 10', 'laphroaig-10', 'Islay single malt scotch.', 1250000, 'products_1.webp', 1, 1),
+('Ardbeg 10', 'ardbeg-10', 'Intense Islay single malt.', 1300000, 'products_2.webp', 1, 1),
+('Buffalo Trace', 'buffalo-trace', 'Kentucky straight bourbon.', 680000, 'products_3.webp', 1, 1),
+('Elijah Craig', 'elijah-craig', 'Small batch bourbon.', 740000, 'whiskey_ed_1.webp', 1, 1),
+('Knob Creek', 'knob-creek', 'Kentucky straight bourbon.', 890000, 'whiskey_ed_2.webp', 1, 1),
+('Four Roses Single Barrel', 'four-roses', 'Premium single barrel bourbon.', 920000, 'products_1.webp', 1, 1)
+ON CONFLICT (slug) DO UPDATE SET image_url = EXCLUDED.image_url;
 
 -- Initial Stock Levels
 INSERT INTO stock (product_id, warehouse_id, quantity, reserved) VALUES
@@ -113,8 +113,8 @@ INSERT INTO feedback (user_id, product_id, rating, comment, is_verified_purchase
 
 -- Cocktail Recipes
 INSERT INTO cocktail_recipes (name, description, instructions, image_url, difficulty, preparation_time, serves) VALUES
-('Whiskey Sour', 'A classic balance of sweet and sour.', '1. Mix whiskey, lemon juice, and simple syrup.\n2. Shake with ice.\n3. Strain into a glass.', 'placeholder-spirit.webp', 'easy', 5, 1),
-('Classic Mojito', 'Refreshing rum cocktail with mint and lime.', '1. Muddle mint leaves with sugar and lime.\n2. Add rum and top with club soda.\n3. Garnish with a mint sprig.', 'placeholder-spirit.webp', 'medium', 10, 1);
+('Whiskey Sour', 'A classic balance of sweet and sour.', '1. Mix whiskey, lemon juice, and simple syrup.\n2. Shake with ice.\n3. Strain into a glass.', 'old_fashioned.png', 'easy', 5, 1),
+('Classic Mojito', 'Refreshing rum cocktail with mint and lime.', '1. Muddle mint leaves with sugar and lime.\n2. Add rum and top with club soda.\n3. Garnish with a mint sprig.', 'daiquiri.png', 'medium', 10, 1);
 
 -- Recipe Ingredients
 -- Linking Whiskey Sour (ID 1) to Johnnie Walker (ID 1)
