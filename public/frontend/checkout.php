@@ -32,7 +32,7 @@ $userId = $session->getUserId();
         <div class="lg:grid lg:grid-cols-12 gap-16">
             
             <!-- Left: Stepper -->
-            <div class="lg:col-span-8">
+            <div id="checkout-main" class="lg:col-span-8 transition-all duration-500">
                 
                 <!-- Step 1: Delivery -->
                 <section id="step-delivery" class="checkout-step block">
@@ -158,7 +158,7 @@ $userId = $session->getUserId();
             </div>
 
             <!-- Right: Sidebar -->
-            <aside class="lg:col-span-4 mt-16 lg:mt-0">
+            <aside id="checkout-sidebar" class="lg:col-span-4 mt-16 lg:mt-0 transition-all duration-500">
                 <div class="sticky top-32 space-y-8">
                     <div class="bg-white border border-gray-100 p-10 shadow-sm">
                         <h3 class="text-xs uppercase font-black tracking-widest border-b border-black pb-4 mb-8">Selection Summary</h3>
@@ -329,6 +329,16 @@ const goToStep = (step) => {
             </span>
         `;
         document.getElementById('review-payment').textContent = state.paymentType === 'card' ? 'Secure Credit Card' : 'Cash on Delivery';
+    }
+    
+    if (step === 4) {
+        const sidebar = document.getElementById('checkout-sidebar');
+        if (sidebar) sidebar.classList.add('hidden');
+        const main = document.getElementById('checkout-main');
+        if (main) {
+            main.classList.remove('lg:col-span-8');
+            main.classList.add('lg:col-span-12');
+        }
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
