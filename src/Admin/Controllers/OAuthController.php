@@ -9,14 +9,24 @@ use App\Admin\Services\UserService;
 
 class OAuthController extends BaseController
 {
-    private string $clientId = '892174316353-0e5rlmnujn37u6vup7a1m2is1ft89rvq.apps.googleusercontent.com';
-    private string $clientSecret = 'YOUR_GOOGLE_CLIENT_SECRET'; // In a real app this is loaded securely
-    private string $redirectUri = 'http://localhost:8000/api/v1/oauth/google/callback';
+    private string $clientId;
+    private string $clientSecret;
+    private string $redirectUri;
 
     public function __construct(
         private UserService $userService,
         private Session $session
-    ) {}
+    ) {
+        $this->clientId = getenv('GOOGLE_CLIENT_ID') ?: '892174316353-0e5rlmnujn37u6vup7a1m2is1ft89rvq.apps.googleusercontent.com';
+        $this->clientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: 'YOUR_GOOGLE_CLIENT_SECRET';
+        
+        $protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) 
+            ? $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' 
+            : ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://');
+            
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
+        $this->redirectUri = $protocol . $host . '/api/v1/oauth/google/callback';
+    }
 
     public function redirect(Request $request): void
     {
