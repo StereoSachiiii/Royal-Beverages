@@ -127,7 +127,6 @@ const init = async () => {
     await loadData();
     renderCategory();
     renderProducts();
-    renderRelatedCategories();
     setupEventListeners();
 
     // Trigger hero shrink animation after 1 second

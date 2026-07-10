@@ -14,7 +14,7 @@ require_once __DIR__ . "/components/header.php";
             <!-- Search Bar -->
             <div class="faq-search">
                 <input type="text" id="faqSearch" class="input" placeholder="Search for answers...">
-                <button class="btn btn-gold" id="faqSearchBtn">Search</button>
+                <button class="btn-premium px-8" id="faqSearchBtn">Search</button>
             </div>
         </div>
     </section>
@@ -195,8 +195,8 @@ require_once __DIR__ . "/components/header.php";
             <h2>Still Have Questions?</h2>
             <p>Our team is happy to help you with any questions.</p>
             <div class="faq-help-actions">
-                <a href="<?= getPageUrl('contact') ?>" class="btn btn-gold">Contact Us</a>
-                <a href="tel:+94112345678" class="btn btn-outline">Call: +94 11 234 5678</a>
+                <a href="<?= getPageUrl('contact') ?>" class="btn-premium px-8">Contact Us</a>
+                <a href="tel:+94112345678" class="btn-premium-outline px-8">Call: +94 11 234 5678</a>
             </div>
         </div>
     </section>
