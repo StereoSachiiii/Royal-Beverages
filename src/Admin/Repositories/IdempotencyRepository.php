@@ -42,4 +42,20 @@ class IdempotencyRepository extends BaseRepository
             ':status_code' => $statusCode
         ]);
     }
+
+    protected function mapToModel(array $row): IdempotencyModel
+    {
+        return new IdempotencyModel(
+            key: $row['key'],
+            endpoint: $row['endpoint'],
+            responseBody: $row['response_body'],
+            statusCode: (int)$row['status_code'],
+            createdAt: $row['created_at']
+        );
+    }
+
+    protected function mapToModels(array $rows): array
+    {
+        return array_map([$this, 'mapToModel'], $rows);
+    }
 }

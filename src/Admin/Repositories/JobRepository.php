@@ -102,4 +102,22 @@ class JobRepository extends BaseRepository
             $update->execute([':id' => $id]);
         }
     }
+
+    protected function mapToModel(array $row): JobModel
+    {
+        return new JobModel(
+            id: (int)$row['id'],
+            jobType: $row['job_type'],
+            payload: json_decode($row['payload'], true) ?? [],
+            status: $row['status'],
+            attempts: (int)$row['attempts'],
+            runAt: $row['run_at'],
+            createdAt: $row['created_at']
+        );
+    }
+
+    protected function mapToModels(array $rows): array
+    {
+        return array_map([$this, 'mapToModel'], $rows);
+    }
 }
