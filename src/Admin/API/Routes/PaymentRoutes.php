@@ -90,7 +90,7 @@ $router->group('/api/v1', function (Router $router): void {
         return $controller->createStripeCheckoutSession($body);
     
     })->middleware([
-        new AuthMiddleware(true),
+        new AuthMiddleware(false),
         new CSRFMiddleware(),
         new RateLimitMiddleware('payment_stripe_checkout', 5, 60)
     ]);
