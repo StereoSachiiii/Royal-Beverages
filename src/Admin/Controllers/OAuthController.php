@@ -17,14 +17,16 @@ class OAuthController extends BaseController
         private UserService $userService,
         private Session $session
     ) {
-        $this->clientId = getenv('GOOGLE_CLIENT_ID') ?: '892174316353-0e5rlmnujn37u6vup7a1m2is1ft89rvq.apps.googleusercontent.com';
-        $this->clientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: 'YOUR_GOOGLE_CLIENT_SECRET';
+        $this->clientId = trim(getenv('GOOGLE_CLIENT_ID') ?: '892174316353-0e5rlmnujn37u6vup7a1m2is1ft89rvq.apps.googleusercontent.com', "\"' \t\n\r\0\x0B");
+        $this->clientSecret = trim(getenv('GOOGLE_CLIENT_SECRET') ?: 'YOUR_GOOGLE_CLIENT_SECRET', "\"' \t\n\r\0\x0B");
         
-        $protocol = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) 
-            ? $_SERVER['HTTP_X_FORWARDED_PROTO'] . '://' 
-            : ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://');
+        $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        $protocol = (str_contains(strtolower($forwardedProto), 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) 
+            ? 'https://' 
+            : 'http://';
             
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
+        $host = trim($_SERVER['HTTP_HOST'] ?? 'localhost:8000', "\"' \t\n\r\0\x0B");
+        // Ensure no trailing slashes or weird characters
         $this->redirectUri = $protocol . $host . '/api/v1/oauth/google/callback';
     }
 
