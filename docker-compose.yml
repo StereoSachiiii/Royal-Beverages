@@ -11,6 +11,7 @@ services:
       - "traefik.http.routers.royalbeverages.entrypoints=websecure"
       - "traefik.http.routers.royalbeverages.tls.certresolver=myresolver"
       - "traefik.http.services.royalbeverages.loadbalancer.server.port=80"
+      - "traefik.docker.network=global-proxy-net"
 
     volumes:
       - ./:/var/www/html
