@@ -5,12 +5,15 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { getImageUrl, apiRequest,
+import {
+  getImageUrl,
+  apiRequest,
   escapeHtml,
   formatDate,
   formatNumber,
   getTemplate,
-  closeModal, } from '../../utils.js';
+  closeModal,
+} from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 import { uploadImage } from '../../FormHelpers.js';
 

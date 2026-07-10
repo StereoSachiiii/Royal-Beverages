@@ -5,7 +5,14 @@
 
 import { API_ROUTES } from '../../dashboard.routes.js';
 import { AdminAPI } from '../../admin-api.js';
-import { getImageUrl, escapeHtml, formatCurrency, formatNumber, formatDate, getTemplate } from '../../utils.js';
+import {
+  getImageUrl,
+  escapeHtml,
+  formatCurrency,
+  formatNumber,
+  formatDate,
+  getTemplate,
+} from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchProducts(limit = 20, offset = 0, query = '') {

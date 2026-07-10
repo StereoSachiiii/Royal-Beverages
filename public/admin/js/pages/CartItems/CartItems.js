@@ -4,7 +4,14 @@
  */
 
 import { API_ROUTES, buildQueryString } from '../../dashboard.routes.js';
-import { getImageUrl, apiRequest, escapeHtml, formatDate, getTemplate, closeModal } from '../../utils.js';
+import {
+  getImageUrl,
+  apiRequest,
+  escapeHtml,
+  formatDate,
+  getTemplate,
+  closeModal,
+} from '../../utils.js';
 import { createEntityModule } from '../../components/EntityBuilder.js';
 
 async function fetchCartItems(limit = 20, offset = 0, query = '') {

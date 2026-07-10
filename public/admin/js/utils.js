@@ -8,18 +8,18 @@ export function escapeHtml(text) {
 export function getImageUrl(path) {
   if (!path) return '';
   if (path.startsWith('http') || path.startsWith('data:')) return path;
-  
+
   const baseUrl = window.ADMIN_CONFIG?.BASE_URL || '../';
   const base = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
-  
+
   // Clean up leading slashes on path
   const cleanPath = path.replace(/^\/+/, '');
-  
+
   // Our images are usually just filenames, but let's check if it already has 'assets/images'
   if (cleanPath.startsWith('assets/images/')) {
     return base + cleanPath;
   }
-  
+
   // Otherwise, default to prepending assets/images/
   return base + 'assets/images/' + cleanPath;
 }
