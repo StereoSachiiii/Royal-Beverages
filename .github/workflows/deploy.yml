@@ -1,4 +1,4 @@
-﻿name: Deploy to Azure VM
+name: Deploy to Azure VM
 
 on:
   push:
@@ -17,5 +17,6 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/Royal-Beverages
-            git pull origin main
-            docker-compose up -d --build
+            git fetch origin main
+            git reset --hard origin/main
+            yes | docker-compose up -d --build
